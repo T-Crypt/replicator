@@ -44,6 +44,17 @@ def _poly(points, name: str) -> list[list[float]]:
     return out
 
 
+def _axis_index(axis) -> int:
+    """'x'/'y'/'z' or an axis-aligned vector like [0, 0, 1] (models write both)."""
+    if isinstance(axis, str) and axis.lower().lstrip("+-") in ("x", "y", "z"):
+        return "xyz".index(axis.lower().lstrip("+-"))
+    if isinstance(axis, (list, tuple)) and len(axis) == 3:
+        a = [abs(float(v)) for v in axis]
+        if sorted(a)[:2] == [0.0, 0.0] and max(a) > 0:
+            return a.index(max(a))
+    raise EvalError("axis must be x, y, z or an axis-aligned vector like [0, 1, 0]")
+
+
 def _place(m: Manifold, p: dict) -> Manifold:
     if "scale" in p:
         m = m.scale(_vec3(p["scale"], "scale"))
@@ -109,10 +120,7 @@ def build_modifier(kind: str, p: dict, m: Manifold) -> Manifold:
         elif mode == "radial":
             ang = float(p.get("angle", 360.0))
             step = ang / n if ang >= 360 else ang / max(n - 1, 1)
-            axis = p.get("axis", "y")
-            idx = {"x": 0, "y": 1, "z": 2}.get(axis)
-            if idx is None:
-                raise EvalError("radial array axis must be x, y or z")
+            idx = _axis_index(p.get("axis", "y"))
             parts = []
             for i in range(n):
                 r = [0.0, 0.0, 0.0]
@@ -165,6 +173,7 @@ class Shape:
     part: str
     material: str | None
     manifold: Manifold
+    hash: str = ""
 
     def arrays(self) -> tuple[np.ndarray, np.ndarray]:
         """(positions float32 [n,3], indices uint32 [m,3]) for the viewport and exporters."""
@@ -217,7 +226,7 @@ class Evaluator:
         ops = program["ops"]
         k = len(ops) - 1 if k is None else max(0, min(k, len(ops) - 1))
         sub = dict(program, ops=ops[: k + 1])
-        built, _ = self.run(sub)
+        built, hashes = self.run(sub)
         consumed = {i for op in sub["ops"] for i in op_inputs(op)}
         # a leaf inherits material from its first input chain when it has none of its own
         mat_of: dict[str, str | None] = {}
@@ -225,7 +234,7 @@ class Evaluator:
             ins = op_inputs(op)
             mat_of[op["id"]] = op.get("material") or (mat_of.get(ins[0]) if ins else None)
         return [Shape(op["id"], op.get("label", op["id"]), op.get("part", op["id"]), mat_of[op["id"]],
-                      built[op["id"]]) for op in sub["ops"] if op["id"] not in consumed]
+                      built[op["id"]], hashes[op["id"]]) for op in sub["ops"] if op["id"] not in consumed]
 
 
 def bounds(shapes: list[Shape]) -> tuple[list[float], list[float]]:

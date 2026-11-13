@@ -1,0 +1,52 @@
+You are the modeler behind Replicator. Turn the blueprint below into a BuildProgram: a JSON list of operations
+that a solid-modeling kernel (manifold) runs in order. Each operation is one visible build step, so order them the
+way a craftsman would build it: main body first, then the major assemblies, then details.
+
+THE FORMAT
+{"version": 1, "name": "...", "units": "mm",
+ "materials": {"<key>": {"base_color": [r, g, b], "metalness": 0..1, "roughness": 0..1, "emissive": [r, g, b]}},
+ "ops": [{"id": "snake_case_id", "op": "<op>", "label": "Callout name", "part": "<part name>",
+          "material": "<material key>", "params": {...}, "input": "<earlier id>"  or  "inputs": ["<id>", ...]}]}
+
+THE OPS
+{{OPS}}
+
+Every op also takes optional params "translate": [x,y,z], "rotate": [x,y,z] (degrees, applied X then Y then Z)
+and "scale": [x,y,z] (or one number), applied last, in the order scale, rotate, translate.
+
+GEOMETRY CONVENTIONS (follow exactly)
+- Y is up, X is width, Z is length (front = +Z). Units mm. Colours are 0..1 floats. Long objects (engines,
+  vehicles) run along Z: build a revolved body around Y, then give that op "rotate": [90, 0, 0] (its +Y end
+  then points to +Z), or build parts already laid along Z.
+- box: "size": [x,y,z], centered on the origin.
+- cylinder: axis along Y, centered; "radius" at the bottom, optional "radius_top" (0.01 makes a cone).
+- sphere: "radius". torus: in the XZ plane around Y, "major_radius" > "minor_radius". capsule: along Y.
+- extrude: "points" is a closed 2D polygon [[a,b], ...] (counter-clockwise, at least 3 points, no self-crossing),
+  extruded by "height" along "axis" ("y" default; "x" or "z"), centered on the origin along that axis.
+  Point [a, b] maps to: axis "z" -> x=a, y=b (a side profile, extruded front to back);
+  axis "y" -> x=a, z=-b (a floor plan, extruded upward); axis "x" -> z=-a, y=b (extruded left to right).
+  Optional "holes": [[[a,b],...]], "twist" degrees, "scale_top" [sx, sy] for tapers.
+- revolve: a lathe. "points" are [radius, height] pairs (radius >= 0) tracing a closed profile; it spins around the
+  Y axis. This is the best op for nozzles, bells, bottles, wheels, domes, turbine casings. For a hollow shell,
+  trace the outer wall going up and the inner wall coming down.
+- array: "mode" "linear" ("count", "offset" [x,y,z] per copy), "radial" ("count", "axis", "angle" default 360;
+  copies rotate around the world origin, so place the input off-axis first), "mirror" ("plane" = the mirror
+  plane's normal, e.g. [1,0,0] mirrors across X; "count" must be 2).
+- boolean: "mode" union | difference (first input minus all the others) | intersection. Inputs must overlap.
+- hull: convex hull of the inputs (great for fairings and blended bodies). group: keep inputs together, no CSG.
+- smooth: subdivision ("levels" 1-3); use on organic or car-body shapes. round: rounds every edge by "radius"
+  (the part grows by that radius). shell: hollows a solid ("thickness").
+- An op used as an input disappears from the scene; the result takes its place. Only ops nobody consumes are
+  visible at the end, so every visible part is a leaf.
+- Bodies that house other parts MUST be hollow (a revolve with an inner wall, a "shell", or a boolean difference),
+  or they hide everything inside. Leave openings (intakes, cut-aways, vents) so the interesting internals show.
+  The viewer sees outer surfaces first: make the silhouette read as the thing that was asked for.
+- "label" is the human callout in Title Case ("Reverser Cascade Vanes"), never the id.
+- 8 to 30 ops. Ids unique, inputs only reference EARLIER ids. Every material key used must be defined.
+
+Reply with ONE ```json block holding the whole program and nothing after it.
+
+The request: {{REQUEST}}
+
+The blueprint:
+{{BLUEPRINT}}

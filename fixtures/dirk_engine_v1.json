@@ -1,0 +1,984 @@
+{
+ "version": 1,
+ "name": "Vortex-Back Reverse-Thrust Engine",
+ "units": "mm",
+ "materials": {
+  "painted_graphite": {
+   "base_color": [
+    0.18,
+    0.18,
+    0.19
+   ],
+   "metalness": 0.1,
+   "roughness": 0.8,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "aluminium": {
+   "base_color": [
+    0.86,
+    0.87,
+    0.89
+   ],
+   "metalness": 0.9,
+   "roughness": 0.35,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "carbon_fibre": {
+   "base_color": [
+    0.13,
+    0.14,
+    0.16
+   ],
+   "metalness": 0.25,
+   "roughness": 0.5,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "titanium": {
+   "base_color": [
+    0.76,
+    0.78,
+    0.81
+   ],
+   "metalness": 0.95,
+   "roughness": 0.3,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "brushed_steel": {
+   "base_color": [
+    0.69,
+    0.71,
+    0.73
+   ],
+   "metalness": 0.9,
+   "roughness": 0.42,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "painted_gunmetal": {
+   "base_color": [
+    0.23,
+    0.25,
+    0.28
+   ],
+   "metalness": 0.65,
+   "roughness": 0.45,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "dark_ceramic": {
+   "base_color": [
+    0.21,
+    0.19,
+    0.17
+   ],
+   "metalness": 0.05,
+   "roughness": 0.55,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "copper": {
+   "base_color": [
+    0.74,
+    0.45,
+    0.26
+   ],
+   "metalness": 0.95,
+   "roughness": 0.35,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "emissive_glow": {
+   "base_color": [
+    0.9,
+    0.35,
+    0.05
+   ],
+   "metalness": 0.0,
+   "roughness": 0.4,
+   "emissive": [
+    1.0,
+    0.4,
+    0.05
+   ]
+  }
+ },
+ "ops": [
+  {
+   "id": "nacelle_shell",
+   "op": "extrude",
+   "label": "NACELLE_SHELL",
+   "part": "NACELLE_SHELL",
+   "material": "painted_gunmetal",
+   "params": {
+    "height": 1600,
+    "axis": "y",
+    "translate": [
+     0,
+     1100,
+     0
+    ],
+    "points": [
+     [
+      675,
+      0
+     ],
+     [
+      477.32,
+      477.32
+     ],
+     [
+      0,
+      675
+     ],
+     [
+      -477.32,
+      477.32
+     ],
+     [
+      -675,
+      0
+     ],
+     [
+      -477.32,
+      -477.32
+     ],
+     [
+      0,
+      -675
+     ],
+     [
+      477.32,
+      -477.32
+     ]
+    ],
+    "holes": [
+     [
+      [
+       625,
+       0
+      ],
+      [
+       579.73,
+       241.48
+      ],
+      [
+       461.94,
+       461.94
+      ],
+      [
+       241.48,
+       579.73
+      ],
+      [
+       0,
+       625
+      ],
+      [
+       -241.48,
+       579.73
+      ],
+      [
+       -461.94,
+       461.94
+      ],
+      [
+       -579.73,
+       241.48
+      ],
+      [
+       -625,
+       0
+      ],
+      [
+       -579.73,
+       -241.48
+      ],
+      [
+       -461.94,
+       -461.94
+      ],
+      [
+       -241.48,
+       -579.73
+      ],
+      [
+       0,
+       -625
+      ],
+      [
+       241.48,
+       -579.73
+      ],
+      [
+       461.94,
+       -461.94
+      ],
+      [
+       579.73,
+       -241.48
+      ]
+     ]
+    ]
+   }
+  },
+  {
+   "id": "core_casing",
+   "op": "revolve",
+   "label": "CORE_CASING",
+   "part": "CORE_CASING",
+   "material": "brushed_steel",
+   "params": {
+    "translate": [
+     0,
+     1250,
+     0
+    ],
+    "points": [
+     [
+      0,
+      -800
+     ],
+     [
+      410,
+      -800
+     ],
+     [
+      380,
+      800
+     ],
+     [
+      0,
+      800
+     ],
+     [
+      0,
+      -800
+     ]
+    ]
+   }
+  },
+  {
+   "id": "reverse_cowl",
+   "op": "revolve",
+   "label": "REVERSE_COWL",
+   "part": "REVERSE_COWL",
+   "material": "titanium",
+   "params": {
+    "translate": [
+     0,
+     1900,
+     0
+    ],
+    "points": [
+     [
+      600,
+      -350
+     ],
+     [
+      675,
+      -350
+     ],
+     [
+      675,
+      330
+     ],
+     [
+      650,
+      350
+     ],
+     [
+      600,
+      350
+     ],
+     [
+      600,
+      -350
+     ]
+    ]
+   }
+  },
+  {
+   "id": "reverse_duct",
+   "op": "revolve",
+   "label": "REVERSE_DUCT",
+   "part": "REVERSE_DUCT",
+   "material": "dark_ceramic",
+   "params": {
+    "translate": [
+     0,
+     1775,
+     0
+    ],
+    "points": [
+     [
+      550,
+      -375
+     ],
+     [
+      600,
+      -375
+     ],
+     [
+      600,
+      375
+     ],
+     [
+      550,
+      375
+     ],
+     [
+      550,
+      -375
+     ]
+    ]
+   }
+  },
+  {
+   "id": "intake_lip",
+   "op": "revolve",
+   "label": "INTAKE_LIP",
+   "part": "INTAKE_LIP",
+   "material": "painted_graphite",
+   "params": {
+    "translate": [
+     0,
+     40,
+     0
+    ],
+    "points": [
+     [
+      575,
+      -40
+     ],
+     [
+      675,
+      -40
+     ],
+     [
+      675,
+      30
+     ],
+     [
+      660,
+      40
+     ],
+     [
+      600,
+      40
+     ],
+     [
+      575,
+      25
+     ],
+     [
+      575,
+      -40
+     ]
+    ]
+   }
+  },
+  {
+   "id": "fan_hub",
+   "op": "revolve",
+   "label": "FAN_HUB",
+   "part": "FAN_HUB",
+   "material": "titanium",
+   "params": {
+    "translate": [
+     0,
+     335,
+     0
+    ],
+    "points": [
+     [
+      0,
+      -185
+     ],
+     [
+      210,
+      -185
+     ],
+     [
+      210,
+      -150
+     ],
+     [
+      130,
+      -150
+     ],
+     [
+      130,
+      185
+     ],
+     [
+      0,
+      185
+     ],
+     [
+      0,
+      -185
+     ]
+    ]
+   }
+  },
+  {
+   "id": "fan_blade_front_source",
+   "op": "extrude",
+   "label": "FAN_BLADE_FRONT_SOURCE",
+   "part": "FAN_BLADE_FRONT",
+   "material": "carbon_fibre",
+   "params": {
+    "height": 25,
+    "axis": "z",
+    "translate": [
+     395,
+     260,
+     0
+    ],
+    "rotate": [
+     0,
+     0,
+     12
+    ],
+    "points": [
+     [
+      -205,
+      -100
+     ],
+     [
+      205,
+      -100
+     ],
+     [
+      205,
+      100
+     ],
+     [
+      -205,
+      100
+     ]
+    ]
+   }
+  },
+  {
+   "id": "fan_blade_front",
+   "op": "array",
+   "label": "FAN_BLADE_FRONT",
+   "part": "FAN_BLADE_FRONT",
+   "material": "carbon_fibre",
+   "params": {
+    "count": 18,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "fan_blade_front_source"
+  },
+  {
+   "id": "inlet_guide_vane_source",
+   "op": "extrude",
+   "label": "INLET_GUIDE_VANE_SOURCE",
+   "part": "INLET_GUIDE_VANE",
+   "material": "aluminium",
+   "params": {
+    "height": 12,
+    "axis": "z",
+    "translate": [
+     530,
+     120,
+     0
+    ],
+    "rotate": [
+     0,
+     0,
+     8
+    ],
+    "points": [
+     [
+      -60,
+      -80
+     ],
+     [
+      60,
+      -80
+     ],
+     [
+      60,
+      80
+     ],
+     [
+      -60,
+      80
+     ]
+    ]
+   }
+  },
+  {
+   "id": "inlet_guide_vane",
+   "op": "array",
+   "label": "INLET_GUIDE_VANE",
+   "part": "INLET_GUIDE_VANE",
+   "material": "aluminium",
+   "params": {
+    "count": 16,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "inlet_guide_vane_source"
+  },
+  {
+   "id": "rear_fan_hub",
+   "op": "revolve",
+   "label": "REAR_FAN_HUB",
+   "part": "REAR_FAN_HUB",
+   "material": "titanium",
+   "params": {
+    "translate": [
+     0,
+     1180,
+     0
+    ],
+    "points": [
+     [
+      0,
+      -130
+     ],
+     [
+      190,
+      -130
+     ],
+     [
+      190,
+      130
+     ],
+     [
+      0,
+      130
+     ],
+     [
+      0,
+      -130
+     ]
+    ]
+   }
+  },
+  {
+   "id": "counter_fan_blade_source",
+   "op": "extrude",
+   "label": "COUNTER_FAN_BLADE_SOURCE",
+   "part": "COUNTER_FAN_BLADE",
+   "material": "carbon_fibre",
+   "params": {
+    "height": 25,
+    "axis": "z",
+    "translate": [
+     395,
+     1180,
+     0
+    ],
+    "rotate": [
+     0,
+     0,
+     -12
+    ],
+    "points": [
+     [
+      -205,
+      -100
+     ],
+     [
+      205,
+      -100
+     ],
+     [
+      205,
+      100
+     ],
+     [
+      -205,
+      100
+     ]
+    ]
+   }
+  },
+  {
+   "id": "counter_fan_blade",
+   "op": "array",
+   "label": "COUNTER_FAN_BLADE",
+   "part": "COUNTER_FAN_BLADE",
+   "material": "carbon_fibre",
+   "params": {
+    "count": 18,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "counter_fan_blade_source"
+  },
+  {
+   "id": "hot_section_casing",
+   "op": "cylinder",
+   "label": "HOT_SECTION_CASING",
+   "part": "HOT_SECTION_CASING",
+   "material": "titanium",
+   "params": {
+    "height": 750,
+    "radius": 390,
+    "translate": [
+     0,
+     1625,
+     0
+    ]
+   }
+  },
+  {
+   "id": "exhaust_nozzle",
+   "op": "revolve",
+   "label": "EXHAUST_NOZZLE",
+   "part": "EXHAUST_NOZZLE",
+   "material": "brushed_steel",
+   "params": {
+    "translate": [
+     0,
+     2175,
+     0
+    ],
+    "points": [
+     [
+      350,
+      -125
+     ],
+     [
+      550,
+      -125
+     ],
+     [
+      360,
+      125
+     ],
+     [
+      350,
+      125
+     ],
+     [
+      350,
+      -125
+     ]
+    ]
+   }
+  },
+  {
+   "id": "exhaust_cone",
+   "op": "cylinder",
+   "label": "EXHAUST_CONE",
+   "part": "EXHAUST_CONE",
+   "material": "emissive_glow",
+   "params": {
+    "height": 350,
+    "radius": 300,
+    "radius_top": 50,
+    "translate": [
+     0,
+     2125,
+     0
+    ]
+   }
+  },
+  {
+   "id": "reverse_actuator_ring",
+   "op": "torus",
+   "label": "REVERSE_ACTUATOR_RING",
+   "part": "REVERSE_ACTUATOR_RING",
+   "material": "copper",
+   "params": {
+    "major_radius": 640,
+    "minor_radius": 35,
+    "translate": [
+     0,
+     1650,
+     0
+    ]
+   }
+  },
+  {
+   "id": "actuator_piston_source",
+   "op": "capsule",
+   "label": "ACTUATOR_PISTON_SOURCE",
+   "part": "ACTUATOR_PISTON",
+   "material": "copper",
+   "params": {
+    "height": 120,
+    "radius": 35,
+    "translate": [
+     625,
+     1650,
+     0
+    ],
+    "rotate": [
+     0,
+     0,
+     -90
+    ]
+   }
+  },
+  {
+   "id": "actuator_piston",
+   "op": "array",
+   "label": "ACTUATOR_PISTON",
+   "part": "ACTUATOR_PISTON",
+   "material": "copper",
+   "params": {
+    "count": 6,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "actuator_piston_source"
+  },
+  {
+   "id": "reverse_vane_source",
+   "op": "extrude",
+   "label": "REVERSE_VANE_SOURCE",
+   "part": "REVERSE_VANE",
+   "material": "dark_ceramic",
+   "params": {
+    "height": 18,
+    "axis": "z",
+    "translate": [
+     575,
+     1850,
+     0
+    ],
+    "rotate": [
+     0,
+     0,
+     35
+    ],
+    "points": [
+     [
+      -70,
+      -110
+     ],
+     [
+      70,
+      -110
+     ],
+     [
+      70,
+      110
+     ],
+     [
+      -70,
+      110
+     ]
+    ]
+   }
+  },
+  {
+   "id": "reverse_vane",
+   "op": "array",
+   "label": "REVERSE_VANE",
+   "part": "REVERSE_VANE",
+   "material": "dark_ceramic",
+   "params": {
+    "count": 12,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "reverse_vane_source"
+  }
+ ],
+ "blueprint": {
+  "title": "Vortex-Back Reverse-Thrust Engine",
+  "summary": "A non-conventional turbofan with exposed counter-rotating fans and a faceted rear reverse-thrust ring. Its reverse mode uses radial actuators and ceramic vanes to redirect bypass flow forward through an annular duct.",
+  "style": "non-conventional exposed-turbine brutalist",
+  "dimensions": [
+   1350,
+   2300,
+   1350
+  ],
+  "parts": [
+   {
+    "name": "INTAKE_LIP",
+    "role": "Defines the engine inlet and splits outer bypass flow from core flow.",
+    "shape": "Revolved 2D profile: annular lip with rounded outer edge and chamfered inner edge.",
+    "size": "OD 1350, ID 1150, axial depth 80",
+    "position": "center [0, 40, 0]",
+    "material": "painted (matte graphite)",
+    "count": 1
+   },
+   {
+    "name": "INLET_GUIDE_VANE",
+    "role": "Pre-swirls air entering the front fan and protects the intake face.",
+    "shape": "Extruded airfoil profile, thin flat plate with 8-degree pitch; radial array of 16 around Y.",
+    "size": "span 120, chord 160, thickness 12",
+    "position": "array center [0, 120, 0]; first vane at radius 530",
+    "material": "aluminium",
+    "count": 16
+   },
+   {
+    "name": "FAN_BLADE_FRONT",
+    "role": "Primary thrust-producing fan for forward flight.",
+    "shape": "Extruded twisted airfoil blade with rounded leading edge; radial array of 18 around Y, 12-degree forward pitch.",
+    "size": "root radius 190, tip radius 600, chord 200, thickness 25",
+    "position": "array center [0, 260, 0]; first blade root at [190, 260, 0]",
+    "material": "carbon fibre",
+    "count": 18
+   },
+   {
+    "name": "FAN_HUB",
+    "role": "Mounts front fan blades and closes the inlet core opening.",
+    "shape": "Lathe profile: tapered cone with cylindrical root flange and smoothed tip.",
+    "size": "base dia 420, tip dia 260, length 370",
+    "position": "center [0, 335, 0]",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "REAR_FAN_HUB",
+    "role": "Carries the counter-rotating fan and provides a forward-facing reverse cone.",
+    "shape": "Lathe profile: cylinder with rearward-facing conical nose and front flange.",
+    "size": "dia 380, length 260, nose depth 120",
+    "position": "center [0, 1180, 0]",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "COUNTER_FAN_BLADE",
+    "role": "Reclaims energy and increases thrust; rotates opposite the front fan.",
+    "shape": "Extruded twisted airfoil blade with mirrored pitch; radial array of 18 around Y.",
+    "size": "root radius 190, tip radius 600, chord 200, thickness 25",
+    "position": "array center [0, 1180, 0]; first blade root at [190, 1180, 0]",
+    "material": "carbon fibre",
+    "count": 18
+   },
+   {
+    "name": "CORE_CASING",
+    "role": "Contains compressor and turbine sections and carries the hot core.",
+    "shape": "Lathe profile: long cylinder tapering slightly rearward, with three shallow axial ribs.",
+    "size": "OD 820, length 1600, wall 22",
+    "position": "center [0, 1250, 0]",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "NACELLE_SHELL",
+    "role": "Outer bypass duct and visual housing for the fan section.",
+    "shape": "Revolved profile: faceted octagonal outer silhouette smoothed by hull, open annular bore.",
+    "size": "OD 1350, ID 1250, length 1600",
+    "position": "center [0, 1100, 0]",
+    "material": "painted (gunmetal)",
+    "count": 1
+   },
+   {
+    "name": "REVERSE_DUCT",
+    "role": "Channels bypass air to the reverse-thrust vanes.",
+    "shape": "Cylindrical annular tube with internal cooling ribs; boolean subtracted from core casing clearances.",
+    "size": "OD 1200, ID 1100, length 750",
+    "position": "center [0, 1775, 0]",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "REVERSE_COWL",
+    "role": "Outer sliding shroud that closes the rear bypass duct in forward thrust.",
+    "shape": "Cylindrical annular shell with rear chamfer and six axial locking slots.",
+    "size": "OD 1350, ID 1200, length 700",
+    "position": "center [0, 1900, 0]",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "REVERSE_VANE",
+    "role": "Deflects bypass flow forward when reverse thrust is selected.",
+    "shape": "Extruded trapezoidal plate with 35-degree deflection angle; radial array of 12 around Y.",
+    "size": "radial length 140, chord 220, thickness 18",
+    "position": "array center [0, 1850, 0]; first vane at radius 575",
+    "material": "dark ceramic",
+    "count": 12
+   },
+   {
+    "name": "REVERSE_ACTUATOR_RING",
+    "role": "Distributes actuation force to the reverse cowl and vanes.",
+    "shape": "Torus-like ring made from revolved rectangular profile with six radial bosses.",
+    "size": "OD 1280, ID 1200, radial section 70",
+    "position": "center [0, 1650, 0]",
+    "material": "copper",
+    "count": 1
+   },
+   {
+    "name": "ACTUATOR_PISTON",
+    "role": "Drives the reverse cowl outward and deploys the vanes.",
+    "shape": "Cylinder with spherical joint cap; radial array of 6 around Y, pointing outward from ring.",
+    "size": "length 120, dia 70, joint dia 90",
+    "position": "array center [0, 1650, 0]; first piston at radius 1250",
+    "material": "copper",
+    "count": 6
+   },
+   {
+    "name": "HOT_SECTION_CASING",
+    "role": "Houses turbine and exhaust gas path under high temperature.",
+    "shape": "Cylinder with external cooling fins and rear conical taper.",
+    "size": "OD 780, length 750, fin height 18",
+    "position": "center [0, 1625, 0]",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "EXHAUST_CONE",
+    "role": "Shapes core exhaust and provides a visible reverse-mode glow reference.",
+    "shape": "Cone with smoothed tip and three longitudinal cooling slots.",
+    "size": "base dia 600, tip dia 100, length 350",
+    "position": "center [0, 2125, 0]",
+    "material": "emissive glow (orange)",
+    "count": 1
+   },
+   {
+    "name": "EXHAUST_NOZZLE",
+    "role": "Final core nozzle and structural rear closure.",
+    "shape": "Annular cone with faceted external panels and internal flow liner.",
+    "size": "front OD 1100, rear OD 720, front ID 700, rear ID 520, length 250",
+    "position": "center [0, 2175, 0]",
+    "material": "brushed steel",
+    "count": 1
+   }
+  ],
+  "callouts": [
+   "Engine axis is +Y; intake face is y=0 and exhaust face is y=2300.",
+   "Front and rear fans are counter-rotating; rear fan pitch is mirrored relative to front fan.",
+   "Reverse thrust path: bypass duct -> reverse vanes -> forward-facing annular flow.",
+   "Actuator pistons engage the reverse cowl only in reverse mode; cowl seals in forward mode.",
+   "Hot section materials are limited to titanium and steel; ceramic vanes resist reverse-flow heating."
+  ]
+ }
+}

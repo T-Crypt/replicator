@@ -273,3 +273,14 @@ def test_export_glb_and_stl_and_empty_difference_eval_error(tmp_path):
     ])
     with pytest.raises(EvalError):
         ev.run(empty_diff_prog)
+
+def test_radial_array_accepts_axis_vectors():
+    from replicator.core.evaluate import Evaluator
+    base = {"id": "b", "op": "box", "params": {"size": [1, 1, 1], "translate": [0, 0, 4]}}
+    for axis in ("z", [0, 0, 1], "+Z", [0, 0, -2]):
+        prog = {"version": 1, "units": "mm", "materials": {}, "ops": [
+            base, {"id": "r", "op": "array", "input": "b", "params": {"mode": "radial", "count": 4, "axis": axis}}]}
+        assert Evaluator().run(prog)[0]["r"].volume() > 0
+    with pytest.raises(Exception):
+        Evaluator().run({"version": 1, "units": "mm", "materials": {}, "ops": [
+            base, {"id": "r", "op": "array", "input": "b", "params": {"mode": "radial", "count": 4, "axis": [1, 1, 0]}}]})
