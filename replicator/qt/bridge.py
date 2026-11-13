@@ -495,7 +495,7 @@ class Studio(QObject):
         if self._busy:
             self._say("busy: one job at a time (one GPU)")
             return
-        local = label.startswith(("Reverse", "Render"))
+        local = label.startswith(("Reverse", "Render", "Opening", "Pulling"))
         self._busy = label if local else f"{label} on {self._engine}"
         self.busyChanged.emit()
         self._mode_after = mode_after
@@ -515,6 +515,9 @@ class Studio(QObject):
         self.busyChanged.emit()
         if res is None:
             self._say(msg)
+            return
+        if "note" in res:
+            self._say(res["note"])
             return
         if "render" in res:
             self._render_path = res["render"]
@@ -589,6 +592,50 @@ class Studio(QObject):
                                       part_materials=part_mats)
             return {"render": str(png), "seconds": time.time() - t}
         self._run_job("Rendering (Cycles, CPU)", job)
+
+    @Slot()
+    def openInBlender(self):
+        """Hand the build to Blender (mcp-for-blender socket on localhost:9876) for agents or hand edits."""
+        if not self._program:
+            return
+        from ..core import blender_link
+        work = OUT / "blender"
+        work.mkdir(parents=True, exist_ok=True)
+        shapes = self._ev.step(self._program)
+        glb = exporter.export(shapes, self._program.get("materials", {}), work / time.strftime("%Y%m%d-%H%M%S.glb"))
+        mats = self._program.get("materials", {})
+        part_mats = {s.id: s.material for s in shapes if s.material}
+
+        def job(log):
+            if blender_link.is_up():
+                raise RuntimeError("a Blender with the MCP socket is already open (localhost:9876); close it first")
+            blender_link.open_in_blender(glb, mats, part_mats)
+            log("blender: starting (iGPU, CUDA hidden, update check off)")
+            if not blender_link.wait_up(60):
+                raise RuntimeError("Blender opened but the MCP socket did not come up on localhost:9876")
+            info = blender_link.send("get_scene_info")
+            log(f"blender: MCP socket up on localhost:9876 ({info.get('status')})")
+            return {"note": "Blender is live: agents can drive it through mcp-for-blender; Pull brings it back."}
+        self._run_job("Opening Blender", job)
+
+    @Slot()
+    def pullFromBlender(self):
+        """Bring the live Blender scene back as a reverse-engineered program (Dissect, Timeline, Showcase)."""
+        from ..core import blender_link
+        dest = OUT / "blender" / time.strftime("pulled-%Y%m%d-%H%M%S.glb")
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        proj = OUT / "reverse" / dest.stem
+
+        def job(log):
+            if not blender_link.is_up():
+                raise RuntimeError("no Blender MCP socket on localhost:9876 (use Open in Blender first)")
+            blender_link.pull_scene(dest)
+            log(f"blender: exported {dest.name}; reverse engineering it")
+            proj.mkdir(parents=True, exist_ok=True)
+            prog, rep = reverse.analyze_mesh(dest, proj)
+            prog["name"] = "Reverse: from Blender"
+            return {"program": prog, "project": str(proj)}
+        self._run_job("Pulling from Blender", job, mode_after="reverse")
 
     @Slot()
     def clearRender(self):

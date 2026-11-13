@@ -114,7 +114,9 @@ ApplicationWindow {
             HeaderMenu {
                 text: "Render"
                 items: [ ["Showcase  (4)", () => window.setMode("showcase")],
-                         ["Render still (Cycles, CPU)", () => studio.renderShowcase(viewport.cameraJson())] ]
+                         ["Render still (Cycles, CPU)", () => studio.renderShowcase(viewport.cameraJson())],
+                         ["Open in Blender (MCP socket)", () => studio.openInBlender()],
+                         ["Pull back from Blender", () => studio.pullFromBlender()] ]
             }
             Item { Layout.fillWidth: true }
             Row {   // mode tabs
