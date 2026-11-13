@@ -25,6 +25,10 @@ def main(argv=None) -> int:
     ap.add_argument("--shot")
     ap.add_argument("--step", type=int, default=-1)
     ap.add_argument("--blueprint", type=float, default=0.0)
+    ap.add_argument("--mode", default="", help="build | dissect | reverse | showcase (for --shot)")
+    ap.add_argument("--explode", type=float, default=-1.0)
+    ap.add_argument("--select", default="")
+    ap.add_argument("--size", default="", help="WxH window size for --shot")
     a = ap.parse_args(argv)
 
     gpu.apply(software=a.software)
@@ -43,6 +47,15 @@ def main(argv=None) -> int:
     from PySide6.QtGui import QSurfaceFormat
     QSurfaceFormat.setDefaultFormat(QQuick3D.idealSurfaceFormat(4))  # needs the app; before any window
     QQuickStyle.setStyle("Fusion")
+    from PySide6.QtGui import QColor, QPalette
+    pal = QPalette()
+    for role, c in ((QPalette.Window, "#26282c"), (QPalette.WindowText, "#d9dce1"), (QPalette.Base, "#1a1b1e"),
+                    (QPalette.AlternateBase, "#2d3035"), (QPalette.Text, "#d9dce1"), (QPalette.Button, "#2d3035"),
+                    (QPalette.ButtonText, "#d9dce1"), (QPalette.Highlight, "#3d8ee6"), (QPalette.HighlightedText, "#ffffff"),
+                    (QPalette.ToolTipBase, "#1a1b1e"), (QPalette.ToolTipText, "#d9dce1"), (QPalette.PlaceholderText, "#5c616a"),
+                    (QPalette.Mid, "#3a3d43"), (QPalette.Dark, "#1c1d20"), (QPalette.Light, "#3a3d43")):
+        pal.setColor(role, QColor(c))
+    app.setPalette(pal)
 
     studio = Studio()
     engine = QQmlApplicationEngine()
@@ -62,10 +75,19 @@ def main(argv=None) -> int:
             studio.setStep(a.step if a.step >= 0 else studio.stepCount - 1)
         elif not a.shot:
             win.setProperty("playing", True)
+    if a.size:
+        w, h = (int(x) for x in a.size.split("x"))
+        win.setProperty("width", w)
+        win.setProperty("height", h)
+    if a.mode:
+        from PySide6.QtCore import QMetaObject, Q_ARG
+        QMetaObject.invokeMethod(win, "setMode", Q_ARG("QVariant", a.mode))
+    if a.select:
+        studio.select(a.select)
     if a.blueprint:
-        bp = win.findChild(object, "bpSlider")
-        if bp is not None:
-            bp.setProperty("value", a.blueprint)
+        win.setProperty("blueprint", a.blueprint)
+    if a.explode >= 0:
+        win.setProperty("explodeTarget", a.explode)
 
     def self_check():
         if gpu.on_nvidia():

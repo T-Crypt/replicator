@@ -88,8 +88,12 @@ class Studio(QObject):
 
     @Property("QVariantList", notify=shapesChanged)
     def components(self):
+        g = self._ground
         return [{"id": c.id, "label": c.label, "role": c.role, "color": c.color, "count": len(c.shapes),
-                 "order": c.order, "shapes": c.shapes} for c in self._comps]
+                 "order": c.order, "shapes": c.shapes,
+                 "center": [float(c.center[0]), float(c.center[1]) + g, float(c.center[2])],
+                 "offset": [float(x) for x in (c.offset if c.offset is not None else [0, 0, 0])],
+                 "size": [float(x) for x in (c.hi - c.lo)]} for c in self._comps]
 
     @Property(str, notify=programChanged)
     def title(self):
@@ -413,6 +417,34 @@ class Studio(QObject):
             return False
         return self._commit_op(self._selected, lambda op: (op.clear(), op.update(new_op)),
                                f"edited {new_op.get('id')}")
+
+    @Slot(str)
+    def addPrimitive(self, kind: str):
+        """Tool palette: append a primitive at the origin (or start a new program with it)."""
+        defaults = {"box": {"size": [100, 100, 100]}, "cylinder": {"height": 120, "radius": 40},
+                    "sphere": {"radius": 60}, "torus": {"major_radius": 60, "minor_radius": 15},
+                    "capsule": {"height": 100, "radius": 30}, "gear": {"teeth": 24, "module": 4, "thickness": 20,
+                                                                        "bore": 12},
+                    "helix": {"radius": 30, "pitch": 12, "turns": 6, "wire_radius": 3},
+                    "loft": {"sections": [{"y": 0, "rx": 60, "rz": 35}, {"y": 80, "radius": 40},
+                                          {"y": 160, "rx": 20, "rz": 45}]},
+                    "pipe": {"path": [[-80, 20, 0], [0, 120, 0], [80, 20, 0]], "radius": 10, "smooth": 8}}
+        if kind not in defaults:
+            return
+        prog = copy.deepcopy(self._program) if self._program else {
+            "version": 1, "name": "Untitled build", "units": "mm", "materials": {
+                "steel": {"base_color": [0.62, 0.64, 0.68], "metalness": 1.0, "roughness": 0.3}}, "ops": []}
+        prog.setdefault("materials", {}).setdefault(
+            "steel", {"base_color": [0.62, 0.64, 0.68], "metalness": 1.0, "roughness": 0.3})
+        ids = {o["id"] for o in prog["ops"]}
+        n = 1
+        while f"{kind}_{n}" in ids:
+            n += 1
+        oid = f"{kind}_{n}"
+        prog["ops"].append({"id": oid, "op": kind, "label": f"{kind.title()} {n}", "component": oid,
+                            "material": "steel", "params": defaults[kind]})
+        self._set_program(prog, f"added {oid}", keep_step=True)
+        self.select(oid)
 
     @Slot()
     def undo(self):

@@ -26,7 +26,8 @@ void MAIN()
     float contour = 1.0 - smoothstep(0.0, 0.06, cy);
 
     vec3 navy = vec3(0.03, 0.10, 0.22);
-    vec3 albedo = mix(baseColor.rgb, navy, blueprint);
+    vec3 albedo = mix(baseColor.rgb, tint.rgb * 0.85, tintAmount);   // colour by component (Dissect)
+    albedo = mix(albedo, navy, blueprint);
     albedo = mix(albedo, albedo * 0.25, band);                           // fresh zone is darker under the glow
     BASE_COLOR = vec4(albedo, 1.0);
     METALNESS = mix(metal, 0.0, blueprint);
@@ -35,5 +36,6 @@ void MAIN()
     em += cyan * (edge * 3.0 + band * lattice * 1.6 + band * 0.15);
     em += cyan * blueprint * (rim * 1.4 + contour * 0.35);
     em += vec3(1.0, 0.62, 0.15) * selected * (0.25 + rim * 1.2);         // amber when selected
+    em += tint.rgb * xray * (0.15 + rim * 1.5);                         // x-ray ghost for isolated views
     EMISSIVE_COLOR = em;
 }
