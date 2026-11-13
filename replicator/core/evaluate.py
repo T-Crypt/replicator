@@ -9,7 +9,9 @@ import math
 from dataclasses import dataclass
 
 import numpy as np
-from manifold3d import CrossSection, Manifold, OpType
+from pathlib import Path
+
+from manifold3d import CrossSection, Manifold, Mesh, OpType
 
 from .program import COMBINERS, check, op_hash, op_inputs
 
@@ -19,6 +21,101 @@ AXIS_ROT = {"y": Z_TO_Y, "z": (0.0, 0.0, 0.0), "x": (0.0, 90.0, 0.0)}
 
 class EvalError(ValueError):
     pass
+
+
+class _Status:
+    name = "NotManifold"
+
+
+class _RawMeshData:
+    def __init__(self, vp, tri):
+        self.vert_properties = vp
+        self.tri_verts = tri
+
+
+class RawMesh:
+    """Imported geometry that is not a closed manifold (most downloaded GLBs). It can be shown, moved, exploded and
+    exported to GLB, but not used in booleans, hulls or STL. Implements the subset of Manifold the app uses."""
+
+    def __init__(self, V: np.ndarray, F: np.ndarray, N: np.ndarray | None = None):
+        self.V = np.asarray(V, np.float64)
+        self.F = np.asarray(F, np.uint32)
+        self.N = N
+
+    def _new(self, V):
+        return RawMesh(V, self.F)
+
+    def is_empty(self):
+        return len(self.F) == 0
+
+    def bounding_box(self):
+        lo, hi = self.V.min(0), self.V.max(0)
+        return (*lo.tolist(), *hi.tolist())
+
+    def volume(self):
+        a, b, c = (self.V[self.F[:, i]] for i in range(3))
+        return float(abs(np.einsum("ij,ij->i", a, np.cross(b, c)).sum()) / 6.0)
+
+    def status(self):
+        return _Status()
+
+    def genus(self):
+        return -1
+
+    def num_tri(self):
+        return len(self.F)
+
+    def translate(self, t):
+        return self._new(self.V + np.asarray(t, np.float64))
+
+    def scale(self, s):
+        return self._new(self.V * np.asarray(s, np.float64))
+
+    def mirror(self, n):
+        n = np.asarray(n, np.float64)
+        n = n / (np.linalg.norm(n) or 1)
+        V = self.V - 2 * np.outer(self.V @ n, n)
+        return RawMesh(V, self.F[:, ::-1].copy())
+
+    def rotate(self, r):
+        rx, ry, rz = np.radians(np.asarray(r, np.float64))
+        cx, sx, cy, sy, cz, sz = np.cos(rx), np.sin(rx), np.cos(ry), np.sin(ry), np.cos(rz), np.sin(rz)
+        Rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
+        Ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
+        Rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
+        return self._new(self.V @ (Rz @ Ry @ Rx).T)  # X, then Y, then Z (manifold's order)
+
+    def calculate_normals(self, _idx=0, _angle=0.0):
+        a, b, c = (self.V[self.F[:, i]] for i in range(3))
+        fn = np.cross(b - a, c - a)
+        vn = np.zeros_like(self.V)
+        for i in range(3):
+            np.add.at(vn, self.F[:, i], fn)
+        vn /= np.linalg.norm(vn, axis=1, keepdims=True) + 1e-12
+        return RawMesh(self.V, self.F, vn)
+
+    def to_mesh(self):
+        vp = self.V if self.N is None else np.hstack([self.V, self.N])
+        return _RawMeshData(vp.astype(np.float32), self.F)
+
+
+def load_asset(base: Path | None, rel: str):
+    if base is None:
+        raise EvalError("mesh assets need a project folder (open the program from disk)")
+    path = (base / rel).resolve()
+    if base.resolve() not in path.parents:
+        raise EvalError("mesh asset must live inside the project folder")
+    if not path.exists():
+        raise EvalError(f"mesh asset {rel} not found")
+    d = np.load(path)
+    V, F = np.asarray(d["V"], np.float32), np.asarray(d["F"], np.uint32)
+    try:
+        m = Manifold(Mesh(vert_properties=np.ascontiguousarray(V), tri_verts=np.ascontiguousarray(F)))
+        if not m.is_empty() and m.status().name == "NoError":
+            return m
+    except Exception:  # noqa: BLE001 - any failure means "not a manifold": fall back to the raw mesh
+        pass
+    return RawMesh(V, F)
 
 
 def _segs(p: dict, default: int = 64) -> int:
@@ -65,7 +162,15 @@ def _place(m: Manifold, p: dict) -> Manifold:
     return m
 
 
-def build_primitive(kind: str, p: dict) -> Manifold:
+EXT_PRIMITIVES: dict = {}
+EXT_MODIFIERS: dict = {}
+
+
+def build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
+    if kind in EXT_PRIMITIVES:
+        return EXT_PRIMITIVES[kind][2](p)
+    if kind == "mesh":
+        return load_asset(base, str(p["asset"]))
     if kind == "box":
         return Manifold.cube(_vec3(p["size"], "size"), center=bool(p.get("center", True)))
     if kind == "cylinder":
@@ -108,8 +213,15 @@ def build_primitive(kind: str, p: dict) -> Manifold:
 
 
 def build_modifier(kind: str, p: dict, m: Manifold) -> Manifold:
+    if kind in EXT_MODIFIERS:
+        _need_manifold(m, kind)
+        return EXT_MODIFIERS[kind][2](p, m)
     if kind == "transform":
         return m
+    if kind != "array":
+        _need_manifold(m, kind)
+    elif isinstance(m, RawMesh):
+        raise EvalError("array needs a closed solid; this imported mesh is not watertight")
     if kind == "array":
         mode, n = p["mode"], int(p["count"])
         if n < 1 or n > 256:
@@ -155,7 +267,15 @@ def build_modifier(kind: str, p: dict, m: Manifold) -> Manifold:
     raise EvalError(f"unknown modifier {kind}")
 
 
+def _need_manifold(m, what: str):
+    if isinstance(m, RawMesh):
+        raise EvalError(f"{what} needs a closed solid; this imported mesh is not watertight (show, move and explode "
+                        "work, CSG does not)")
+
+
 def build_combiner(kind: str, p: dict, ms: list[Manifold]) -> Manifold:
+    for m in ms:
+        _need_manifold(m, kind)
     if kind == "boolean":
         op = {"union": OpType.Add, "difference": OpType.Subtract, "intersection": OpType.Intersect}[p["mode"]]
         return Manifold.batch_boolean(ms, op)
@@ -174,6 +294,7 @@ class Shape:
     material: str | None
     manifold: Manifold
     hash: str = ""
+    component: str = ""
 
     def arrays(self) -> tuple[np.ndarray, np.ndarray]:
         """(positions float32 [n,3], indices uint32 [m,3]) for the viewport and exporters."""
@@ -182,7 +303,8 @@ class Shape:
 
 
 class Evaluator:
-    def __init__(self):
+    def __init__(self, base: Path | None = None):
+        self.base = base
         self._cache: dict[str, Manifold] = {}
         self.last_hits = 0
         self.last_misses = 0
@@ -204,7 +326,7 @@ class Evaluator:
             kind, p = op["op"], op.get("params", {})
             try:
                 if not ins:
-                    m = build_primitive(kind, p)
+                    m = build_primitive(kind, p, self.base)
                 elif kind in COMBINERS:
                     m = build_combiner(kind, p, [out[i] for i in ins])
                 else:
@@ -230,11 +352,22 @@ class Evaluator:
         consumed = {i for op in sub["ops"] for i in op_inputs(op)}
         # a leaf inherits material from its first input chain when it has none of its own
         mat_of: dict[str, str | None] = {}
+        comp = component_map(sub)
         for op in sub["ops"]:
             ins = op_inputs(op)
             mat_of[op["id"]] = op.get("material") or (mat_of.get(ins[0]) if ins else None)
         return [Shape(op["id"], op.get("label", op["id"]), op.get("part", op["id"]), mat_of[op["id"]],
-                      built[op["id"]], hashes[op["id"]]) for op in sub["ops"] if op["id"] not in consumed]
+                      built[op["id"]], hashes[op["id"]], comp[op["id"]])
+                for op in sub["ops"] if op["id"] not in consumed]
+
+
+def component_map(program: dict) -> dict[str, str]:
+    """op id -> component id: its own `component`, else its first input's, else its `part`, else its id."""
+    out: dict[str, str] = {}
+    for op in program["ops"]:
+        ins = op_inputs(op)
+        out[op["id"]] = op.get("component") or (out.get(ins[0]) if ins else None) or op.get("part") or op["id"]
+    return out
 
 
 def bounds(shapes: list[Shape]) -> tuple[list[float], list[float]]:
@@ -245,3 +378,14 @@ def bounds(shapes: list[Shape]) -> tuple[list[float], list[float]]:
         lo = [min(lo[i], b[i]) for i in range(3)]
         hi = [max(hi[i], b[i + 3]) for i in range(3)]
     return lo, hi
+
+
+def _register_extensions() -> None:
+    from . import ops_advanced
+    from .program import register
+    register(ops_advanced.PRIMITIVES, ops_advanced.MODIFIERS)
+    EXT_PRIMITIVES.update(ops_advanced.PRIMITIVES)
+    EXT_MODIFIERS.update(ops_advanced.MODIFIERS)
+
+
+_register_extensions()

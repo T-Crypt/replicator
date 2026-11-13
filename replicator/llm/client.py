@@ -179,3 +179,22 @@ def edit(program: dict, instruction: str, engine: str = "dirk", log=print) -> li
                  {"role": "user", "content": "That patch fails: " + "; ".join(errs[:10]) +
                   ". Reply with a corrected JSON Patch array in one ```json block."}]
     raise ValueError(f"no valid edit: {errs[:5]}")
+
+
+def name_components(facts: list[dict], context: str, engine: str = "dirk", log=print) -> dict:
+    """Inferred names and roles for components from observed measurements only. Returns {id: {label, role,
+    confidence}}. The caller tags every result `inferred`; the model never sees or claims anything else."""
+    prompt = _prompt("name_parts", CONTEXT=context, FACTS=json.dumps(facts, indent=1))
+    for rnd in range(REPAIR_ROUNDS + 1):
+        log(f"naming: round {rnd + 1}")
+        try:
+            out = extract_json(chat([{"role": "user", "content": prompt}], engine, max_tokens=8000))
+            if isinstance(out, list):
+                out = {d["id"]: d for d in out if isinstance(d, dict) and "id" in d}
+            if isinstance(out, dict) and out:
+                return {k: {"label": str(v.get("label", k))[:60], "role": str(v.get("role", ""))[:160],
+                            "confidence": float(v.get("confidence", 0.5))} for k, v in out.items()
+                        if isinstance(v, dict)}
+        except (ValueError, TypeError) as e:
+            log(f"naming: unusable reply ({e})")
+    raise ValueError("no usable names from the model")

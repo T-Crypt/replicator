@@ -1,0 +1,109 @@
+{
+ "version": 1,
+ "units": "mm",
+ "materials": {},
+ "ops": [
+  {
+   "id": "g",
+   "op": "gear",
+   "params": {
+    "teeth": 24,
+    "module": 3,
+    "thickness": 10,
+    "bore": 8
+   }
+  },
+  {
+   "id": "s",
+   "op": "helix",
+   "params": {
+    "radius": 20,
+    "pitch": 8,
+    "turns": 6,
+    "wire_radius": 2,
+    "translate": [
+     90,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "b",
+   "op": "loft",
+   "params": {
+    "sections": [
+     {
+      "y": 0,
+      "rx": 40,
+      "rz": 20
+     },
+     {
+      "y": 60,
+      "radius": 25
+     },
+     {
+      "y": 120,
+      "rx": 10,
+      "rz": 30
+     }
+    ],
+    "translate": [
+     -120,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "h",
+   "op": "pipe",
+   "params": {
+    "path": [
+     [
+      0,
+      0,
+      80
+     ],
+     [
+      40,
+      60,
+      80
+     ],
+     [
+      80,
+      0,
+      80
+     ]
+    ],
+    "radius": 6,
+    "smooth": 8
+   }
+  },
+  {
+   "id": "t",
+   "op": "box",
+   "params": {
+    "size": [
+     20,
+     120,
+     20
+    ],
+    "translate": [
+     0,
+     60,
+     -80
+    ]
+   }
+  },
+  {
+   "id": "tw",
+   "op": "deform",
+   "input": "t",
+   "params": {
+    "mode": "twist",
+    "amount": 180
+   }
+  }
+ ]
+}

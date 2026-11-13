@@ -1,48 +1,96 @@
-"""A QQuick3DGeometry filled from a manifold: positions + normals (split at sharp edges), Y-up, ready for a Model."""
+"""Viewport geometry: a solid (positions + normals split at sharp edges) and its feature lines (C4D 'lines' look)."""
 from __future__ import annotations
 
 import numpy as np
-from manifold3d import Manifold
-from PySide6.QtCore import Property, QByteArray, Signal
+from PySide6.QtCore import Property, QByteArray, QObject, Signal
 from PySide6.QtGui import QColor, QVector3D
 from PySide6.QtQuick3D import QQuick3DGeometry
 
 A = QQuick3DGeometry.Attribute
 SHARP_DEG = 35.0
+EDGE_DEG = 28.0
+MAX_EDGE_TRIS = 250_000
 
 
-def mesh_arrays(m: Manifold) -> tuple[np.ndarray, np.ndarray]:
-    """Interleaved [x y z nx ny nz] float32 and uint32 indices. Normals are smooth across faces that meet at under
-    SHARP_DEG and split across sharper edges, so a revolved nozzle reads round and a box reads crisp."""
+def mesh_arrays(m) -> tuple[np.ndarray, np.ndarray]:
+    """Interleaved [x y z nx ny nz] float32 and uint32 indices."""
     mn = m.calculate_normals(0, SHARP_DEG).to_mesh()
     vp = np.asarray(mn.vert_properties, np.float32)
     tri = np.asarray(mn.tri_verts, np.uint32)
     if vp.shape[1] >= 6:
-        verts = np.ascontiguousarray(vp[:, :6])
-    else:  # flat fallback
-        p = vp[:, :3][tri.reshape(-1)]
-        a, b, c = p[0::3], p[1::3], p[2::3]
-        n = np.cross(b - a, c - a)
-        n /= np.linalg.norm(n, axis=1, keepdims=True) + 1e-12
-        verts = np.hstack([p, np.repeat(n, 3, axis=0)]).astype(np.float32)
-        tri = np.arange(len(p), dtype=np.uint32).reshape(-1, 3)
-    return verts, tri
+        return np.ascontiguousarray(vp[:, :6]), tri
+    p = vp[:, :3][tri.reshape(-1)]
+    a, b, c = p[0::3], p[1::3], p[2::3]
+    n = np.cross(b - a, c - a)
+    n /= np.linalg.norm(n, axis=1, keepdims=True) + 1e-12
+    verts = np.hstack([p, np.repeat(n, 3, axis=0)]).astype(np.float32)
+    return verts, np.arange(len(p), dtype=np.uint32).reshape(-1, 3)
+
+
+def feature_edges(V: np.ndarray, F: np.ndarray) -> np.ndarray:
+    """Line segments [k, 2, 3] along creases sharper than EDGE_DEG and open boundaries (welded by position)."""
+    if len(F) == 0 or len(F) > MAX_EDGE_TRIS:
+        return np.zeros((0, 2, 3), np.float32)
+    P = V[:, :3]
+    key = np.round(P / (np.ptp(P, axis=0).max() * 1e-6 + 1e-12)).astype(np.int64)
+    _, weld = np.unique(key, axis=0, return_inverse=True)
+    Fw = weld.reshape(-1)[F]
+    a, b, c = (P[F[:, i]] for i in range(3))
+    fn = np.cross(b - a, c - a)
+    fn /= np.linalg.norm(fn, axis=1, keepdims=True) + 1e-12
+    e = np.concatenate([Fw[:, [0, 1]], Fw[:, [1, 2]], Fw[:, [2, 0]]])
+    eraw = np.concatenate([F[:, [0, 1]], F[:, [1, 2]], F[:, [2, 0]]])
+    face = np.tile(np.arange(len(F)), 3)
+    es = np.sort(e, axis=1)
+    order = np.lexsort((es[:, 1], es[:, 0]))
+    es, face, eraw = es[order], face[order], eraw[order]
+    same = np.all(es[1:] == es[:-1], axis=1)
+    keep = []
+    i, n = 0, len(es)
+    cos_t = np.cos(np.radians(EDGE_DEG))
+    idx = np.nonzero(same)[0]
+    paired = np.zeros(n, bool)
+    paired[idx] = True
+    paired[idx + 1] = True
+    # boundaries: edges with no partner
+    keep.append(eraw[~paired])
+    # creases: partner faces whose normals differ by more than EDGE_DEG
+    sharp = idx[np.einsum("ij,ij->i", fn[face[idx]], fn[face[idx + 1]]) < cos_t]
+    keep.append(eraw[sharp])
+    E = np.concatenate(keep) if keep else np.zeros((0, 2), np.uint32)
+    return np.ascontiguousarray(P[E].astype(np.float32))
+
+
+class EdgeGeometry(QQuick3DGeometry):
+    def __init__(self, segs: np.ndarray, lo, hi):
+        super().__init__()
+        self.setVertexData(QByteArray(np.ascontiguousarray(segs.reshape(-1, 3)).tobytes()))
+        self.setStride(12)
+        self.setPrimitiveType(QQuick3DGeometry.PrimitiveType.Lines)
+        self.addAttribute(A.Semantic.PositionSemantic, 0, A.ComponentType.F32Type)
+        self.setBounds(QVector3D(*lo), QVector3D(*hi))
+        self.update()
 
 
 class MeshGeometry(QQuick3DGeometry):
+    """One leaf shape. phase: 0 static, 1 arriving (materialize), 2 leaving (dematerialize, reverse playback)."""
     changed = Signal()
 
-    def __init__(self, shape_id: str, label: str, part: str, material: dict | None, m: Manifold, fresh: bool):
+    def __init__(self, shape, material: dict | None, phase: int, comp_color: str, comp_label: str):
         super().__init__()
-        self._id, self._label, self._part, self._fresh = shape_id, label, part, fresh
+        self._id, self._label, self._part, self._comp = shape.id, shape.label, shape.part, shape.component
+        self._phase = phase
+        self._comp_color = QColor(comp_color)
+        self._comp_label = comp_label
+        self._offset = QVector3D(0, 0, 0)
         mat = material or {}
         c = mat.get("base_color", [0.72, 0.73, 0.76])
         e = mat.get("emissive", [0, 0, 0])
-        self._color = QColor.fromRgbF(*[float(x) for x in c[:3]])
-        self._emissive = QColor.fromRgbF(*[float(x) for x in e[:3]])
+        self._color = QColor.fromRgbF(*[min(max(float(x), 0.0), 1.0) for x in c[:3]])
+        self._emissive = QColor.fromRgbF(*[min(max(float(x), 0.0), 1.0) for x in e[:3]])
         self._metal = float(mat.get("metalness", 0.0))
         self._rough = float(mat.get("roughness", 0.5))
-        verts, tri = mesh_arrays(m)
+        verts, tri = mesh_arrays(shape.manifold)
         self._tris = len(tri)
         lo, hi = verts[:, :3].min(0), verts[:, :3].max(0)
         self._lo, self._hi = lo, hi
@@ -55,8 +103,16 @@ class MeshGeometry(QQuick3DGeometry):
         self.addAttribute(A.Semantic.IndexSemantic, 0, A.ComponentType.U32Type)
         self.setBounds(QVector3D(*lo.tolist()), QVector3D(*hi.tolist()))
         self.update()
+        self._edges = EdgeGeometry(feature_edges(verts, tri), lo.tolist(), hi.tolist())
 
-    def _ro(t):  # noqa: N805 - small helper for read-only Qt properties
+    def with_phase(self, phase: int) -> "MeshGeometry":
+        self._phase = phase
+        return self
+
+    def set_offset(self, v) -> None:
+        self._offset = QVector3D(*v)
+
+    def _ro(t):  # noqa: N805
         return lambda f: Property(t, f, constant=True)
 
     @_ro(str)
@@ -65,8 +121,16 @@ class MeshGeometry(QQuick3DGeometry):
     def label(self): return self._label
     @_ro(str)
     def part(self): return self._part
+    @_ro(str)
+    def component(self): return self._comp
+    @_ro(str)
+    def componentLabel(self): return self._comp_label
+    @_ro(QColor)
+    def componentColor(self): return self._comp_color
+    @_ro(int)
+    def phase(self): return self._phase
     @_ro(bool)
-    def fresh(self): return self._fresh
+    def fresh(self): return self._phase == 1
     @_ro(QColor)
     def baseColor(self): return self._color
     @_ro(QColor)
@@ -79,5 +143,11 @@ class MeshGeometry(QQuick3DGeometry):
     def minY(self): return float(self._lo[1])
     @_ro(float)
     def maxY(self): return float(self._hi[1])
+    @_ro(QVector3D)
+    def center(self): return QVector3D(*((self._lo + self._hi) / 2).tolist())
+    @_ro(QVector3D)
+    def explodeOffset(self): return self._offset
     @_ro(int)
     def triangles(self): return self._tris
+    @_ro(QObject)
+    def edges(self): return self._edges

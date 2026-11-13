@@ -34,6 +34,7 @@ PRIMITIVES = {
     "capsule": ({"height", "radius"}, {"segments"}),
     "extrude": ({"points", "height"}, {"axis", "twist", "scale_top", "holes"}),
     "revolve": ({"points"}, {"degrees", "segments"}),
+    "mesh": ({"asset"}, set()),  # imported geometry (reverse engineering): an .npz with V, F beside program.json
 }
 MODIFIERS = {  # take one input
     "transform": (set(), set()),
@@ -49,7 +50,7 @@ COMBINERS = {  # take two or more inputs
 }
 PLACEMENT = {"translate", "rotate", "scale"}  # allowed on every op, applied last
 OPS = {**PRIMITIVES, **MODIFIERS, **COMBINERS}
-OP_KEYS = {"id", "op", "label", "part", "params", "material", "input", "inputs"} | PLACEMENT
+OP_KEYS = {"id", "op", "label", "part", "component", "params", "material", "input", "inputs"} | PLACEMENT
 BOOLEAN_MODES = ("union", "difference", "intersection")
 ARRAY_MODES = ("linear", "radial", "mirror")
 
@@ -92,6 +93,13 @@ def validate(program: dict) -> list[str]:
     if not isinstance(mats, dict):
         errs.append("materials must be an object")
         mats = {}
+    comps = program.get("components")
+    comp_ids: set[str] | None = None
+    if comps is not None:
+        if not isinstance(comps, list) or not all(isinstance(c, dict) and c.get("id") for c in comps):
+            errs.append("components must be a list of objects with an id")
+        else:
+            comp_ids = {c["id"] for c in comps}
     ops = program.get("ops")
     if not isinstance(ops, list) or not ops:
         return errs + ["ops must be a non-empty list"]
@@ -139,6 +147,9 @@ def validate(program: dict) -> list[str]:
             errs.append(f"{where}: boolean mode must be one of {BOOLEAN_MODES}")
         if kind == "array" and params.get("mode") not in ARRAY_MODES:
             errs.append(f"{where}: array mode must be one of {ARRAY_MODES}")
+        comp = op.get("component")
+        if comp is not None and comp_ids is not None and comp not in comp_ids:
+            errs.append(f"{where}: component {comp!r} is not in components")
         mat = op.get("material")
         if mat is not None and mat not in mats:
             errs.append(f"{where}: material {mat!r} is not defined in materials")
@@ -151,6 +162,15 @@ def check(program: dict) -> dict:
     if errs:
         raise ProgramError(errs)
     return program
+
+
+def register(primitives: dict, modifiers: dict) -> None:
+    """Add op families from an extension module (name -> (required, optional, builder)) to the schema."""
+    for table, ext in ((PRIMITIVES, primitives), (MODIFIERS, modifiers)):
+        for name, (req, opt, _fn) in ext.items():
+            table[name] = (set(req), set(opt))
+    OPS.clear()
+    OPS.update({**PRIMITIVES, **MODIFIERS, **COMBINERS})
 
 
 def op_hash(op: dict, input_hashes: list[str]) -> str:
