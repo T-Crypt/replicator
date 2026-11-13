@@ -1,0 +1,917 @@
+{
+ "version": 1,
+ "name": "Vortex-Reverse Turbofan Engine",
+ "units": "mm",
+ "materials": {
+  "gunmetal": {
+   "base_color": [
+    0.16,
+    0.18,
+    0.2
+   ],
+   "metalness": 0.55,
+   "roughness": 0.48,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "titanium": {
+   "base_color": [
+    0.62,
+    0.64,
+    0.68
+   ],
+   "metalness": 0.88,
+   "roughness": 0.32,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "carbon_fibre": {
+   "base_color": [
+    0.08,
+    0.08,
+    0.09
+   ],
+   "metalness": 0.18,
+   "roughness": 0.62,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "aluminium": {
+   "base_color": [
+    0.78,
+    0.8,
+    0.82
+   ],
+   "metalness": 0.92,
+   "roughness": 0.28,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "brushed_steel": {
+   "base_color": [
+    0.55,
+    0.57,
+    0.6
+   ],
+   "metalness": 0.85,
+   "roughness": 0.42,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "matte_polymer": {
+   "base_color": [
+    0.22,
+    0.24,
+    0.27
+   ],
+   "metalness": 0.05,
+   "roughness": 0.82,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "copper": {
+   "base_color": [
+    0.76,
+    0.42,
+    0.22
+   ],
+   "metalness": 0.95,
+   "roughness": 0.34,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "dark_ceramic": {
+   "base_color": [
+    0.1,
+    0.11,
+    0.12
+   ],
+   "metalness": 0.25,
+   "roughness": 0.58,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "cyan_glow": {
+   "base_color": [
+    0.02,
+    0.18,
+    0.22
+   ],
+   "metalness": 0.0,
+   "roughness": 0.35,
+   "emissive": [
+    0.05,
+    0.9,
+    0.95
+   ]
+  }
+ },
+ "ops": [
+  {
+   "id": "intake_cowl",
+   "op": "revolve",
+   "label": "Intake Cowl",
+   "part": "Intake cowl",
+   "material": "gunmetal",
+   "params": {
+    "points": [
+     [
+      500,
+      0
+     ],
+     [
+      500,
+      560
+     ],
+     [
+      470,
+      600
+     ],
+     [
+      360,
+      600
+     ],
+     [
+      360,
+      40
+     ],
+     [
+      500,
+      40
+     ]
+    ],
+    "degrees": 360,
+    "segments": 96,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     300
+    ]
+   }
+  },
+  {
+   "id": "fan_hub",
+   "op": "revolve",
+   "label": "Fan Hub",
+   "part": "Fan hub",
+   "material": "titanium",
+   "params": {
+    "points": [
+     [
+      150,
+      0
+     ],
+     [
+      120,
+      100
+     ],
+     [
+      120,
+      230
+     ],
+     [
+      0,
+      230
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 64,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     550
+    ]
+   }
+  },
+  {
+   "id": "fan_blade_source",
+   "op": "extrude",
+   "label": "Fan Blade Source",
+   "part": "Fan blade set",
+   "material": "carbon_fibre",
+   "params": {
+    "height": 8,
+    "axis": "z",
+    "points": [
+     [
+      130,
+      -90
+     ],
+     [
+      330,
+      -60
+     ],
+     [
+      330,
+      60
+     ],
+     [
+      130,
+      90
+     ]
+    ],
+    "rotate": [
+     0,
+     0,
+     15
+    ],
+    "translate": [
+     0,
+     500,
+     690
+    ]
+   }
+  },
+  {
+   "id": "fan_blade_set",
+   "op": "array",
+   "label": "Fan Blade Set",
+   "part": "Fan blade set",
+   "material": "carbon_fibre",
+   "input": "fan_blade_source",
+   "params": {
+    "count": 22,
+    "mode": "radial",
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "angle": 360
+   }
+  },
+  {
+   "id": "bypass_duct_liner",
+   "op": "revolve",
+   "label": "Bypass Duct Liner",
+   "part": "Bypass duct liner",
+   "material": "aluminium",
+   "params": {
+    "points": [
+     [
+      360,
+      0
+     ],
+     [
+      360,
+      550
+     ],
+     [
+      340,
+      550
+     ],
+     [
+      340,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 96,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     -250
+    ]
+   }
+  },
+  {
+   "id": "reverse_vane_source",
+   "op": "box",
+   "label": "Reverse Vane Source",
+   "part": "Reverse vane ring",
+   "material": "brushed_steel",
+   "params": {
+    "size": [
+     20,
+     140,
+     180
+    ],
+    "rotate": [
+     35,
+     0,
+     0
+    ],
+    "translate": [
+     350,
+     500,
+     180
+    ]
+   }
+  },
+  {
+   "id": "reverse_vane_ring",
+   "op": "array",
+   "label": "Reverse Vane Ring",
+   "part": "Reverse vane ring",
+   "material": "brushed_steel",
+   "input": "reverse_vane_source",
+   "params": {
+    "count": 16,
+    "mode": "radial",
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "angle": 360
+   }
+  },
+  {
+   "id": "reverse_duct_door_source",
+   "op": "extrude",
+   "label": "Reverse Duct Door Source",
+   "part": "Reverse duct doors",
+   "material": "matte_polymer",
+   "params": {
+    "height": 18,
+    "axis": "x",
+    "points": [
+     [
+      -170,
+      -150
+     ],
+     [
+      170,
+      -150
+     ],
+     [
+      170,
+      150
+     ],
+     [
+      -170,
+      150
+     ]
+    ],
+    "rotate": [
+     0,
+     40,
+     0
+    ],
+    "translate": [
+     380,
+     500,
+     90
+    ]
+   }
+  },
+  {
+   "id": "reverse_duct_doors",
+   "op": "array",
+   "label": "Reverse Duct Doors",
+   "part": "Reverse duct doors",
+   "material": "matte_polymer",
+   "input": "reverse_duct_door_source",
+   "params": {
+    "count": 2,
+    "mode": "mirror",
+    "plane": [
+     1,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "core_compressor",
+   "op": "revolve",
+   "label": "Core Compressor",
+   "part": "Core compressor",
+   "material": "titanium",
+   "params": {
+    "points": [
+     [
+      180,
+      0
+     ],
+     [
+      220,
+      50
+     ],
+     [
+      220,
+      450
+     ],
+     [
+      180,
+      500
+     ],
+     [
+      0,
+      500
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 64,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     -50
+    ]
+   }
+  },
+  {
+   "id": "combustor_annulus",
+   "op": "torus",
+   "label": "Combustor Annulus",
+   "part": "Combustor annulus",
+   "material": "copper",
+   "params": {
+    "major_radius": 250,
+    "minor_radius": 70,
+    "segments": 64,
+    "translate": [
+     0,
+     500,
+     -150
+    ]
+   }
+  },
+  {
+   "id": "fuel_nozzle_source",
+   "op": "cylinder",
+   "label": "Fuel Nozzle Source",
+   "part": "Combustor annulus",
+   "material": "copper",
+   "params": {
+    "height": 55,
+    "radius": 14,
+    "segments": 24,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     250,
+     500,
+     -150
+    ]
+   }
+  },
+  {
+   "id": "fuel_nozzle_ring",
+   "op": "array",
+   "label": "Fuel Nozzle Ring",
+   "part": "Combustor annulus",
+   "material": "copper",
+   "input": "fuel_nozzle_source",
+   "params": {
+    "count": 8,
+    "mode": "radial",
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "angle": 360
+   }
+  },
+  {
+   "id": "turbine_disk",
+   "op": "revolve",
+   "label": "Turbine Disk",
+   "part": "Turbine stage",
+   "material": "titanium",
+   "params": {
+    "points": [
+     [
+      210,
+      0
+     ],
+     [
+      190,
+      150
+     ],
+     [
+      0,
+      150
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 64,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     -450
+    ]
+   }
+  },
+  {
+   "id": "turbine_vane_source",
+   "op": "box",
+   "label": "Turbine Vane Source",
+   "part": "Turbine stage",
+   "material": "titanium",
+   "params": {
+    "size": [
+     10,
+     60,
+     120
+    ],
+    "translate": [
+     195,
+     500,
+     -375
+    ]
+   }
+  },
+  {
+   "id": "turbine_vane_ring",
+   "op": "array",
+   "label": "Turbine Vane Ring",
+   "part": "Turbine stage",
+   "material": "titanium",
+   "input": "turbine_vane_source",
+   "params": {
+    "count": 18,
+    "mode": "radial",
+    "axis": [
+     0,
+     1,
+     0
+    ],
+    "angle": 360
+   }
+  },
+  {
+   "id": "turbine_stage",
+   "op": "boolean",
+   "label": "Turbine Stage",
+   "part": "Turbine stage",
+   "material": "titanium",
+   "inputs": [
+    "turbine_disk",
+    "turbine_vane_ring"
+   ],
+   "params": {
+    "mode": "union"
+   }
+  },
+  {
+   "id": "reverse_flow_baffle",
+   "op": "revolve",
+   "label": "Reverse-Flow Baffle",
+   "part": "Reverse-flow baffle",
+   "material": "brushed_steel",
+   "params": {
+    "points": [
+     [
+      360,
+      0
+     ],
+     [
+      360,
+      25
+     ],
+     [
+      200,
+      25
+     ],
+     [
+      200,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 64,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     80
+    ]
+   }
+  },
+  {
+   "id": "aft_reverse_pod",
+   "op": "revolve",
+   "label": "Aft Reverse Pod",
+   "part": "Aft reverse pod",
+   "material": "dark_ceramic",
+   "params": {
+    "points": [
+     [
+      150,
+      0
+     ],
+     [
+      90,
+      250
+     ],
+     [
+      70,
+      250
+     ],
+     [
+      70,
+      210
+     ],
+     [
+      0,
+      210
+     ],
+     [
+      0,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 64,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     -750
+    ]
+   }
+  },
+  {
+   "id": "exhaust_nozzle",
+   "op": "revolve",
+   "label": "Exhaust Nozzle",
+   "part": "Exhaust nozzle",
+   "material": "brushed_steel",
+   "params": {
+    "points": [
+     [
+      230,
+      0
+     ],
+     [
+      180,
+      350
+     ],
+     [
+      160,
+      350
+     ],
+     [
+      210,
+      0
+     ]
+    ],
+    "degrees": 360,
+    "segments": 96,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     500,
+     -850
+    ]
+   }
+  },
+  {
+   "id": "thrust_reverser_actuator",
+   "op": "capsule",
+   "label": "Thrust Reverser Actuator",
+   "part": "Thrust reverser actuator",
+   "material": "aluminium",
+   "params": {
+    "height": 220,
+    "radius": 55,
+    "segments": 48,
+    "translate": [
+     0,
+     880,
+     210
+    ]
+   }
+  },
+  {
+   "id": "status_glow_ring",
+   "op": "torus",
+   "label": "Status Glow Ring",
+   "part": "Status glow ring",
+   "material": "cyan_glow",
+   "params": {
+    "major_radius": 490,
+    "minor_radius": 12,
+    "segments": 96,
+    "translate": [
+     0,
+     500,
+     450
+    ]
+   }
+  }
+ ],
+ "blueprint": {
+  "title": "Vortex-Reverse Turbofan Engine",
+  "summary": "A non-conventional turbofan with exposed bypass reverse vanes, split duct doors, and a central aft reverse pod. The engine keeps a realistic axial layout while using visible reverse-flow hardware as its defining feature.",
+  "style": "non-conventional exposed reverse-flow turbine",
+  "dimensions": [
+   1000,
+   1000,
+   1800
+  ],
+  "parts": [
+   {
+    "name": "Intake cowl",
+    "role": "Shapes incoming airflow and carries the fan section.",
+    "shape": "Revolved profile around the Z axis, outer radius 500 and inner radius 360 from z=300 to z=900, with a 40 mm forward lip and three radial box struts arrayed at 120 degrees.",
+    "size": "OD 1000, ID 720, length 600",
+    "position": "axis at x=0, y=500; center z=600",
+    "material": "painted (matte gunmetal)",
+    "count": 1
+   },
+   {
+    "name": "Fan hub",
+    "role": "Carries the fan blades and drives the core compressor.",
+    "shape": "Cone from radius 150 at z=780 to radius 120 at z=680, then cylinder radius 120 to z=550, with a rear shaft hole boolean cut.",
+    "size": "length 230, max dia 300",
+    "position": "axis at x=0, y=500; center z=665",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "Fan blade set",
+    "role": "Accelerates the primary and bypass airflow.",
+    "shape": "Radial array of thin extruded airfoil plates, root radius 130, tip radius 480, root chord 180, tip chord 120, thickness 8, swept 15 degrees.",
+    "size": "dia 960, blade thickness 8",
+    "position": "axis at x=0, y=500; array center z=690",
+    "material": "carbon fibre",
+    "count": 22
+   },
+   {
+    "name": "Bypass duct liner",
+    "role": "Guides bypass air toward the reverse vanes and rear duct.",
+    "shape": "Revolved hollow cylinder, outer radius 360, inner radius 340, z=300 to z=-250, with 12 radial rib boxes on the inner wall.",
+    "size": "length 550, wall 20",
+    "position": "axis at x=0, y=500; center z=25",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "Reverse vane ring",
+    "role": "Redirects bypass flow rearward for thrust reversal.",
+    "shape": "Radial array of flat plates, each 180 long, 140 wide, 20 thick, hinged at radius 350 with radial pivot axes at z=180 and angled 35 degrees aft.",
+    "size": "ring dia 700, vane length 180",
+    "position": "axis at x=0, y=500; center z=180",
+    "material": "brushed steel",
+    "count": 16
+   },
+   {
+    "name": "Reverse duct doors",
+    "role": "Open the bypass duct to form the reverse-flow channel.",
+    "shape": "Two mirrored extruded curved panels, radius 400, chord 340, width 300, thickness 18, hinged at z=260 and z=-80; closed position tangent to the duct, open position rotated 40 degrees outward.",
+    "size": "panel 340 x 300 x 18",
+    "position": "mirrored about x=0; hinge centers at x=\u00b1380, y=500, z=90",
+    "material": "matte polymer",
+    "count": 2
+   },
+   {
+    "name": "Core compressor",
+    "role": "Compresses core airflow before combustion.",
+    "shape": "Revolved stepped cylinder from radius 180 to 220, z=450 to z=-50, with nine thin disk steps arrayed axially.",
+    "size": "length 500, max dia 440",
+    "position": "axis at x=0, y=500; center z=200",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "Combustor annulus",
+    "role": "Burns fuel in the core engine.",
+    "shape": "Revolved torus-like ring, major radius 250, minor radius 70, centered at z=-150, with eight small cylinder fuel nozzles arrayed radially.",
+    "size": "OD 640, ID 360, length 140",
+    "position": "axis at x=0, y=500; center z=-150",
+    "material": "copper",
+    "count": 1
+   },
+   {
+    "name": "Turbine stage",
+    "role": "Extracts energy from hot gas to drive the compressor.",
+    "shape": "Revolved front disk radius 210 at z=-300, rear disk radius 190 at z=-450, with a radial array of thin box vanes 120 long, 60 wide, 10 thick.",
+    "size": "length 150, max dia 420",
+    "position": "axis at x=0, y=500; center z=-375",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "Reverse-flow baffle",
+    "role": "Separates forward core flow from the reverse bypass channel.",
+    "shape": "Annular disk, outer radius 360, inner radius 200, thickness 25, z=80, with 12 radial slot boxes boolean-cut through the ring.",
+    "size": "OD 720, ID 400, thickness 25",
+    "position": "axis at x=0, y=500; center z=80",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "Aft reverse pod",
+    "role": "Central non-conventional reverse thruster ejecting flow rearward.",
+    "shape": "Cone from radius 150 at z=-500 to radius 90 at z=-750, capped by a torus radius 90 and minor radius 25, with a rear opening radius 70 boolean-cut.",
+    "size": "length 250, max dia 300",
+    "position": "axis at x=0, y=500; center z=-625",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "Exhaust nozzle",
+    "role": "Accelerates core exhaust and frames the aft pod.",
+    "shape": "Revolved cone-cylinder, radius 230 at z=-500 tapering to radius 180 at z=-850, wall thickness 20, with 12 radial cooling slots arrayed around the shell.",
+    "size": "length 350, inlet dia 460, outlet dia 360",
+    "position": "axis at x=0, y=500; center z=-675",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "Thrust reverser actuator",
+    "role": "Drives the reverse vanes and duct doors.",
+    "shape": "Cylinder radius 55, length 220, with a capsule piston radius 35 protruding 80, mounted above the engine axis.",
+    "size": "dia 110, length 220, piston dia 70",
+    "position": "center at x=0, y=880, z=210",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "Status glow ring",
+    "role": "Visual service and reverse-mode indicator.",
+    "shape": "Torus, major radius 490, minor radius 12, placed around the intake cowl and smoothed to a continuous ring.",
+    "size": "OD 1004, tube dia 24",
+    "position": "axis at x=0, y=500; center z=450",
+    "material": "emissive glow (cyan)",
+    "count": 1
+   }
+  ],
+  "callouts": [
+   "Engine axis is along Z, front at +Z, centerline at y=500.",
+   "Reverse mode sequence: actuator extends, vanes rotate aft, duct doors open, aft pod aligns with reverse flow.",
+   "Bypass duct and reverse vanes are the primary thrust-reversal path; the aft pod is a secondary non-conventional reverse thruster.",
+   "Keep fan blade tips 20 mm clear of the intake cowl inner radius.",
+   "Reverse-flow baffle slots must align with the reverse vane pitch."
+  ]
+ }
+}

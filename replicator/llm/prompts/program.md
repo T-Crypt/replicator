@@ -32,6 +32,8 @@ GEOMETRY CONVENTIONS (follow exactly)
 - array: "mode" "linear" ("count", "offset" [x,y,z] per copy), "radial" ("count", "axis", "angle" default 360;
   copies rotate around the world origin, so place the input off-axis first), "mirror" ("plane" = the mirror
   plane's normal, e.g. [1,0,0] mirrors across X; "count" must be 2).
+  Radial rings go around the object's own axis: for an engine or fuselage lying along Z use "axis": "z" and place
+  the source part off-axis in X or Y (never Y-axis rings on a Z-axis body).
 - boolean: "mode" union | difference (first input minus all the others) | intersection. Inputs must overlap.
 - hull: convex hull of the inputs (great for fairings and blended bodies). group: keep inputs together, no CSG.
 - smooth: subdivision ("levels" 1-3); use on organic or car-body shapes. round: rounds every edge by "radius"
