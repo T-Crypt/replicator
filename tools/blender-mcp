@@ -1,0 +1,8 @@
+#!/bin/sh
+# MCP server for the Blender that Replicator opens (Render > Open in Blender), for agent harnesses.
+# Pinned to the same upstream commit as vendor/mcp-for-blender (protocol 16):
+#   uv tool install "git+https://github.com/ahujasid/mcp-for-blender@8f40787fbde8e6d8fe51c5a3553e5635fff40d2b"
+# Telemetry off, socket on loopback only. CPU only: the server opens no GPU context.
+export DISABLE_TELEMETRY=true BLENDER_MCP_DISABLE_TELEMETRY=true MCP_DISABLE_TELEMETRY=true
+export BLENDER_HOST=127.0.0.1 BLENDER_PORT=9876 CUDA_VISIBLE_DEVICES=
+exec "$HOME/.local/bin/mcp-for-blender" "$@"
