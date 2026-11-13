@@ -34,23 +34,56 @@ def chat(messages: list[dict], engine: str = "dirk", max_tokens: int = 14000, ti
     return data["choices"][0]["message"]["content"] or ""
 
 
+def _loads_lenient(s: str):
+    try:
+        return json.loads(s)
+    except json.JSONDecodeError:
+        pass
+    # models slip in // comments and trailing commas; strip them outside strings and try again
+    out, i, n, in_str = [], 0, len(s), False
+    while i < n:
+        c = s[i]
+        if in_str:
+            out.append(c)
+            if c == "\\" and i + 1 < n:
+                out.append(s[i + 1]); i += 2; continue
+            if c == '"':
+                in_str = False
+        elif c == '"':
+            in_str = True; out.append(c)
+        elif c == "/" and i + 1 < n and s[i + 1] == "/":
+            while i < n and s[i] != "\n":
+                i += 1
+            continue
+        else:
+            out.append(c)
+        i += 1
+    cleaned = re.sub(r",(\s*[}\]])", r"\1", "".join(out))
+    return json.loads(cleaned)
+
+
 def extract_json(text: str):
-    """The last ```json fence, else the outermost {...}/[...] in the reply."""
+    """The last ```json fence, else the outermost {...}/[...] in the reply. Raises ValueError with the reason."""
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S)
+    if not text.strip():
+        raise ValueError("the reply was empty (the model may have spent its budget thinking)")
     fences = re.findall(r"```(?:json)?\s*\n(.*?)```", text, flags=re.S)
+    last_err = None
     for cand in reversed(fences):
         try:
-            return json.loads(cand)
-        except json.JSONDecodeError:
-            continue
+            return _loads_lenient(cand)
+        except json.JSONDecodeError as e:
+            last_err = e
     for opener, closer in (("{", "}"), ("[", "]")):
         i, j = text.find(opener), text.rfind(closer)
         if 0 <= i < j:
             try:
-                return json.loads(text[i:j + 1])
-            except json.JSONDecodeError:
-                pass
-    raise ValueError("no JSON found in the model reply")
+                return _loads_lenient(text[i:j + 1])
+            except json.JSONDecodeError as e:
+                last_err = e
+    if last_err:
+        raise ValueError(f"the JSON in the reply does not parse: {last_err}")
+    raise ValueError("no JSON block in the reply")
 
 
 def _prompt(name: str, **fill) -> str:
@@ -87,7 +120,21 @@ def problems(program) -> list[str]:
 def dream(prompt: str, engine: str = "dirk", log=print) -> dict:
     """Text in, a validated BuildProgram out (its blueprint stage kept under program["blueprint"])."""
     log(f"blueprint: asking {engine}")
-    bp = extract_json(chat([{"role": "user", "content": _prompt("blueprint", REQUEST=prompt)}], engine))
+    bmsgs = [{"role": "user", "content": _prompt("blueprint", REQUEST=prompt)}]
+    for rnd in range(REPAIR_ROUNDS + 1):
+        reply = chat(bmsgs, engine)
+        try:
+            bp = extract_json(reply)
+            if not isinstance(bp, dict) or not bp.get("parts"):
+                raise ValueError("the blueprint must be one JSON object with a non-empty parts list")
+            break
+        except ValueError as e:
+            log(f"blueprint: round {rnd + 1} unusable ({e})")
+            if rnd == REPAIR_ROUNDS:
+                raise
+            bmsgs += [{"role": "assistant", "content": reply[-4000:]},
+                      {"role": "user", "content": f"That reply could not be used: {e}. Reply again with the whole "
+                       "blueprint as ONE valid ```json block (no comments, no trailing commas)."}]
     log(f"blueprint: {len(bp.get('parts', []))} parts, {bp.get('dimensions')}")
     msgs = [{"role": "user", "content": _prompt("program", REQUEST=prompt, BLUEPRINT=json.dumps(bp, indent=1),
                                                OPS=op_reference())}]
