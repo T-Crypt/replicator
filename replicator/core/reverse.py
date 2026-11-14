@@ -23,6 +23,7 @@ from pathlib import Path
 import numpy as np
 import trimesh
 
+MAX_TRIANGLES = 3_000_000  # a bigger scene takes minutes to split and bloats the project; decimate it first
 MAX_PIECES = 400          # beyond this, tiny pieces are merged into their nearest large neighbour
 SIG_TOL = 0.03            # 3 % tolerance when grouping identical pieces
 
@@ -38,12 +39,19 @@ def ledger_entry(claim: str, kind: str, evidence: str, subject: str = "", confid
 # ---------------------------------------------------------------- import
 def load_pieces(path: Path) -> tuple[list[trimesh.Trimesh], dict]:
     """Every connected piece of the model in world space, Y-up, plus facts about the file."""
-    loaded = trimesh.load(str(path), force="scene")
+    if not path.is_file() or path.stat().st_size == 0:
+        raise ValueError(f"{path.name} is empty or missing")
+    try:
+        loaded = trimesh.load(str(path), force="scene")
+    except Exception as e:  # noqa: BLE001 - trimesh raises a dozen types for a broken file
+        raise ValueError(f"{path.name} could not be read as a 3D model ({e})") from None
+    tris = sum(len(g.faces) for n in loaded.graph.nodes_geometry
+               if isinstance(g := loaded.geometry.get(loaded.graph[n][1]), trimesh.Trimesh))   # instances count
+    if tris > MAX_TRIANGLES:
+        raise ValueError(f"{path.name} has {tris:,} triangles; the limit is {MAX_TRIANGLES:,}. Decimate it "
+                         "(Blender's Decimate modifier) and import again")
     meshes = []
-    for name, geom in loaded.geometry.items():
-        if not isinstance(geom, trimesh.Trimesh):
-            continue
-    dumped = loaded.dump(concatenate=False) if hasattr(loaded, "dump") else list(loaded.geometry.values())
+    dumped = loaded.dump(concatenate=False)    # bakes every node transform into world space
     nodes = len(dumped)
     for g in dumped:
         if isinstance(g, trimesh.Trimesh) and len(g.faces):
@@ -55,15 +63,28 @@ def load_pieces(path: Path) -> tuple[list[trimesh.Trimesh], dict]:
     return meshes, facts
 
 
+def unit_hint(fmt: str, longest: float) -> dict:
+    """Mesh files carry no reliable units. Say what the size suggests; the model is never rescaled silently."""
+    if longest < 2:
+        return ledger_entry(f"longest side is {longest:.3g}: probably metres (or inches), not millimetres; "
+                            "Replicator reads file units as mm and did not rescale", "inferred",
+                            "a real part under 2 mm is rare; glTF is metres by specification, OBJ and PLY unspecified",
+                            confidence=0.6)
+    if fmt in ("stl", "3mf"):
+        return ledger_entry("units are millimetres", "inferred", f"{fmt.upper()} from printers is mm by convention",
+                            confidence=0.7)
+    return ledger_entry("units assumed millimetres", "inferred", f"{fmt.upper()} has no unit field", confidence=0.4)
+
+
 def _merge_small(meshes: list[trimesh.Trimesh]) -> tuple[list[trimesh.Trimesh], int]:
     if len(meshes) <= MAX_PIECES:
         return meshes, 0
-    meshes = sorted(meshes, key=lambda m: -m.bounding_box.volume)
+    meshes = sorted(meshes, key=lambda m: -float(np.prod(np.ptp(m.bounds, axis=0))))
     keep, small = meshes[:MAX_PIECES], meshes[MAX_PIECES:]
-    centers = np.array([k.bounding_box.centroid for k in keep])
+    centers = np.array([k.bounds.mean(0) for k in keep])
     groups = defaultdict(list)
     for s in small:
-        groups[int(np.argmin(np.linalg.norm(centers - s.bounding_box.centroid, axis=1)))].append(s)
+        groups[int(np.argmin(np.linalg.norm(centers - s.bounds.mean(0), axis=1)))].append(s)
     for i, extra in groups.items():
         keep[i] = trimesh.util.concatenate([keep[i], *extra])
     return keep, len(small)
@@ -120,10 +141,10 @@ def same_sig(a: tuple, b: tuple) -> bool:
 def find_patterns(facts: list[dict]) -> list[dict]:
     """Groups of identical pieces, and whether each group is a radial or linear array (observed geometry)."""
     groups: list[list[int]] = []
-    for i, f in enumerate(facts):
-        sig = signature(f)
+    sigs = [signature(f) for f in facts]
+    for i, sig in enumerate(sigs):
         for g in groups:
-            if same_sig(signature(facts[g[0]]), sig):
+            if same_sig(sigs[g[0]], sig):
                 g.append(i)
                 break
         else:
@@ -202,6 +223,7 @@ def analyze_mesh(path: Path, project: Path) -> tuple[dict, dict]:
     ext = hi - lo
     ledger.append(ledger_entry(f"overall size {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} (file units)", "observed",
                                "union of piece bounding boxes"))
+    ledger.append(unit_hint(facts_file["format"], float(ext.max())))
     wt = sum(f["watertight"] for f in facts)
     ledger.append(ledger_entry(f"{wt} of {len(facts)} pieces are closed solids", "observed",
                                "trimesh is_watertight; open pieces can be shown and exploded but not used in CSG"))
