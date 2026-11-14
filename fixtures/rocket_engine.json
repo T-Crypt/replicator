@@ -1,0 +1,652 @@
+{
+ "version": 1,
+ "name": "Gas-Generator Rocket Engine",
+ "units": "mm",
+ "materials": {
+  "aluminium_7075": {
+   "base_color": [
+    0.76,
+    0.77,
+    0.79
+   ],
+   "metalness": 1.0,
+   "roughness": 0.38
+  },
+  "aluminium_7075_black": {
+   "base_color": [
+    0.03,
+    0.03,
+    0.035
+   ],
+   "metalness": 1.0,
+   "roughness": 0.34
+  },
+  "inconel_718": {
+   "base_color": [
+    0.48,
+    0.46,
+    0.43
+   ],
+   "metalness": 1.0,
+   "roughness": 0.4
+  },
+  "inconel_heat": {
+   "base_color": [
+    0.36,
+    0.24,
+    0.13
+   ],
+   "metalness": 1.0,
+   "roughness": 0.46
+  },
+  "steel": {
+   "base_color": [
+    0.62,
+    0.64,
+    0.68
+   ],
+   "metalness": 1.0,
+   "roughness": 0.3
+  },
+  "steel_maraging": {
+   "base_color": [
+    0.4,
+    0.41,
+    0.43
+   ],
+   "metalness": 1.0,
+   "roughness": 0.3
+  },
+  "titanium_ti6al4v": {
+   "base_color": [
+    0.56,
+    0.54,
+    0.51
+   ],
+   "metalness": 1.0,
+   "roughness": 0.3
+  }
+ },
+ "components": [
+  {
+   "id": "chamber",
+   "label": "Thrust Chamber"
+  },
+  {
+   "id": "injector",
+   "label": "Injector"
+  },
+  {
+   "id": "frame",
+   "label": "Thrust Frame"
+  },
+  {
+   "id": "gimbal",
+   "label": "Gimbal"
+  },
+  {
+   "id": "manifold",
+   "label": "Coolant Manifold"
+  },
+  {
+   "id": "turbopump",
+   "label": "Turbopump"
+  },
+  {
+   "id": "turbine",
+   "label": "Turbine"
+  },
+  {
+   "id": "gas_generator",
+   "label": "Gas Generator"
+  },
+  {
+   "id": "exhaust",
+   "label": "Turbine Exhaust"
+  },
+  {
+   "id": "feed_lines",
+   "label": "Feed Lines"
+  },
+  {
+   "id": "actuators",
+   "label": "Gimbal Actuators"
+  }
+ ],
+ "blueprint": {
+  "title": "Gas-Generator Rocket Engine",
+  "summary": "A sea-level kerosene and liquid-oxygen engine laid out from its thrust chamber: throat radius 100 mm, expansion ratio 16, contraction ratio 4, an 80 % Rao bell. A single turbopump beside the chamber is driven by a gas generator and dumps its exhaust through a duct.",
+  "dimensions": [
+   1070,
+   1830,
+   812
+  ],
+  "parts": []
+ },
+ "ops": [
+  {
+   "id": "chamber",
+   "op": "nozzle",
+   "label": "Thrust Chamber and Bell Nozzle",
+   "component": "chamber",
+   "material": "inconel_718",
+   "params": {
+    "throat_radius": 100.0,
+    "expansion_ratio": 16.0,
+    "contraction_ratio": 4.0,
+    "wall": 6.0,
+    "segments": 128,
+    "translate": [
+     0,
+     797.5448267190434,
+     0
+    ]
+   }
+  },
+  {
+   "id": "dome",
+   "op": "revolve",
+   "label": "Injector Dome",
+   "component": "injector",
+   "material": "steel_maraging",
+   "params": {
+    "points": [
+     [
+      0,
+      0
+     ],
+     [
+      206.0,
+      0.0
+     ],
+     [
+      203.90321702747212,
+      15.654632210061365
+     ],
+     [
+      197.65555256458646,
+      30.990581252557263
+     ],
+     [
+      187.3841910430308,
+      45.695651430207505
+     ],
+     [
+      173.29822776322334,
+      59.47048992011573
+     ],
+     [
+      155.68441231697722,
+      72.03468073398136
+     ],
+     [
+      134.90131119272874,
+      83.1324531789684
+     ],
+     [
+      111.37200839585311,
+      92.53788861142992
+     ],
+     [
+      85.5754926783886,
+      100.05951948899701
+     ],
+     [
+      58.03690670933454,
+      105.54422709759471
+     ],
+     [
+      29.316856684296734,
+      108.88035860690259
+     ],
+     [
+      1.2613862031217738e-14,
+      110.0
+     ]
+    ],
+    "segments": 96,
+    "translate": [
+     0,
+     1555.0896534380868,
+     0
+    ]
+   }
+  },
+  {
+   "id": "frame",
+   "op": "tube",
+   "label": "Thrust Cone",
+   "component": "frame",
+   "material": "titanium_ti6al4v",
+   "params": {
+    "height": 150,
+    "radius": 150,
+    "radius_top": 48,
+    "wall": 8,
+    "translate": [
+     0,
+     1705.0896534380868,
+     0
+    ]
+   }
+  },
+  {
+   "id": "gimbal",
+   "op": "sphere",
+   "label": "Gimbal Bearing",
+   "component": "gimbal",
+   "material": "steel",
+   "params": {
+    "radius": 46,
+    "translate": [
+     0,
+     1805.0896534380868,
+     0
+    ]
+   }
+  },
+  {
+   "id": "gimbal_pad",
+   "op": "box",
+   "label": "Gimbal Mount Pad",
+   "component": "gimbal",
+   "material": "titanium_ti6al4v",
+   "params": {
+    "size": [
+     180,
+     30,
+     180
+    ],
+    "translate": [
+     0,
+     1855.0896534380868,
+     0
+    ]
+   }
+  },
+  {
+   "id": "gimbal_set",
+   "op": "group",
+   "inputs": [
+    "gimbal",
+    "gimbal_pad"
+   ],
+   "label": "Gimbal Assembly",
+   "component": "gimbal"
+  },
+  {
+   "id": "manifold",
+   "op": "torus",
+   "label": "Coolant Inlet Manifold",
+   "component": "manifold",
+   "material": "steel",
+   "params": {
+    "major_radius": 280.1165431181879,
+    "minor_radius": 24,
+    "segments": 96,
+    "translate": [
+     0,
+     622.1999259807449,
+     0
+    ]
+   }
+  },
+  {
+   "id": "band",
+   "op": "torus",
+   "label": "Bell Stiffener Band",
+   "component": "manifold",
+   "material": "inconel_718",
+   "params": {
+    "major_radius": 372.3590200501068,
+    "minor_radius": 8,
+    "segments": 128,
+    "translate": [
+     0,
+     263.92304845413264,
+     0
+    ]
+   }
+  },
+  {
+   "id": "fuel_body",
+   "op": "cylinder",
+   "label": "Fuel Pump Body",
+   "component": "turbopump",
+   "material": "aluminium_7075",
+   "params": {
+    "height": 150,
+    "radius": 92,
+    "translate": [
+     436.0,
+     1085.0896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "fuel_volute",
+   "op": "torus",
+   "label": "Fuel Pump Volute",
+   "component": "turbopump",
+   "material": "aluminium_7075",
+   "params": {
+    "major_radius": 100,
+    "minor_radius": 38,
+    "translate": [
+     436.0,
+     1085.0896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "fuel_pump",
+   "op": "boolean",
+   "inputs": [
+    "fuel_body",
+    "fuel_volute"
+   ],
+   "params": {
+    "mode": "union"
+   },
+   "label": "Fuel Pump",
+   "component": "turbopump"
+  },
+  {
+   "id": "lox_body",
+   "op": "cylinder",
+   "label": "Oxidizer Pump Body",
+   "component": "turbopump",
+   "material": "aluminium_7075",
+   "params": {
+    "height": 150,
+    "radius": 92,
+    "translate": [
+     436.0,
+     1305.0896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "lox_volute",
+   "op": "torus",
+   "label": "Oxidizer Pump Volute",
+   "component": "turbopump",
+   "material": "aluminium_7075",
+   "params": {
+    "major_radius": 100,
+    "minor_radius": 38,
+    "translate": [
+     436.0,
+     1305.0896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "lox_pump",
+   "op": "boolean",
+   "inputs": [
+    "lox_body",
+    "lox_volute"
+   ],
+   "params": {
+    "mode": "union"
+   },
+   "label": "Oxidizer Pump",
+   "component": "turbopump"
+  },
+  {
+   "id": "shaft",
+   "op": "cylinder",
+   "label": "Turbopump Shaft Housing",
+   "component": "turbopump",
+   "material": "steel_maraging",
+   "params": {
+    "height": 375.0,
+    "radius": 44,
+    "translate": [
+     436.0,
+     1242.5896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "turbine",
+   "op": "tube",
+   "label": "Turbine Housing",
+   "component": "turbine",
+   "material": "inconel_heat",
+   "params": {
+    "height": 110,
+    "radius": 104,
+    "wall": 12,
+    "translate": [
+     436.0,
+     1485.0896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "turbine_disc",
+   "op": "rotor",
+   "label": "Turbine Wheel",
+   "component": "turbine",
+   "material": "inconel_718",
+   "params": {
+    "hub_radius": 40,
+    "tip_radius": 90,
+    "chord": 26,
+    "blades": 31,
+    "pitch": 55,
+    "twist": 10,
+    "hub_length": 40,
+    "translate": [
+     436.0,
+     1485.0896534380868,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "gg",
+   "op": "capsule",
+   "label": "Gas Generator",
+   "component": "gas_generator",
+   "material": "inconel_heat",
+   "params": {
+    "height": 150,
+    "radius": 46,
+    "translate": [
+     436.0,
+     1635.0896534380868,
+     -150.0
+    ]
+   }
+  },
+  {
+   "id": "gg_line",
+   "op": "pipe",
+   "label": "Gas Generator Hot-Gas Line",
+   "component": "gas_generator",
+   "material": "inconel_heat",
+   "params": {
+    "path": [
+     [
+      436.0,
+      1635.0896534380868,
+      -150.0
+     ],
+     [
+      436.0,
+      1605.0896534380868,
+      -60.0
+     ],
+     [
+      436.0,
+      1535.0896534380868,
+      0.0
+     ]
+    ],
+    "radius": 26,
+    "smooth": 8
+   }
+  },
+  {
+   "id": "exhaust",
+   "op": "pipe",
+   "label": "Turbine Exhaust Duct",
+   "component": "exhaust",
+   "material": "inconel_heat",
+   "params": {
+    "path": [
+     [
+      536.0,
+      1485.0896534380868,
+      0.0
+     ],
+     [
+      596.0,
+      1415.0896534380868,
+      20.0
+     ],
+     [
+      611.0,
+      622.1999259807449,
+      40.0
+     ],
+     [
+      611.0,
+      857.5448267190434,
+      40.0
+     ]
+    ],
+    "radius": 52,
+    "smooth": 10
+   }
+  },
+  {
+   "id": "fuel_line",
+   "op": "pipe",
+   "label": "Fuel Line to Coolant Manifold",
+   "component": "feed_lines",
+   "material": "steel",
+   "params": {
+    "path": [
+     [
+      356.0,
+      1085.0896534380868,
+      60.0
+     ],
+     [
+      316.0,
+      965.0896534380868,
+      140.0
+     ],
+     [
+      338.1165431181879,
+      662.1999259807449,
+      160
+     ],
+     [
+      252.10488880636913,
+      622.1999259807449,
+      123.25127897200268
+     ]
+    ],
+    "radius": 34,
+    "smooth": 10
+   }
+  },
+  {
+   "id": "lox_line",
+   "op": "pipe",
+   "label": "Oxidizer Line to Injector",
+   "component": "feed_lines",
+   "material": "steel",
+   "params": {
+    "path": [
+     [
+      356.0,
+      1305.0896534380868,
+      -50.0
+     ],
+     [
+      276.0,
+      1385.0896534380868,
+      -120.0
+     ],
+     [
+      185.4,
+      1595.0896534380868,
+      -120
+     ],
+     [
+      113.30000000000001,
+      1630.0896534380868,
+      -60
+     ]
+    ],
+    "radius": 38,
+    "smooth": 10
+   }
+  },
+  {
+   "id": "lox_valve",
+   "op": "cylinder",
+   "label": "Main Oxidizer Valve",
+   "component": "feed_lines",
+   "material": "aluminium_7075_black",
+   "params": {
+    "height": 110,
+    "radius": 52,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     296.0,
+     1365.0896534380868,
+     -100.0
+    ]
+   }
+  },
+  {
+   "id": "actuator_0",
+   "op": "capsule",
+   "label": "Gimbal Actuator A",
+   "component": "actuators",
+   "material": "aluminium_7075_black",
+   "params": {
+    "height": 330,
+    "radius": 24,
+    "translate": [
+     -236.0,
+     1515.0896534380868,
+     0
+    ]
+   }
+  },
+  {
+   "id": "actuator_1",
+   "op": "capsule",
+   "label": "Gimbal Actuator B",
+   "component": "actuators",
+   "material": "aluminium_7075_black",
+   "params": {
+    "height": 330,
+    "radius": 24,
+    "translate": [
+     0,
+     1515.0896534380868,
+     -236.0
+    ]
+   }
+  }
+ ]
+}

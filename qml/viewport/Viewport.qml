@@ -157,7 +157,7 @@ Item {
             depthOfFieldFocusRange: studio.radius * 1.6
             depthOfFieldBlurAmount: 1.6
             vignetteEnabled: root.showcase
-            vignetteStrength: 0.55
+            vignetteStrength: 12      // 0..15, LOWER is darker (Qt docs); 0.55 blacked out the stage
             vignetteRadius: 0.38
             vignetteColor: "#000000"
             ditheringEnabled: true
@@ -165,8 +165,8 @@ Item {
                 enabled: root.showcase
                 color: Theme.stageTop
                 depthEnabled: true
-                depthNear: root.dist * 1.2
-                depthFar: root.dist * 3.2
+                depthNear: root.dist + studio.radius * 1.4     // starts behind the object, never on it
+                depthFar: root.dist + studio.radius * 1.4 + root.dist * 2.2
                 depthCurve: 1.0
                 density: 1.0
             }
