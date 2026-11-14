@@ -182,7 +182,19 @@ EXT_PRIMITIVES: dict = {}
 EXT_MODIFIERS: dict = {}
 
 
+# "center": false puts the base on the origin instead of the middle (OpenSCAD's convention, which models know)
+BASE_LIFT = {"cylinder": lambda p: float(p["height"]) / 2, "tube": lambda p: float(p["height"]) / 2,
+             "capsule": lambda p: float(p["height"]) / 2 + float(p["radius"])}
+
+
 def build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
+    m = _build_primitive(kind, p, base)
+    if kind in BASE_LIFT and p.get("center", True) is False:
+        m = m.translate((0.0, BASE_LIFT[kind](p), 0.0))
+    return m
+
+
+def _build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
     if kind in EXT_PRIMITIVES:
         return EXT_PRIMITIVES[kind][2](p)
     if kind == "mesh":

@@ -532,10 +532,10 @@ ApplicationWindow {
                         color: window.blueprint > 0.5 ? Theme.holo : window.showcase ? "#eef2f7" : Theme.viewText
                     }
                     Text {
-                        text: studio.summary; width: window.showcase ? 560 : 460; wrapMode: Text.WordWrap
+                        text: studio.summary; width: window.showcase ? 620 : 460; wrapMode: Text.WordWrap
                         color: window.showcase ? "#aab2bd" : Theme.viewDim; font.pixelSize: window.showcase ? 14 : Theme.fs
                         font.family: Theme.sans; lineHeight: 1.25
-                        maximumLineCount: window.showcase ? 3 : 2; elide: Text.ElideRight
+                        maximumLineCount: window.showcase ? 6 : 2; elide: Text.ElideRight
                         visible: text !== ""
                     }
                     Row {

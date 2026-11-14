@@ -45,13 +45,14 @@ def test_null_params_are_dropped_not_guessed():
     assert client.problems(p) == []
 
 
-def test_center_true_is_dropped_where_everything_is_centred_but_kept_on_box():
-    p = prog({"id": "c", "op": "cylinder", "params": {"height": 5, "radius": 2, "center": True}},
+def test_center_true_is_dropped_only_where_the_op_has_no_center():
+    p = prog({"id": "r", "op": "sphere", "params": {"radius": 2, "center": True}},
              {"id": "k", "op": "box", "params": {"size": [1, 1, 1], "center": True}},
              {"id": "f", "op": "cylinder", "params": {"height": 5, "radius": 2, "center": False}})
     client.tidy(p)
     assert "center" not in p["ops"][0]["params"] and p["ops"][1]["params"]["center"] is True
     assert p["ops"][2]["params"]["center"] is False
+    assert client.problems(p) == []
 
 
 def test_rotate_op_is_a_transform_but_only_when_it_is_purely_placement():
@@ -78,3 +79,19 @@ def test_repair_message_lists_errors_and_adds_hint_for_empty_results():
 def test_op_reference_hides_import_only_ops():
     ref = client.op_reference()
     assert "- mesh:" not in ref and "- revolve:" in ref
+
+
+def test_ops_written_before_their_inputs_are_reordered():
+    from replicator.llm.client import tidy
+    p = {"version": 1, "units": "mm", "ops": [
+        {"id": "u", "op": "boolean", "inputs": ["a", "b"], "params": {"mode": "union"}},
+        {"id": "a", "op": "box", "params": {"size": 10}},
+        {"id": "b", "op": "sphere", "params": {"radius": 6}}]}
+    assert [o["id"] for o in tidy(p)["ops"]] == ["a", "b", "u"]
+
+
+def test_a_cycle_is_left_for_validation():
+    from replicator.llm.client import tidy
+    p = {"version": 1, "units": "mm", "ops": [
+        {"id": "a", "op": "transform", "input": "b"}, {"id": "b", "op": "transform", "input": "a"}]}
+    assert [o["id"] for o in tidy(p)["ops"]] == ["a", "b"]

@@ -9,7 +9,7 @@ import trimesh
 from manifold3d import Manifold
 
 from replicator.core import importers, reverse
-from replicator.core.evaluate import EvalError, RawMesh, Shape, build_modifier, build_primitive
+from replicator.core.evaluate import EvalError, Evaluator, RawMesh, Shape, build_modifier, build_primitive
 from replicator.core.export import export
 
 
@@ -273,3 +273,15 @@ def test_two_thousand_pieces_import_in_seconds(tmp_path):
     program, _ = reverse.analyze_mesh(tmp_path / "big.glb", tmp_path / "proj")
     assert len(program["ops"]) == reverse.MAX_PIECES
     assert time.perf_counter() - t < 15
+
+
+@pytest.mark.parametrize("kind, params, bottom, top", [
+    ("cylinder", {"height": 100, "radius": 10, "center": False}, 0.0, 100.0),
+    ("tube", {"height": 80, "radius": 20, "wall": 2, "center": False}, 0.0, 80.0),
+    ("capsule", {"height": 50, "radius": 5, "center": False}, 0.0, 60.0),
+    ("cylinder", {"height": 100, "radius": 10}, -50.0, 50.0),
+])
+def test_center_false_puts_the_base_on_the_origin(kind, params, bottom, top):
+    (s,) = Evaluator().step({"version": 1, "units": "mm", "ops": [{"id": "x", "op": kind, "params": params}]})
+    b = s.manifold.bounding_box()
+    assert (round(b[1], 3), round(b[4], 3)) == (bottom, top)

@@ -13,7 +13,7 @@ from pathlib import Path
 from .. import knowledge
 from ..core import assembly, critique
 from ..core.evaluate import EvalError, Evaluator
-from ..core.program import OPS, PLACEMENT, VERSION, validate
+from ..core.program import OPS, PLACEMENT, VERSION, op_inputs, validate
 
 PROMPTS = Path(__file__).parent / "prompts"
 ENGINES = {
@@ -114,6 +114,7 @@ def tidy(program):
     placement-only "rotate"/"translate"/"scale" op named as the transform it is. Geometry is never changed."""
     if not isinstance(program, dict) or not isinstance(program.get("ops"), list):
         return program
+    _order_inputs_first(program)
     for op in program["ops"]:
         params = op.get("params", {}) if isinstance(op, dict) else None
         if not isinstance(params, dict):
@@ -130,6 +131,28 @@ def tidy(program):
             if _is_poly(pts) and _area(pts) < 0:
                 params["points"] = pts[::-1]
     return program
+
+
+def _order_inputs_first(program: dict) -> None:
+    """Models sometimes write an op before the ops it consumes. When every input exists and there is no cycle, move
+    each op after its inputs (stable otherwise); anything else is left for validation to report."""
+    ops = program["ops"]
+    if not all(isinstance(o, dict) and isinstance(o.get("id"), str) for o in ops):
+        return
+    ids = {o["id"]: i for i, o in enumerate(ops)}
+    deps = {o["id"]: [i for i in op_inputs(o) if isinstance(i, str)] for o in ops}
+    if len(ids) != len(ops) or any(d not in ids for ds in deps.values() for d in ds):
+        return
+    if all(ids[d] < ids[oid] for oid, ds in deps.items() for d in ds):
+        return
+    placed, out = set(), []
+    while len(out) < len(ops):
+        ready = [o for o in ops if o["id"] not in placed and all(d in placed for d in deps[o["id"]])]
+        if not ready:
+            return                                    # a cycle: let validation say so
+        placed.add(ready[0]["id"])
+        out.append(ready[0])
+    program["ops"] = out
 
 
 def _is_poly(pts) -> bool:

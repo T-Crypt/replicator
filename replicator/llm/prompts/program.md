@@ -19,7 +19,8 @@ GEOMETRY CONVENTIONS (follow exactly)
   vehicles) run along Z: build a revolved body around Y, then give that op "rotate": [90, 0, 0] (its +Y end
   then points to +Z), or build parts already laid along Z.
 - box: "size": [x,y,z], centered on the origin.
-- cylinder: axis along Y, centered; "radius" at the bottom, optional "radius_top" (0.01 makes a cone).
+- cylinder: axis along Y, centered ("center": false puts its base at y=0); "radius" at the bottom, optional
+  "radius_top" (0.01 makes a cone). tube and capsule take "center" the same way.
 - sphere: "radius". torus: in the XZ plane around Y, "major_radius" > "minor_radius". capsule: along Y.
 - extrude: "points" is a closed 2D polygon [[a,b], ...] (counter-clockwise, at least 3 points, no self-crossing),
   extruded by "height" along "axis" ("y" default; "x" or "z"), centered on the origin along that axis.

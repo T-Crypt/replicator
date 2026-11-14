@@ -28,10 +28,10 @@ UNITS = ("mm", "cm", "m")
 # op name -> (required params, optional params). The schema the LLM is constrained to is generated from this.
 PRIMITIVES = {
     "box": ({"size"}, {"center"}),
-    "cylinder": ({"height", "radius"}, {"radius_top", "segments"}),
+    "cylinder": ({"height", "radius"}, {"radius_top", "segments", "center"}),
     "sphere": ({"radius"}, {"segments"}),
     "torus": ({"major_radius", "minor_radius"}, {"segments"}),
-    "capsule": ({"height", "radius"}, {"segments"}),
+    "capsule": ({"height", "radius"}, {"segments", "center"}),
     "extrude": ({"points", "height"}, {"axis", "twist", "scale_top", "holes"}),
     "revolve": ({"points"}, {"degrees", "segments"}),
     "mesh": ({"asset"}, set()),  # imported geometry (reverse engineering): an .npz with V, F beside program.json

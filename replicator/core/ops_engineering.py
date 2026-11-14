@@ -186,7 +186,7 @@ def _build_grille(p: dict) -> Manifold:
 
 
 PRIMITIVES = {
-    "tube": ({"height", "radius", "wall"}, {"radius_top", "segments"}, _wrap_builder(_build_tube)),
+    "tube": ({"height", "radius", "wall"}, {"radius_top", "segments", "center"}, _wrap_builder(_build_tube)),
     "nozzle": ({"throat_radius", "expansion_ratio"},
                {"contraction_ratio", "chamber_length", "bell_fraction", "wall", "segments"},
                _wrap_builder(_build_nozzle)),
