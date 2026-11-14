@@ -224,6 +224,8 @@ def analyze_mesh(path: Path, project: Path) -> tuple[dict, dict]:
     ledger.append(ledger_entry(f"overall size {ext[0]:.1f} x {ext[1]:.1f} x {ext[2]:.1f} (file units)", "observed",
                                "union of piece bounding boxes"))
     ledger.append(unit_hint(facts_file["format"], float(ext.max())))
+    if float(ext.max()) < 2:
+        facts_file["suggested_scale"] = 1000
     wt = sum(f["watertight"] for f in facts)
     ledger.append(ledger_entry(f"{wt} of {len(facts)} pieces are closed solids", "observed",
                                "trimesh is_watertight; open pieces can be shown and exploded but not used in CSG"))

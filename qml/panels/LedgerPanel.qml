@@ -21,6 +21,14 @@ Rectangle {
             Pill { text: "Import model…"; icon: "importIn"; primary: true; onHit: lp.importRequested() }
             Pill { text: "Disassemble"; icon: "playBack"; onHit: lp.disassemble() }
             Pill {
+                visible: studio.reportInput.suggested_scale !== undefined && studio.dimensions.length === 3
+                         && Math.max(studio.dimensions[0], studio.dimensions[1], studio.dimensions[2]) < 2
+                icon: "ruler"
+                text: "Metres → mm (×1000)"
+                enabled: studio.busy === ""
+                onHit: studio.rescale(studio.reportInput.suggested_scale)
+            }
+            Pill {
                 icon: "sparkle"
                 text: studio.busy.indexOf("Naming") === 0 ? "Naming…" : "Name parts"
                 enabled: studio.busy === "" && studio.components.length > 0

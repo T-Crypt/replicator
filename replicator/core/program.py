@@ -130,6 +130,24 @@ def duplicate_component(program: dict, cid: str, offset: list[float]) -> tuple[d
     return check(out), new_cid
 
 
+def scale_program(program: dict, factor: float) -> dict:
+    """A copy scaled uniformly about the origin (a metres file read as millimetres). Only visible leaves change:
+    a leaf's scale applies to everything it consumes, and its translate comes after, so both are multiplied."""
+    if not (isinstance(factor, (int, float)) and factor > 0):
+        raise ProgramError(["scale factor must be a positive number"])
+    out = copy.deepcopy(program)
+    consumed = {i for op in out["ops"] for i in op_inputs(op)}
+    for op in out["ops"]:
+        if op["id"] in consumed:
+            continue
+        p = op.setdefault("params", {})
+        s = p.get("scale", 1.0)
+        p["scale"] = [v * factor for v in s] if isinstance(s, list) else s * factor
+        if "translate" in p:
+            p["translate"] = [v * factor for v in p["translate"]]
+    return check(out)
+
+
 def normalize(program: dict) -> dict:
     """Models (and people) put translate/rotate/scale beside params as often as inside it. Move them in, in place."""
     for op in program.get("ops") or []:

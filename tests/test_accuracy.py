@@ -145,3 +145,16 @@ def test_a_top_heavy_object_tips():
 def test_null_inputs_from_a_model_are_ignored():
     from replicator.core.program import validate
     assert validate(prog({"id": "a", "op": "box", "input": None, "inputs": [], "params": {"size": 10}})) == []
+
+
+def test_scaling_a_build_scales_only_what_is_visible():
+    from replicator.core.program import scale_program
+    p = prog({"id": "a", "op": "box", "params": {"size": 0.1, "translate": [0.2, 0, 0]}},
+             {"id": "b", "op": "round", "input": "a", "params": {"radius": 0.01, "translate": [0, 0.5, 0]}},
+             {"id": "c", "op": "sphere", "params": {"radius": 0.05, "scale": [1, 2, 1]}})
+    before = [extent(s) for s in Evaluator().step(p)]
+    out = scale_program(p, 1000)
+    after = [extent(s) for s in Evaluator().step(out)]
+    assert after == [[round(v * 1000, 1) for v in e] for e in before]
+    assert out["ops"][0]["params"] == p["ops"][0]["params"]
+    assert out["ops"][1]["params"]["translate"] == [0, 500, 0] and out["ops"][2]["params"]["scale"] == [1000, 2000, 1000]

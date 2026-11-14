@@ -16,7 +16,7 @@ from ..core import export as exporter
 from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds
 from ..core.ops_engineering import HOLES
 from ..core.program import (ProgramError, apply_patch, check, component_map, component_ops,
-                             delete_component, duplicate_component, op_inputs)
+                             delete_component, duplicate_component, op_inputs, scale_program)
 from ..image3d import pipeline, sheet
 from ..llm import client
 from . import library
@@ -816,6 +816,18 @@ class Studio(QObject):
         except (ValueError, ProgramError, EvalError) as e:
             self._say(f"material swap rejected: {e}")
             return False
+
+    @Slot(float)
+    def rescale(self, factor: float):
+        """Scale the whole build about the origin, e.g. an import whose units were metres, as one undo step."""
+        if not self._program:
+            return
+        try:
+            prog = scale_program(self._program, factor)
+            self._ev.step(prog)
+        except (ProgramError, EvalError) as e:
+            return self._say(f"rescale refused: {e}")
+        self._set_program(prog, f"scaled the build by {factor:g}", keep_step=True)
 
     @Slot()
     def closeProgram(self):
