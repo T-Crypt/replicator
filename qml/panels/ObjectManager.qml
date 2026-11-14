@@ -13,6 +13,7 @@ Rectangle {
     signal toggleHidden(string cid)
     signal isolateComponent(string cid)
     signal playComponent(string cid)
+    signal contextRequested(string cid, real x, real y)
     property var expanded: ({})
 
     ListView {
@@ -41,7 +42,11 @@ Rectangle {
                 Rectangle { visible: row.sel; x: 4; width: 2; height: parent.height - 10; anchors.verticalCenter: parent.verticalCenter; radius: 1; color: Theme.accent }
                 MouseArea {
                     id: hov; anchors.fill: parent; hoverEnabled: true
-                    onClicked: studio.select(row.modelData.id)
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: (m) => {
+                        studio.select(row.modelData.id)
+                        if (m.button === Qt.RightButton) { const p = mapToItem(null, m.x, m.y); om.contextRequested(row.modelData.id, p.x, p.y) }
+                    }
                     onDoubleClicked: om.isolateComponent(row.solo ? "" : row.modelData.id)
                 }
                 RowLayout {

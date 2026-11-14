@@ -79,6 +79,8 @@ Item {
         close: "M6 6 L18 18 M18 6 L6 18",
         check: "M5 12.5 L10 17.5 L19 7",
         plus: "M12 5 V19 M5 12 H19",
+        copy: "M8 8 H20 V20 H8 Z M16 8 V4 H4 V16 H8",
+        trash: "M4 7 H20 M9 7 V4 H15 V7 M6 7 L7 20 H17 L18 7 M10 11 V16 M14 11 V16",
         panelLeft: "M3 5 H21 V19 H3 Z M9 5 V19",
         panelRight: "M3 5 H21 V19 H3 Z M15 5 V19",
         panelBottom: "M3 5 H21 V19 H3 Z M3 14 H21",

@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Replicator.UI
 
 // The status bar: the last console line on the left, kernel read-outs on the right (step, parts, triangles,
@@ -31,6 +32,24 @@ Rectangle {
         Chip { visible: studio.stepCount > 0; label: "TRIS"; value: sb.n(sb.st.triangles) }
         Chip { visible: studio.dimensions.length === 3; label: "SIZE"
                value: studio.dimensions.map(d => Math.round(d)).join(" × ") + " mm" }
+        Item {
+            visible: studio.mass.kg !== undefined
+            implicitWidth: massChip.implicitWidth; implicitHeight: massChip.implicitHeight
+            readonly property var m: studio.mass
+            Chip {
+                id: massChip
+                label: "MASS"
+                value: parent.m.kg === undefined ? "" : (parent.m.kg >= 1000 ? (parent.m.kg / 1000).toFixed(2) + " t"
+                       : parent.m.kg >= 1 ? parent.m.kg.toFixed(1) + " kg" : (parent.m.kg * 1000).toFixed(0) + " g") + (parent.m.assumed ? " *" : "")
+                valueColor: parent.m.assumed ? Theme.inferred : Theme.text
+            }
+            MouseArea { id: massMa; anchors.fill: parent; hoverEnabled: true }
+            ToolTip.visible: massMa.containsMouse; ToolTip.delay: 300
+            ToolTip.text: "Computed from measured volumes and handbook densities by material name. Centre of gravity "
+                          + (m.cg ? m.cg.join(", ") : "") + " mm."
+                          + (m.assumed ? " * " + m.assumed + " part(s) have no recognised material and count as aluminium." : "")
+                          + (m.stands === false ? " It would tip over." : m.stands ? " It stands on its footprint." : "")
+        }
         Chip { visible: studio.stepCount > 0; label: "KERNEL"
                value: (sb.st.buildMs !== undefined ? sb.st.buildMs.toFixed(1) : "—") + " ms"
                valueColor: sb.st.buildMs > 120 ? Theme.amber : Theme.text }

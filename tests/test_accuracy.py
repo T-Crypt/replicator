@@ -125,3 +125,18 @@ def test_knowledge_cards_are_picked_by_subject():
     assert [c.name for c in knowledge.pick("a rocket engine with turbopumps")] == ["rocket_engine"]
     assert [c.name for c in knowledge.pick("a gaming PC with a big graphics card")] == ["desktop_pc"]
     assert knowledge.pick("a ceramic teapot") == []
+
+
+def test_mass_is_volume_times_density_in_plain_floats():
+    from replicator.core import physics
+    p = {"version": 1, "units": "mm", "materials": {"steel": {}}, "ops": [
+        {"id": "c", "op": "box", "material": "steel", "params": {"size": 100, "translate": [0, 50, 0]}}]}
+    m = physics.properties(p, Evaluator().step(p))
+    assert (m.kg, m.cg, m.stands) == (7.85, [0.0, 50.0, 0.0], True)
+    assert type(m.kg) is float and all(type(v) is float for v in m.by_component.values())
+
+
+def test_a_top_heavy_object_tips():
+    p = prog({"id": "post", "op": "box", "component": "post", "params": {"size": [10, 200, 10], "translate": [0, 100, 0]}},
+             {"id": "arm", "op": "box", "component": "arm", "params": {"size": [300, 20, 20], "translate": [150, 210, 0]}})
+    assert ("tips", "") in issues(p)

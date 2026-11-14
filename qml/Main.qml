@@ -43,6 +43,9 @@ ApplicationWindow {
     Behavior on explode { NumberAnimation { duration: 650; easing.type: Easing.OutCubic } }
     property var hidden: ({})
     property string isolate: ""
+    readonly property string part: studio.selectedComponent
+    readonly property string partLabel: { const c = studio.components.find(c => c.id === part); return c ? c.label : part }
+    readonly property bool idle: studio.busy === ""
     property alias renderGate: viewport.renderGate   // [DEBUG-rg] harness
     readonly property bool showcase: studio.mode === "showcase"
     readonly property bool present: studio.mode === "present"
@@ -106,6 +109,17 @@ ApplicationWindow {
         if (studio.mode === "build") timeline.play(1)
     }
     function val(x) { return typeof x === "function" ? x() : x }
+    function openContext(shapeId, x, y) {
+        studio.select(shapeId)
+        ctxMenu.actions = window.pick(part !== "" ? partMenu : sceneMenu)
+        ctxMenu.x = Math.min(x, window.width - ctxMenu.implicitWidth - 8)
+        ctxMenu.y = Math.min(y, window.height - ctxMenu.actions.length * Theme.row - 16)
+        ctxMenu.open()
+    }
+    readonly property var partMenu: ["part.frame", "part.isolate", "part.hide", "part.play", "-", "part.rework", "part.material",
+                                     "-", "part.duplicate", "part.delete", "-", "showAll", "fixIssues"]
+    readonly property var sceneMenu: ["frameAll", "showAll", "-", "disp.shaded", "disp.lines", "disp.xray", "-",
+                                      "add.tube", "add.nozzle", "add.rotor", "add.grille", "add.box", "add.cylinder", "-", "fixIssues", "blenderOpen"]
 
     // ------------------------------------------------------------------ the action registry
     readonly property var actions: [
@@ -121,6 +135,8 @@ ApplicationWindow {
         { id: "undo", group: "Edit", title: "Undo", keys: "Ctrl+Z", icon: "undo", enabled: () => studio.canUndo, run: () => studio.undo() },
         { id: "redo", group: "Edit", title: "Redo", keys: "Ctrl+Shift+Z", icon: "redo", enabled: () => studio.canRedo, run: () => studio.redo() },
         { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (window.present) window.setMode("reverse"); else if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else { studio.select(""); window.isolate = "" } } },
+        { id: "fixIssues", group: "Edit", title: "Fix accuracy issues with the agent", icon: "sparkle", enabled: () => window.idle && studio.issues.some(i => i.severity === "fix"), run: () => studio.fixIssues() },
+        { id: "showAll", group: "Edit", title: "Show everything", icon: "eye", run: () => { window.hidden = ({}); window.isolate = "" } },
         { id: "commander", group: "Edit", title: "Commander: search every action", keys: "Ctrl+K", icon: "search", run: () => commander.open() },
         { id: "preferences", group: "Edit", title: "Preferences…", keys: "Ctrl+,", icon: "sliders", run: () => preferences.open() },
         // create
@@ -133,6 +149,19 @@ ApplicationWindow {
         { id: "add.helix", group: "Create", title: "Spring (helix)", icon: "helix", run: () => studio.addPrimitive("helix") },
         { id: "add.pipe", group: "Create", title: "Pipe", icon: "pipe", run: () => studio.addPrimitive("pipe") },
         { id: "add.loft", group: "Create", title: "Loft", icon: "loft", run: () => studio.addPrimitive("loft") },
+        { id: "add.tube", group: "Create", title: "Tube (hollow casing)", icon: "cylinder", run: () => studio.addPrimitive("tube") },
+        { id: "add.nozzle", group: "Create", title: "Rocket nozzle (bell)", icon: "loft", run: () => studio.addPrimitive("nozzle") },
+        { id: "add.rotor", group: "Create", title: "Rotor (fan, turbine, propeller)", icon: "spin", run: () => studio.addPrimitive("rotor") },
+        { id: "add.grille", group: "Create", title: "Grille (vent plate)", icon: "grid", run: () => studio.addPrimitive("grille") },
+        // the selected part (right-click menu and Commander)
+        { id: "part.frame", group: "Part", title: "Frame this part", icon: "target", enabled: () => window.part !== "", run: () => viewport.frameComponent(window.part) },
+        { id: "part.isolate", group: "Part", title: "Isolate", icon: "target", checked: () => window.part !== "" && window.isolate === window.part, enabled: () => window.part !== "", run: () => window.isolate = window.isolate === window.part ? "" : window.part },
+        { id: "part.hide", group: "Part", title: "Hide", keys: "Ctrl+H", icon: "eyeOff", enabled: () => window.part !== "", run: () => window.toggleHidden(window.part) },
+        { id: "part.play", group: "Part", title: "Play how it is made", icon: "play", enabled: () => window.part !== "", run: () => window.playComponent(window.part) },
+        { id: "part.rework", group: "Part", title: "Rework with the agent…", keys: "Ctrl+E", icon: "sparkle", enabled: () => window.part !== "" && window.idle, run: () => { agentPrompt.cid = window.part; agentPrompt.label = window.partLabel; agentPrompt.open() } },
+        { id: "part.material", group: "Part", title: "Paint a material…", icon: "material", enabled: () => window.part !== "", run: () => { window.showRight = true; window.rightTab = 1 } },
+        { id: "part.duplicate", group: "Part", title: "Duplicate", keys: "Ctrl+D", icon: "copy", enabled: () => window.part !== "" && window.idle, run: () => studio.duplicateComponent(window.part) },
+        { id: "part.delete", group: "Part", title: "Delete", keys: "Delete", icon: "trash", enabled: () => window.part !== "" && window.idle, run: () => studio.deleteComponent(window.part) },
         // tools
         { id: "tool.select", group: "Tool", title: "Select tool", icon: "cursor", checked: () => viewport.tool === "select", run: () => viewport.tool = "select" },
         { id: "tool.move", group: "Tool", title: "Move tool", keys: "W", icon: "move", checked: () => viewport.tool === "move", run: () => viewport.tool = viewport.tool === "move" ? "select" : "move" },
@@ -181,8 +210,10 @@ ApplicationWindow {
     function pick(ids) { return ids.map(i => i === "-" ? "-" : byId[i]) }
     readonly property var menus: [
         { title: "File", items: ["open", "import", "image3d", "-", "exportGlb", "exportStl", "exportObj", "-", "close"] },
-        { title: "Edit", items: ["undo", "redo", "-", "deselect", "-", "commander", "preferences"] },
-        { title: "Create", items: ["add.box", "add.cylinder", "add.sphere", "add.torus", "add.capsule", "-", "add.gear", "add.helix", "add.pipe", "add.loft"] },
+        { title: "Edit", items: ["undo", "redo", "-", "deselect", "showAll", "-", "fixIssues", "-", "commander", "preferences"] },
+        { title: "Create", items: ["add.box", "add.cylinder", "add.sphere", "add.torus", "add.capsule", "-", "add.gear", "add.helix", "add.pipe", "add.loft",
+                                   "-", "add.tube", "add.nozzle", "add.rotor", "add.grille"] },
+        { title: "Part", items: ["part.frame", "part.isolate", "part.hide", "part.play", "-", "part.rework", "part.material", "-", "part.duplicate", "part.delete"] },
         { title: "View", items: ["frameAll", "frameSel", "-", "view.persp", "view.top", "view.right", "view.front", "-",
                                  "disp.shaded", "disp.lines", "disp.wire", "disp.xray", "-", "colorComp", "blueprint", "grid", "reference"] },
         { title: "Render", items: ["mode.showcase", "render", "-", "blenderOpen", "blenderPull"] },
@@ -237,6 +268,8 @@ ApplicationWindow {
         onOpenFile: (path) => window.openPath(path)
     }
     Preferences { id: preferences; workspace: window }
+    RMenu { id: ctxMenu; parent: Overlay.overlay; implicitWidth: 250 }
+    AgentPrompt { id: agentPrompt; onSubmitted: (cid, text) => studio.rework(cid, text) }
 
     // ------------------------------------------------------------------ header: brand, menus, modes, Commander, engine
     header: Rectangle {
@@ -405,6 +438,7 @@ ApplicationWindow {
                     referenceOn: window.showReference
                     turntable: window.showcase && showcaseBar.spin
                     onPicked: (id) => studio.select(id)
+                    onContextRequested: (id, x, y) => window.openContext(id, x, y)
                     onExplodeNudge: (d) => window.explodeTarget = Math.max(0, Math.min(1, window.explodeTarget + d))
                     onUserInteracted: if (studio.renderPath !== "") studio.clearRender()
                 }
@@ -511,6 +545,12 @@ ApplicationWindow {
                             }
                         }
                     }
+                }
+
+                IssuesCard {
+                    visible: !window.empty && !window.showcase && !window.present && studio.mode !== "reverse"
+                    x: 18; y: 118
+                    onChosen: (cid) => { studio.select(cid); viewport.frameComponent(cid) }
                 }
 
                 // ---- selection read-out (bottom left)
@@ -698,6 +738,7 @@ ApplicationWindow {
                         onToggleHidden: (cid) => window.toggleHidden(cid)
                         onIsolateComponent: (cid) => window.isolate = cid
                         onPlayComponent: (cid) => window.playComponent(cid)
+                        onContextRequested: (cid, x, y) => window.openContext(cid, x, y)
                     }
                     LedgerPanel {
                         Layout.fillWidth: true; Layout.fillHeight: true
@@ -749,6 +790,7 @@ ApplicationWindow {
                                 onToggleHidden: (cid) => window.toggleHidden(cid)
                                 onIsolateComponent: (cid) => window.isolate = cid
                                 onPlayComponent: (cid) => window.playComponent(cid)
+                                onContextRequested: (cid, x, y) => window.openContext(cid, x, y)
                             }
                         }
                         MaterialShelf {}

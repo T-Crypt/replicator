@@ -28,6 +28,7 @@ Item {
     property real revealMs: 1100
     property alias view: view
     signal picked(string shapeId)
+    signal contextRequested(string shapeId, real x, real y)
     signal userInteracted()
     signal explodeNudge(real delta)
 
@@ -463,9 +464,11 @@ Item {
                 gizmo.dragging = false; gizmo.axis = -1
                 gizmo.offset = Qt.vector3d(0, 0, 0)
                 if (o.length() > 0.001) studio.nudge(studio.selected, o.x, o.y, o.z)
-            } else if (!moved && m.button === Qt.LeftButton) {
+            } else if (!moved && (m.button === Qt.LeftButton || m.button === Qt.RightButton)) {
                 const r = view.pick(m.x, m.y)
-                root.picked(r.objectHit && r.objectHit.shapeId !== undefined ? r.objectHit.shapeId : "")
+                const id = r.objectHit && r.objectHit.shapeId !== undefined ? r.objectHit.shapeId : ""
+                if (m.button === Qt.LeftButton) root.picked(id)
+                else { const p = mouse.mapToItem(null, m.x, m.y); root.contextRequested(id, p.x, p.y) }
             }
             act = ""
         }

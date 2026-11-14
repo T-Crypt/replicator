@@ -18,6 +18,21 @@ PRESETS: dict[str, tuple[str, str, dict]] = {
     "gold": ("Gold", "Metal", {"base_color": [1.0, 0.77, 0.34], "metalness": 1.0, "roughness": 0.18}),
     "anodised_blue": ("Anodised blue", "Metal", {"base_color": [0.10, 0.32, 0.78], "metalness": 1.0, "roughness": 0.32}),
     "anodised_red": ("Anodised red", "Metal", {"base_color": [0.72, 0.08, 0.10], "metalness": 1.0, "roughness": 0.32}),
+    "titanium_ti6al4v": ("Ti-6Al-4V, machined", "Aerospace", {"base_color": [0.56, 0.54, 0.51], "metalness": 1.0, "roughness": 0.3}),
+    "titanium_blasted": ("Titanium, bead-blasted", "Aerospace", {"base_color": [0.50, 0.49, 0.47], "metalness": 1.0, "roughness": 0.62}),
+    "titanium_heat_tint": ("Titanium, heat-tinted", "Aerospace", {"base_color": [0.33, 0.30, 0.56], "metalness": 1.0, "roughness": 0.28}),
+    "inconel_718": ("Inconel 718", "Aerospace", {"base_color": [0.48, 0.46, 0.43], "metalness": 1.0, "roughness": 0.4}),
+    "inconel_heat": ("Inconel, heat-straw", "Aerospace", {"base_color": [0.36, 0.24, 0.13], "metalness": 1.0, "roughness": 0.46}),
+    "aluminium_7075_black": ("7075-T6, black anodised", "Aerospace", {"base_color": [0.03, 0.03, 0.035], "metalness": 1.0, "roughness": 0.34}),
+    "aluminium_7075": ("7075-T6, clear anodised", "Aerospace", {"base_color": [0.76, 0.77, 0.79], "metalness": 1.0, "roughness": 0.38}),
+    "steel_maraging": ("Maraging steel", "Aerospace", {"base_color": [0.40, 0.41, 0.43], "metalness": 1.0, "roughness": 0.3}),
+    "tungsten": ("Tungsten", "Aerospace", {"base_color": [0.45, 0.45, 0.47], "metalness": 1.0, "roughness": 0.34}),
+    "carbon_cfrp_twill": ("CFRP twill, clear-coated", "Aerospace", {"base_color": [0.03, 0.032, 0.036], "metalness": 0.25, "roughness": 0.16}),
+    "peek": ("PEEK", "Aerospace", {"base_color": [0.62, 0.52, 0.38], "metalness": 0.0, "roughness": 0.4}),
+    "kevlar": ("Aramid (Kevlar)", "Aerospace", {"base_color": [0.78, 0.60, 0.14], "metalness": 0.0, "roughness": 0.6}),
+    "tps_tile": ("Thermal tile (TPS)", "Aerospace", {"base_color": [0.035, 0.035, 0.04], "metalness": 0.0, "roughness": 0.88}),
+    "steel_cerakote_black": ("Cerakote, graphite black", "Aerospace", {"base_color": [0.05, 0.05, 0.055], "metalness": 0.1, "roughness": 0.58}),
+    "steel_cerakote_fde": ("Cerakote, flat dark earth", "Aerospace", {"base_color": [0.42, 0.35, 0.25], "metalness": 0.05, "roughness": 0.6}),
     "abs_white": ("ABS white", "Polymer", {"base_color": [0.88, 0.88, 0.86], "metalness": 0.0, "roughness": 0.42}),
     "abs_black": ("ABS black", "Polymer", {"base_color": [0.035, 0.035, 0.04], "metalness": 0.0, "roughness": 0.45}),
     "rubber": ("Rubber", "Polymer", {"base_color": [0.025, 0.025, 0.028], "metalness": 0.0, "roughness": 0.9}),
@@ -75,4 +90,15 @@ def apply(program: dict, op_ids: list[str], preset: str) -> dict:
             hit += 1
     if not hit:
         raise ValueError("nothing selected to paint")
+    return program
+
+
+def swap(program: dict, old: str, preset: str) -> dict:
+    """Every part made of `old` becomes `preset` (a whole-build material variant). In place."""
+    ids = [op["id"] for op in program["ops"] if op.get("material") == old]
+    if not ids:
+        raise ValueError(f"no part uses {old!r}")
+    apply(program, ids, preset)
+    if old != preset and not any(op.get("material") == old for op in program["ops"]):
+        program["materials"].pop(old, None)
     return program

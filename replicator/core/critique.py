@@ -13,6 +13,7 @@ import numpy as np
 
 from .assembly import Component
 from .evaluate import RawMesh, Shape
+from .physics import properties
 
 AXISYM = {"cylinder", "tube", "torus", "revolve", "nozzle", "rotor", "capsule", "gear", "helix"}
 CLIP_SHARE = 0.25        # overlap, as a share of the smaller part, that reads as parts passing through each other
@@ -167,7 +168,16 @@ def missing(b: Build) -> list[Issue]:
     return out
 
 
-CHECKS = (floating, overlaps, off_axis, size, missing)
+def stability(b: Build) -> list[Issue]:
+    m = properties(b.program, [s for s in b.shapes if _solid(s)])
+    if m.stands is False:
+        return [Issue("tips", "fix", "", f"It would tip over: the centre of gravity ({m.kg:.1f} kg at "
+                      f"x {m.cg[0]:.0f}, z {m.cg[2]:.0f}) lies outside the footprint on the floor. Widen the base, "
+                      "move mass over it, or add a stand.")]
+    return []
+
+
+CHECKS = (floating, overlaps, off_axis, size, missing, stability)
 
 
 def critique(program: dict, shapes: list[Shape], comps: list[Component]) -> list[Issue]:

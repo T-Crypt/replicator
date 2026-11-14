@@ -11,10 +11,11 @@ from pathlib import Path
 from PySide6.QtCore import Property, QObject, QFileSystemWatcher, QUrl, Signal, Slot
 
 from .. import config, voice
-from ..core import assembly, explain, materials, reverse
+from ..core import assembly, critique, explain, materials, physics, reverse
 from ..core import export as exporter
-from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds, component_map
-from ..core.program import ProgramError, apply_patch, check, op_inputs
+from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds
+from ..core.program import (ProgramError, apply_patch, check, component_map, component_ops,
+                             delete_component, duplicate_component, op_inputs)
 from ..image3d import pipeline, sheet
 from ..llm import client
 from . import library
@@ -49,6 +50,7 @@ class Studio(QObject):
     historyChanged = Signal()
     libraryChanged = Signal()
     explanationChanged = Signal()
+    issuesChanged = Signal()
     servicesChanged = Signal()
     voiceChanged = Signal()
     dictated = Signal(str)
@@ -89,6 +91,9 @@ class Studio(QObject):
         self._jobDone.connect(self._on_job)
         self._cfg = config.load()
         self._explanation: dict = {}
+        self._issues: list[dict] = []
+        self._issues_of: dict | None = None
+        self._mass: physics.Mass | None = None
         self._rest = "flush"
         self._say_token = 0
         self._player = None
@@ -300,6 +305,18 @@ class Studio(QObject):
         op = self._op(self._selected)
         return (op or {}).get("material") or ""
 
+    @Property("QVariantList", notify=issuesChanged)
+    def issues(self):
+        return self._issues
+
+    @Property("QVariantMap", notify=issuesChanged)
+    def mass(self):
+        """Computed mass properties: kg, centre of gravity, per component, and which parts use an assumed density."""
+        m = self._mass
+        if m is None:
+            return {}
+        return {"kg": m.kg, "cg": m.cg, "byComponent": m.by_component, "assumed": len(m.assumed), "stands": m.stands}
+
     @Property("QVariantMap", notify=explanationChanged)
     def explanation(self):
         """The checked explanation of the open object ({} until Explain has run): chapters, sources, notice."""
@@ -398,6 +415,12 @@ class Studio(QObject):
         self._radius = max(0.5 * (ext[0] ** 2 + ext[1] ** 2 + ext[2] ** 2) ** 0.5, 1.0)
         self._center = [(lo[0] + hi[0]) / 2, ext[1] / 2, (lo[2] + hi[2]) / 2]
         self._comps = assembly.components(self._program, full)
+        if self._issues_of is not self._program:       # measured once per program version, not per scrub step
+            self._issues_of = self._program
+            self._issues = [i.as_dict() for i in critique.critique(self._program, full, self._comps)]
+            solids = [s for s in full if not isinstance(s.manifold, RawMesh)]
+            self._mass = physics.properties(self._program, solids) if solids else None
+            self.issuesChanged.emit()
         offsets = assembly.explode(full, self._comps)
         cinfo = {c.id: c for c in self._comps}
         cur = {s.hash for s in shapes}
@@ -606,7 +629,11 @@ class Studio(QObject):
                     "helix": {"radius": 30, "pitch": 12, "turns": 6, "wire_radius": 3},
                     "loft": {"sections": [{"y": 0, "rx": 60, "rz": 35}, {"y": 80, "radius": 40},
                                           {"y": 160, "rx": 20, "rz": 45}]},
-                    "pipe": {"path": [[-80, 20, 0], [0, 120, 0], [80, 20, 0]], "radius": 10, "smooth": 8}}
+                    "pipe": {"path": [[-80, 20, 0], [0, 120, 0], [80, 20, 0]], "radius": 10, "smooth": 8},
+                    "tube": {"height": 160, "radius": 60, "wall": 4},
+                    "nozzle": {"throat_radius": 20, "expansion_ratio": 16, "contraction_ratio": 4},
+                    "rotor": {"hub_radius": 22, "tip_radius": 90, "chord": 32, "blades": 16},
+                    "grille": {"size": [140, 3, 140], "hole_size": 8, "hole": "hex"}}
         if kind not in defaults:
             return
         prog = copy.deepcopy(self._program) if self._program else {
@@ -661,6 +688,23 @@ class Studio(QObject):
             self._say(f"material rejected: {e}")
             return False
 
+    @Slot(str, str, result=bool)
+    def swapMaterial(self, old: str, preset: str) -> bool:
+        """Whole-build material variant: every part made of `old` becomes `preset`, as one undo step."""
+        if not self._program:
+            return False
+        try:
+            prog = materials.swap(copy.deepcopy(self._program), old, preset)
+            keep, sel = self._step, self._selected
+            self._set_program(prog, f"material variant: {old} -> {preset}", keep_step=True)
+            if keep < self.stepCount - 1:
+                self.setStep(keep)
+            self.select(sel)
+            return True
+        except (ValueError, ProgramError, EvalError) as e:
+            self._say(f"material swap rejected: {e}")
+            return False
+
     @Slot()
     def closeProgram(self):
         """Back to the start screen."""
@@ -678,6 +722,8 @@ class Studio(QObject):
         self._stats = {}
         self._dims = []
         self._explanation = {}
+        self._issues, self._issues_of = [], None
+        self.issuesChanged.emit()
         self.explanationChanged.emit()
         self.stopSpeaking()
         self.programChanged.emit()
@@ -706,13 +752,60 @@ class Studio(QObject):
     def edit(self, text: str):
         if not self._program:
             return self.dream(text)
-        base = copy.deepcopy(self._program)
+        self._agent_edit("Editing", text)
+
+    def _agent_edit(self, label: str, text: str, scope: set[str] | None = None):
+        base, engine, current = copy.deepcopy(self._program), self._engine, self._program
 
         def job(log):
-            patch = client.edit(base, text, self._engine, log=log)
+            patch = client.edit(base, text, engine, log=log, scope=scope)
             log(f"patch: {len(patch)} change(s)")
-            return {"program": apply_patch(base, patch), "keep": True}
-        self._run_job("Editing", job)
+            return {"program": apply_patch(base, patch), "keep": True, "base": current}
+        self._run_job(label, job)
+
+    @Slot()
+    def fixIssues(self):
+        """Hand the critic's measured problems to the model as one scoped edit."""
+        if not self._program or not self._issues:
+            return self._say("no accuracy issues to fix")
+        issues = [critique.Issue(**i) for i in self._issues]
+        scope = {o for i in issues if i.subject for o in component_ops(self._program, i.subject)}
+        self._agent_edit("Fixing", client.fix_instruction(issues), scope or None)
+
+    @Slot(str, str)
+    def rework(self, cid: str, text: str):
+        """Agent edit limited to one component: every op outside it must come back unchanged."""
+        if not self._program or not text.strip():
+            return
+        scope = set(component_ops(self._program, cid))
+        if not scope:
+            return self._say(f"rework: no component {cid}")
+        label = next((c.label for c in self._comps if c.id == cid), cid)
+        self._agent_edit(f"Reworking {label}", f"Rework the part {label!r}: {text.strip()}", scope)
+
+    @Slot(str)
+    def deleteComponent(self, cid: str):
+        try:
+            prog = delete_component(self._program, cid)
+            self._ev.step(prog)
+        except (ProgramError, EvalError, TypeError) as e:
+            return self._say(f"delete refused: {e}")
+        self._selected = ""
+        self._set_program(prog, f"deleted {cid}", keep_step=True)
+        self.selectionChanged.emit()
+
+    @Slot(str)
+    def duplicateComponent(self, cid: str):
+        c = next((c for c in self._comps if c.id == cid), None)
+        if c is None:
+            return self._say(f"duplicate: no component {cid}")
+        try:
+            prog, new = duplicate_component(self._program, cid, [round(float(c.hi[0] - c.lo[0]) * 1.15, 1), 0, 0])
+            self._ev.step(prog)
+        except (ProgramError, EvalError, TypeError) as e:
+            return self._say(f"duplicate refused: {e}")
+        self._set_program(prog, f"duplicated {cid} as {new}", keep_step=True)
+        self.select(new)
 
     @Slot()
     def nameParts(self):
@@ -778,6 +871,9 @@ class Studio(QObject):
             self._say(f"render ready ({res.get('seconds', 0):.0f} s): {res['render']}")
             return
         prog = res["program"]
+        if "base" in res and res["base"] is not self._program:
+            self._say("agent result dropped: the build changed while the model was working (nothing lost; ask again)")
+            return
         if "project" in res:
             self._project = Path(res["project"])
             self._ev = Evaluator(self._project)
