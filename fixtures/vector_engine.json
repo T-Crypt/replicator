@@ -1,35 +1,314 @@
 {
- "version": 1, "name": "Vector engine, reverse thrust", "units": "mm",
+ "version": 1,
+ "name": "Vector engine, reverse thrust",
+ "units": "mm",
  "materials": {
-  "titanium": {"base_color": [0.62, 0.63, 0.66], "metalness": 1.0, "roughness": 0.32},
-  "ceramic": {"base_color": [0.12, 0.12, 0.13], "metalness": 0.0, "roughness": 0.7},
-  "glow": {"base_color": [0.2, 0.75, 1.0], "metalness": 0.0, "roughness": 0.2, "emissive": [0.2, 0.75, 1.0]}
+  "titanium": {
+   "base_color": [
+    0.62,
+    0.63,
+    0.66
+   ],
+   "metalness": 1.0,
+   "roughness": 0.32
+  },
+  "ceramic": {
+   "base_color": [
+    0.12,
+    0.12,
+    0.13
+   ],
+   "metalness": 0.0,
+   "roughness": 0.7
+  },
+  "glow": {
+   "base_color": [
+    0.2,
+    0.75,
+    1.0
+   ],
+   "metalness": 0.0,
+   "roughness": 0.2,
+   "emissive": [
+    0.2,
+    0.75,
+    1.0
+   ]
+  }
  },
- "blueprint": {"summary": "A podded turbofan whose cascade reverser doors sit in a radial ring.",
-               "dimensions": [220, 520, 220]},
+ "blueprint": {
+  "summary": "A podded turbofan whose cascade reverser doors sit in a radial ring.",
+  "dimensions": [
+   220,
+   520,
+   220
+  ]
+ },
  "ops": [
-  {"id": "nacelle_shell", "op": "revolve", "label": "Nacelle", "part": "nacelle", "material": "titanium",
-   "params": {"points": [[78,0],[98,30],[104,160],[100,330],[84,420],[70,420],[86,330],[90,160],[84,30],[70,0]]}},
-  {"id": "intake_lip", "op": "torus", "label": "Intake lip", "part": "nacelle", "material": "titanium",
-   "params": {"major_radius": 76, "minor_radius": 8, "translate": [0, 0, 0]}},
-  {"id": "nacelle", "op": "boolean", "label": "Nacelle and lip", "part": "nacelle",
-   "inputs": ["nacelle_shell", "intake_lip"], "params": {"mode": "union"}},
-  {"id": "core", "op": "revolve", "label": "Core and spinner", "part": "core", "material": "ceramic",
-   "params": {"points": [[0,10],[22,20],[40,60],[46,300],[38,470],[20,510],[0,515]]}},
-  {"id": "blade", "op": "box", "label": "Fan blade", "part": "fan", "material": "titanium",
-   "params": {"size": [4, 14, 70], "translate": [0, 45, 44], "rotate": [0, 0, 18]}},
-  {"id": "fan", "op": "array", "label": "Fan, 18 blades", "part": "fan", "input": "blade",
-   "params": {"mode": "radial", "count": 18, "axis": "y"}},
-  {"id": "door", "op": "box", "label": "Reverser door", "part": "reverser", "material": "titanium",
-   "params": {"size": [48, 110, 6], "translate": [0, 250, 106], "rotate": [-14, 0, 0]}},
-  {"id": "reverser", "op": "array", "label": "Reverser ring, 6 doors", "part": "reverser", "input": "door",
-   "params": {"mode": "radial", "count": 6, "axis": "y"}},
-  {"id": "nozzle_ring", "op": "torus", "label": "Exhaust glow ring", "part": "nozzle", "material": "glow",
-   "params": {"major_radius": 74, "minor_radius": 3, "translate": [0, 418, 0]}},
-  {"id": "pylon_raw", "op": "extrude", "label": "Pylon", "part": "pylon", "material": "titanium",
-   "params": {"points": [[0,40],[24,320],[-6,320],[-20,60]], "height": 14, "axis": "x",
-              "translate": [0, 0, 0], "rotate": [0, 0, 0]}},
-  {"id": "pylon", "op": "transform", "label": "Pylon on top", "part": "pylon", "input": "pylon_raw",
-   "params": {"rotate": [0, 0, 0], "translate": [0, 0, 0]}}
+  {
+   "id": "nacelle_shell",
+   "op": "revolve",
+   "label": "Nacelle",
+   "part": "nacelle",
+   "material": "titanium",
+   "params": {
+    "points": [
+     [
+      78,
+      0
+     ],
+     [
+      98,
+      30
+     ],
+     [
+      104,
+      160
+     ],
+     [
+      100,
+      330
+     ],
+     [
+      84,
+      420
+     ],
+     [
+      70,
+      420
+     ],
+     [
+      86,
+      330
+     ],
+     [
+      90,
+      160
+     ],
+     [
+      84,
+      30
+     ],
+     [
+      70,
+      0
+     ]
+    ]
+   }
+  },
+  {
+   "id": "intake_lip",
+   "op": "torus",
+   "label": "Intake lip",
+   "part": "nacelle",
+   "material": "titanium",
+   "params": {
+    "major_radius": 76,
+    "minor_radius": 8,
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "nacelle",
+   "op": "boolean",
+   "label": "Nacelle and lip",
+   "part": "nacelle",
+   "inputs": [
+    "nacelle_shell",
+    "intake_lip"
+   ],
+   "params": {
+    "mode": "union"
+   }
+  },
+  {
+   "id": "core",
+   "op": "revolve",
+   "label": "Core and spinner",
+   "part": "core",
+   "material": "ceramic",
+   "params": {
+    "points": [
+     [
+      0,
+      10
+     ],
+     [
+      22,
+      20
+     ],
+     [
+      40,
+      60
+     ],
+     [
+      46,
+      300
+     ],
+     [
+      38,
+      470
+     ],
+     [
+      20,
+      510
+     ],
+     [
+      0,
+      515
+     ]
+    ]
+   }
+  },
+  {
+   "id": "blade",
+   "op": "box",
+   "label": "Fan blade",
+   "part": "fan",
+   "material": "titanium",
+   "params": {
+    "size": [
+     4,
+     14,
+     70
+    ],
+    "translate": [
+     0,
+     45,
+     44
+    ],
+    "rotate": [
+     0,
+     0,
+     18
+    ]
+   }
+  },
+  {
+   "id": "fan",
+   "op": "array",
+   "label": "Fan, 18 blades",
+   "part": "fan",
+   "input": "blade",
+   "params": {
+    "mode": "radial",
+    "count": 18,
+    "axis": "y"
+   }
+  },
+  {
+   "id": "door",
+   "op": "box",
+   "label": "Reverser door",
+   "part": "reverser",
+   "material": "titanium",
+   "params": {
+    "size": [
+     48,
+     110,
+     6
+    ],
+    "translate": [
+     0,
+     250,
+     106
+    ],
+    "rotate": [
+     -14,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "reverser",
+   "op": "array",
+   "label": "Reverser ring, 6 doors",
+   "part": "reverser",
+   "input": "door",
+   "params": {
+    "mode": "radial",
+    "count": 6,
+    "axis": "y"
+   }
+  },
+  {
+   "id": "nozzle_ring",
+   "op": "torus",
+   "label": "Exhaust glow ring",
+   "part": "nozzle",
+   "material": "glow",
+   "params": {
+    "major_radius": 74,
+    "minor_radius": 3,
+    "translate": [
+     0,
+     418,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pylon_raw",
+   "op": "extrude",
+   "label": "Pylon",
+   "part": "pylon",
+   "material": "titanium",
+   "params": {
+    "points": [
+     [
+      0,
+      40
+     ],
+     [
+      24,
+      320
+     ],
+     [
+      -6,
+      320
+     ],
+     [
+      -20,
+      60
+     ]
+    ],
+    "height": 14,
+    "axis": "x",
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "rotate": [
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pylon",
+   "op": "transform",
+   "label": "Pylon on top",
+   "part": "pylon",
+   "input": "pylon_raw",
+   "params": {
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     118
+    ]
+   }
+  }
  ]
 }
