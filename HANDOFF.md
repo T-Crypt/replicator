@@ -53,6 +53,9 @@ the dim behind Commander and Preferences does not show in shots; it does in the 
 7. Check: `--mode present` shot of the engine (floats) and of `out/image3d/orc-mv/program.json` (stands).
 
 ### 2. Presenter overlay (coder) - new `qml/panels/Presenter.qml`
+**Done 2026-11-13** (shot-verified with `out/present-test` and the empty state). The window Shortcuts own Esc, Space,
+Left and Right, so Main.qml routes those actions to the presenter while presenting; `speaking` notifies via `voiceChanged`.
+
 Shown over the viewport when `present`. Fixed light palette (ink `#14181f`, dim `#5b6472`), not theme tokens.
 - State: `property int chapter: 0`, `property bool playing: true`. `readonly property var doc: studio.explanation`.
 - On chapter change: `window.isolate = doc.chapters[chapter].component`, `viewport.frameComponent(...)`, and

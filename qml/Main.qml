@@ -90,7 +90,7 @@ ApplicationWindow {
         if (m === "reverse") { viewport.colorByComponent = true }
         if (m === "showcase") { timeline.stop(); studio.setStep(studio.stepCount - 1); viewport.colorByComponent = false
                                 viewport.heroAngle(); viewport.frameAll(true) }
-        if (m === "present") { viewport.colorByComponent = false; isolate = ""; viewport.frameAll(true) }
+        if (m === "present") { viewport.colorByComponent = false; presenter.start() }
     }
     function toggleHidden(cid) { const h = Object.assign({}, hidden); h[cid] = !h[cid]; hidden = h }
     function playComponent(cid) {
@@ -120,7 +120,7 @@ ApplicationWindow {
         // edit
         { id: "undo", group: "Edit", title: "Undo", keys: "Ctrl+Z", icon: "undo", enabled: () => studio.canUndo, run: () => studio.undo() },
         { id: "redo", group: "Edit", title: "Redo", keys: "Ctrl+Shift+Z", icon: "redo", enabled: () => studio.canRedo, run: () => studio.redo() },
-        { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else { studio.select(""); window.isolate = "" } } },
+        { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (window.present) window.setMode("reverse"); else if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else { studio.select(""); window.isolate = "" } } },
         { id: "commander", group: "Edit", title: "Commander: search every action", keys: "Ctrl+K", icon: "search", run: () => commander.open() },
         { id: "preferences", group: "Edit", title: "Preferences…", keys: "Ctrl+,", icon: "sliders", run: () => preferences.open() },
         // create
@@ -152,10 +152,10 @@ ApplicationWindow {
         { id: "reference", group: "View", title: "Reference images", keys: "R", icon: "reference", checked: () => window.showReference, run: () => window.showReference = !window.showReference },
         { id: "blueprint", group: "View", title: "Blueprint look on / off", keys: "B", icon: "ruler", checked: () => window.blueprint > 0.5, run: () => bpAnim.go(window.blueprint > 0.5 ? 0 : 1) },
         // timeline
-        { id: "play", group: "Timeline", title: "Play / pause the build", keys: "Space", icon: "play", run: () => timeline.playDir !== 0 ? timeline.stop() : timeline.play(1) },
+        { id: "play", group: "Timeline", title: "Play / pause the build", keys: "Space", icon: "play", run: () => window.present ? presenter.togglePlay() : timeline.playDir !== 0 ? timeline.stop() : timeline.play(1) },
         { id: "disassemble", group: "Timeline", title: "Disassemble (play backward)", keys: "Shift+Space", icon: "playBack", run: () => timeline.play(-1) },
-        { id: "stepPrev", group: "Timeline", title: "Previous step", keys: "Left", run: () => { timeline.stop(); studio.setStep(studio.step - 1) } },
-        { id: "stepNext", group: "Timeline", title: "Next step", keys: "Right", run: () => { timeline.stop(); studio.setStep(studio.step + 1) } },
+        { id: "stepPrev", group: "Timeline", title: "Previous step", keys: "Left", run: () => { if (window.present) return presenter.prev(); timeline.stop(); studio.setStep(studio.step - 1) } },
+        { id: "stepNext", group: "Timeline", title: "Next step", keys: "Right", run: () => { if (window.present) return presenter.next(); timeline.stop(); studio.setStep(studio.step + 1) } },
         // modes
         { id: "mode.build", group: "Mode", title: "Build mode", keys: "1", icon: "build", checked: () => studio.mode === "build", run: () => window.setMode("build") },
         { id: "mode.dissect", group: "Mode", title: "Dissect mode (exploded view)", keys: "2", icon: "dissect", checked: () => studio.mode === "dissect", run: () => window.setMode("dissect") },
@@ -632,6 +632,12 @@ ApplicationWindow {
                             onHit: prompt.go()
                         }
                     }
+                }
+                Presenter {
+                    id: presenter
+                    anchors.fill: parent
+                    window: window
+                    viewport: viewport
                 }
             }
             Timeline {
