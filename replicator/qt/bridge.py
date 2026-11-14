@@ -8,18 +8,24 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import Property, QObject, QUrl, Signal, Slot
+from PySide6.QtCore import Property, QObject, QFileSystemWatcher, QUrl, Signal, Slot
 
-from ..core import assembly, reverse
+from .. import config, voice
+from ..core import assembly, explain, materials, reverse
 from ..core import export as exporter
 from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds, component_map
 from ..core.program import ProgramError, apply_patch, check, op_inputs
+from ..image3d import pipeline, sheet
 from ..llm import client
+from . import library
 from .envmap import EnvMap
 from .mesh_geometry import MeshGeometry
 
 OUT = Path.home() / "Replicator"
-MODES = ("build", "dissect", "reverse", "showcase")
+HISTORY_LIMIT = 200
+GEO_CACHE_LIMIT = 600      # viewport meshes kept for instant undo and scrub
+EVAL_CACHE_LIMIT = 4000    # kernel results kept (op hash -> solid)
+MODES = ("build", "dissect", "reverse", "showcase", "present")
 ENUMS = {"mode": {"boolean": ["union", "difference", "intersection"], "array": ["linear", "radial", "mirror"],
                   "deform": ["taper", "twist", "bend"]},
          "axis": ["x", "y", "z"]}
@@ -39,6 +45,14 @@ class Studio(QObject):
     modeChanged = Signal()
     reportChanged = Signal()
     renderChanged = Signal()
+    holodeckChanged = Signal()
+    historyChanged = Signal()
+    libraryChanged = Signal()
+    explanationChanged = Signal()
+    servicesChanged = Signal()
+    voiceChanged = Signal()
+    dictated = Signal(str)
+    _voiceEvent = Signal(str, str)
     _jobDone = Signal(object, str)
 
     def __init__(self):
@@ -47,6 +61,10 @@ class Studio(QObject):
         self._program: dict | None = None
         self._project: Path | None = None
         self._history: list[dict] = []
+        self._future: list[dict] = []
+        self._stats: dict = {}
+        self._ops_rows: list | None = None
+        self._comp_rows: list | None = None
         self._step = -1
         self._shapes: list[MeshGeometry] = []
         self._prev_shapes: list = []
@@ -64,7 +82,20 @@ class Studio(QObject):
         self._radius = 300.0
         self._center = [0.0, 150.0, 0.0]
         self._env = EnvMap()
+        self._holodeck_watcher = QFileSystemWatcher()
+        if sheet.CHARACTERS.is_dir():
+            self._holodeck_watcher.addPath(str(sheet.CHARACTERS))
+            self._holodeck_watcher.directoryChanged.connect(self.holodeckChanged.emit)
         self._jobDone.connect(self._on_job)
+        self._cfg = config.load()
+        self._explanation: dict = {}
+        self._rest = "flush"
+        self._say_token = 0
+        self._player = None
+        self._speaking = False
+        self._rec = None
+        self._listening = False
+        self._voiceEvent.connect(self._on_voice)
 
     # ------------------------------------------------------------------ properties
     @Property("QVariantList", notify=shapesChanged)
@@ -75,25 +106,32 @@ class Studio(QObject):
     def ops(self):
         if not self._program:
             return []
+        if self._ops_rows is not None:
+            return self._ops_rows
         comp = component_map(self._program)
         colors = {c.id: c.color for c in self._comps}
         consumed_at: dict[str, int] = {}
         for i, op in enumerate(self._program["ops"]):
             for ref in op_inputs(op):
                 consumed_at.setdefault(ref, i)
-        return [{"id": op["id"], "op": op["op"], "label": op.get("label", op["id"]), "part": op.get("part", ""),
-                 "component": comp[op["id"]], "color": colors.get(comp[op["id"]], "#8a8f98"), "index": i,
-                 "consumedAt": consumed_at.get(op["id"], -1)}
-                for i, op in enumerate(self._program["ops"])]
+        self._ops_rows = [
+            {"id": op["id"], "op": op["op"], "label": op.get("label", op["id"]), "part": op.get("part", ""),
+             "component": comp[op["id"]], "color": colors.get(comp[op["id"]], "#8a8f98"), "index": i,
+             "consumedAt": consumed_at.get(op["id"], -1)}
+            for i, op in enumerate(self._program["ops"])]
+        return self._ops_rows
 
     @Property("QVariantList", notify=shapesChanged)
     def components(self):
+        if self._comp_rows is not None:
+            return self._comp_rows
         g = self._ground
-        return [{"id": c.id, "label": c.label, "role": c.role, "color": c.color, "count": len(c.shapes),
+        self._comp_rows = [{"id": c.id, "label": c.label, "role": c.role, "color": c.color, "count": len(c.shapes),
                  "order": c.order, "shapes": c.shapes,
                  "center": [float(c.center[0]), float(c.center[1]) + g, float(c.center[2])],
                  "offset": [float(x) for x in (c.offset if c.offset is not None else [0, 0, 0])],
                  "size": [float(x) for x in (c.hi - c.lo)]} for c in self._comps]
+        return self._comp_rows
 
     @Property(str, notify=programChanged)
     def title(self):
@@ -220,6 +258,95 @@ class Studio(QObject):
     def renderPath(self):
         return self._render_path
 
+    @Property("QVariantList", notify=holodeckChanged)
+    def holodeckSheets(self):
+        """Holodeck character sheets, newest first."""
+        rows = []
+        if sheet.CHARACTERS.is_dir():
+            for p in sheet.CHARACTERS.glob("*.png"):
+                rows.append({"path": str(p), "name": p.stem, "subject": sheet.subject(sheet.sidecar(p)),
+                             "mtime": p.stat().st_mtime})
+        rows.sort(key=lambda r: -r["mtime"])
+        return rows
+
+    @Property("QVariantMap", notify=shapesChanged)
+    def stats(self):
+        """Kernel read-outs for the status bar: triangles, parts, build time and cache use of the last rebuild."""
+        return self._stats
+
+    @Property(bool, notify=historyChanged)
+    def canUndo(self):
+        return bool(self._history)
+
+    @Property(bool, notify=historyChanged)
+    def canRedo(self):
+        return bool(self._future)
+
+    @Property("QVariantList", constant=True)
+    def materialLibrary(self):
+        return materials.rows()
+
+    @Property("QVariantList", notify=programChanged)
+    def programMaterials(self):
+        return materials.program_rows(self._program)
+
+    @Property(str, notify=selectionChanged)
+    def selectedMaterial(self):
+        if not self._program:
+            return ""
+        for g in self._shapes:
+            if g.shapeId == self._selected:
+                return g.materialName
+        op = self._op(self._selected)
+        return (op or {}).get("material") or ""
+
+    @Property("QVariantMap", notify=explanationChanged)
+    def explanation(self):
+        """The checked explanation of the open object ({} until Explain has run): chapters, sources, notice."""
+        return self._explanation
+
+    @Property(str, notify=modeChanged)
+    def restPose(self):
+        """'flush' or 'levitate': how Present shows the object (measured from its footprint)."""
+        return self._rest
+
+    @Property("QVariantMap", notify=servicesChanged)
+    def services(self):
+        """Optional services (web research, voice) and what is usable right now."""
+        return {**self._cfg, "status": voice.status(self._cfg)}
+
+    @Property(bool, notify=voiceChanged)
+    def speaking(self):
+        return self._speaking
+
+    @Property(bool, notify=voiceChanged)
+    def listening(self):
+        return self._listening
+
+    @Property("QVariantList", notify=libraryChanged)
+    def examples(self):
+        return library.examples()
+
+    @Property("QVariantList", notify=libraryChanged)
+    def recents(self):
+        return library.recents(OUT)
+
+    @Property("QVariantList", notify=programChanged)
+    def reference(self):
+        """Reference images of the open program (image to 3D keeps the views it was built from): key, label, path."""
+        ref = (self._program or {}).get("reference") or {}
+        out = []
+        for v in ref.get("views", []):
+            p = Path(v.get("image", ""))
+            if not p.is_absolute() and self._project:
+                p = self._project / p
+            p = p.resolve()
+            if p.is_file():
+                fill, cy = library.figure_extent(p)
+                out.append({"key": v.get("key", "front"), "label": v.get("label", v.get("key", "")), "path": str(p),
+                            "fill": fill, "cy": cy})
+        return out
+
     # ------------------------------------------------------------------ helpers
     _dims: list = []
 
@@ -237,7 +364,11 @@ class Studio(QObject):
         check(program)
         if push and self._program is not None:
             self._history.append(self._program)
+            del self._history[:-HISTORY_LIMIT]
+            self._future.clear()
         self._program = program
+        self._ops_rows = self._comp_rows = None
+        self.historyChanged.emit()
         self._prev_shapes = []
         self._step = -1
         self.programChanged.emit()
@@ -251,8 +382,10 @@ class Studio(QObject):
             self._shapes, self._comps = [], []
             self.shapesChanged.emit()
             return
+        t0 = time.perf_counter()
         try:
             shapes = self._ev.step(self._program, self._step)
+            hits, misses = self._ev.last_hits, self._ev.last_misses
             full = self._ev.step(self._program)
         except EvalError as e:
             self._say(f"build error: {e}")
@@ -274,11 +407,13 @@ class Studio(QObject):
 
         def geo(s, phase):
             key = s.hash + "|" + json.dumps(mats.get(s.material), sort_keys=True)
-            g = self._geo_cache.get(key)
             c = cinfo.get(s.component)
+            key += "|" + s.id + "|" + (c.color if c else "") + "|" + (c.label if c else "")
+            g = self._geo_cache.get(key)
             if g is None:
                 g = MeshGeometry(s, mats.get(s.material), phase, c.color if c else "#8a8f98",
                                  c.label if c else s.component)
+                g.materialName = s.material or ""
                 self._geo_cache[key] = g
             g.with_phase(phase)
             g.set_offset(offsets.get(s.id, [0, 0, 0]))
@@ -288,7 +423,29 @@ class Studio(QObject):
         out += [geo(s, 2) for s in prev if s.hash not in cur]   # leaving: dematerialize on reverse playback
         self._prev_shapes = shapes
         self._shapes = out
+        if len(self._geo_cache) > GEO_CACHE_LIMIT:      # scrubbing a parameter leaves a trail of old meshes
+            keep = {id(g) for g in out}
+            self._geo_cache = {k: g for k, g in self._geo_cache.items() if id(g) in keep}
+            self._ev.trim(EVAL_CACHE_LIMIT)
+        self._ops_rows = self._comp_rows = None
+        live = [g for g, s in zip(out, shapes)]
+        self._stats = {"triangles": sum(g.triangles for g in live), "parts": len(live),
+                       "components": len(self._comps), "buildMs": round((time.perf_counter() - t0) * 1000, 1),
+                       "cacheHits": hits, "cacheMisses": misses, "cached": len(self._ev._cache)}
         self.shapesChanged.emit()
+
+    def _load_explanation(self):
+        """A new object: forget the old explanation, pick up a saved one from the project folder."""
+        self.stopSpeaking()
+        doc = {}
+        f = (self._project / "explanation.json") if self._project else None
+        if f and f.exists():
+            try:
+                doc = json.loads(f.read_text())
+            except ValueError:
+                doc = {}
+        self._explanation = doc
+        self.explanationChanged.emit()
 
     def _refresh_report(self):
         if not self._program:
@@ -318,7 +475,11 @@ class Studio(QObject):
     def setMode(self, m: str):
         if m not in MODES or m == self._mode:
             return
+        if self._mode == "present":
+            self.stopSpeaking()
         self._mode = m
+        if m == "present" and self._program:
+            self._rest = explain.rest_pose(self._ev.step(self._program))
         self.modeChanged.emit()
         if m == "reverse":
             self._refresh_report()
@@ -343,9 +504,12 @@ class Studio(QObject):
             self._project = p.parent
             self._ev = Evaluator(self._project)
             self._history.clear()
+            self._future.clear()
+            self._geo_cache.clear()
             self._program = None
             self._report = {}
             self._set_program(prog, f"opened {p.name}")
+            self._load_explanation()
         except (OSError, json.JSONDecodeError, ProgramError, EvalError) as e:
             self._say(f"open failed: {e}")
 
@@ -364,13 +528,27 @@ class Studio(QObject):
             return {"program": prog, "project": str(proj)}
         self._run_job("Reverse engineering", job, mode_after="reverse")
 
+    @Slot(str, bool)
+    def imageTo3D(self, path: str, single: bool):
+        """Image or Holodeck sheet -> a 3D model via Hunyuan3D in ComfyUI (one Berth batch)."""
+        src = _local(path)
+
+        def job(log):
+            log(f"image3d: {src.name}")
+            info = pipeline.image_to_mesh(src, single=single, log=log)
+            prog = json.loads(Path(info["program"]).read_text())
+            log(f"image3d: ready, {info['parts']} part(s), {info['triangles']:,} triangles "
+                f"({info['gpu_seconds']} s on the card)")
+            return {"program": prog, "project": str(Path(info["program"]).parent)}
+        self._run_job("Image to 3D", job, mode_after="reverse")
+
     # ------------------------------------------------------------------ edits
     def _commit_op(self, oid: str, mutate, note: str) -> bool:
         try:
             prog = copy.deepcopy(self._program)
             op = next(o for o in prog["ops"] if o["id"] == oid)
             mutate(op)
-            Evaluator(self._project).step(prog)
+            self._ev.step(prog)              # validates on the shared cache: only the edited op is rebuilt
             keep = self._step
             self._set_program(prog, note, keep_step=True)
             if keep < self.stepCount - 1:
@@ -451,12 +629,78 @@ class Studio(QObject):
         if not self._history:
             self._say("nothing to undo")
             return
+        self._future.append(self._program)
         self._set_program(self._history.pop(), "undo", keep_step=True, push=False)
+
+    @Slot()
+    def redo(self):
+        if not self._future:
+            self._say("nothing to redo")
+            return
+        self._history.append(self._program)
+        self._set_program(self._future.pop(), "redo", keep_step=True, push=False)
+
+    @Slot(str, result=bool)
+    def applyMaterial(self, name: str) -> bool:
+        """Material shelf: paint the selected part, or every part of the selected component."""
+        if not self._program:
+            return False
+        ids = [g.shapeId for g in self._shapes
+               if g.shapeId == self._selected or g.component == self._selected]
+        if not ids and self._op(self._selected):
+            ids = [self._selected]
+        try:
+            prog = materials.apply(copy.deepcopy(self._program), ids, name)
+            keep, sel = self._step, self._selected
+            self._set_program(prog, f"material {name} on {len(ids)} part(s)", keep_step=True)
+            if keep < self.stepCount - 1:
+                self.setStep(keep)
+            self.select(sel)
+            return True
+        except (ValueError, ProgramError, EvalError) as e:
+            self._say(f"material rejected: {e}")
+            return False
+
+    @Slot()
+    def closeProgram(self):
+        """Back to the start screen."""
+        self._program = None
+        self._project = None
+        self._history.clear()
+        self._future.clear()
+        self._geo_cache.clear()
+        self._ev = Evaluator()
+        self._ops_rows = self._comp_rows = None
+        self._prev_shapes = []
+        self._step = -1
+        self._selected = ""
+        self._report = {}
+        self._stats = {}
+        self._dims = []
+        self._explanation = {}
+        self.explanationChanged.emit()
+        self.stopSpeaking()
+        self.programChanged.emit()
+        self.historyChanged.emit()
+        self.selectionChanged.emit()
+        self.stepChanged.emit()
+        self.reportChanged.emit()
+        self.libraryChanged.emit()
+        self._rebuild()
 
     # ------------------------------------------------------------------ model jobs
     @Slot(str)
     def dream(self, text: str):
-        self._run_job("Dreaming", lambda log: {"program": client.dream(text, self._engine, log=log)})
+        engine, cfg = self._engine, dict(self._cfg)
+
+        def job(log):
+            sources = None
+            if cfg["research"]:      # ground the concept in real mechanisms before the blueprint is written
+                from ..research import lane
+                qs = client.research_queries(text, [], engine, log=log)
+                sources = lane.gather(qs, [text], cfg["search_url"], log=log) or None
+            return {"program": client.dream(text, engine, log=log, sources=sources)}
+        self._run_job("Dreaming", job)
 
     @Slot(str)
     def edit(self, text: str):
@@ -495,7 +739,8 @@ class Studio(QObject):
         if self._busy:
             self._say("busy: one job at a time (one GPU)")
             return
-        local = label.startswith(("Reverse", "Render", "Opening", "Pulling"))
+        local = label.startswith(("Reverse", "Render", "Opening", "Pulling", "Image to 3D"))
+        self.stopSpeaking()
         self._busy = label if local else f"{label} on {self._engine}"
         self.busyChanged.emit()
         self._mode_after = mode_after
@@ -519,6 +764,14 @@ class Studio(QObject):
         if "note" in res:
             self._say(res["note"])
             return
+        if "explanation" in res:
+            self._explanation = res["explanation"]
+            self.explanationChanged.emit()
+            c = self._explanation["counts"]
+            self._say(f"explained: {len(self._explanation['chapters'])} chapters, {c['cited']} cited, "
+                      f"{c['measured']} measured, {c['concept']} concept, {self._explanation['dropped']} dropped")
+            self.setMode("present")
+            return
         if "render" in res:
             self._render_path = res["render"]
             self.renderChanged.emit()
@@ -529,12 +782,17 @@ class Studio(QObject):
             self._project = Path(res["project"])
             self._ev = Evaluator(self._project)
             self._history.clear()
+            self._future.clear()
+            self._geo_cache.clear()
             self._program = None
         elif "names" not in res:
             OUT.mkdir(parents=True, exist_ok=True)
             (OUT / time.strftime("%Y%m%d-%H%M%S.json")).write_text(json.dumps(prog, indent=1))
+            self.libraryChanged.emit()
         self._set_program(prog, f"built: {prog.get('name', '')} ({len(prog['ops'])} steps)",
                           keep_step=res.get("keep", False) or bool(self._mode_after))
+        if "keep" not in res:
+            self._load_explanation()
         if self._mode_after:
             self.setMode(self._mode_after)
             self._mode_after = None
@@ -642,3 +900,137 @@ class Studio(QObject):
         if self._render_path:
             self._render_path = ""
             self.renderChanged.emit()
+
+    # ------------------------------------------------------------------ explain
+    @Slot()
+    def explain(self):
+        """How the open object works: research lane -> local model -> every sentence checked (core/explain.py)."""
+        if not self._program:
+            return
+        prog, comps, dims = self._program, list(self._comps), list(self._dims)
+        subject = self.title.removeprefix("Reverse: ")
+        bp = prog.get("blueprint") or {}
+        dreamed = bool(bp.get("parts"))
+        origin = ("a concept dreamed by a local model from a text prompt" if dreamed else
+                  "a 3D shape generated from a picture" if prog.get("reference") else
+                  "an imported 3D model that was taken apart into pieces" if subject != self.title else
+                  "a model built by hand in the workshop")
+        facts = explain.component_facts(comps, dims, prog.get("units", "mm"))
+        glance = explain.at_a_glance(subject, comps, dims, prog.get("units", "mm"))
+        rest = explain.rest_pose(self._ev.step(prog))
+        engine, cfg, project = self._engine, dict(self._cfg), self._project
+        labels = [c.label for c in comps if not c.label.lower().startswith(("detached", "piece", "body"))]
+
+        def job(log):
+            from ..research import lane
+            sources = [dict(s) for s in bp.get("sources", [])]
+            if cfg["research"]:
+                qs = client.research_queries(subject + (". " + bp.get("summary", "") if bp.get("summary") else ""),
+                                             labels, engine, log=log)
+                found = lane.gather(qs, [subject] + labels, cfg["search_url"], log=log)
+                sources = [s.as_dict() for s in found] or sources
+            else:
+                log("explain: web research is off (Preferences); only measurements"
+                    + (" and concept reasoning" if dreamed else "") + " can be shown")
+            block = lane.context_block([lane.Source(**s) for s in sources])
+            raw = client.explain(subject, origin, facts, block, engine, log=log)
+            checked = explain.verify(raw, sources, facts, force_concept=dreamed)
+            doc = explain.finish(subject, checked, glance, sources, rest, engine)
+            doc["research"] = bool(cfg["research"])
+            if project:
+                (project / "explanation.json").write_text(json.dumps(doc, indent=1))
+            return {"explanation": doc}
+        self._run_job("Explaining", job)
+
+    @Slot(str, str)
+    def setService(self, key: str, value_json: str):
+        if key not in config.DEFAULTS:
+            return
+        try:
+            v = json.loads(value_json)
+        except ValueError:
+            return
+        if not isinstance(v, type(config.DEFAULTS[key])):
+            return
+        self._cfg[key] = v.strip() if isinstance(v, str) else v
+        config.save(self._cfg)
+        self.servicesChanged.emit()
+
+    # ------------------------------------------------------------------ voice (optional; never on the RTX card)
+    @Slot(str)
+    def speak(self, text: str):
+        """Read `text` aloud. Emits voiceChanged when it starts and when it ends."""
+        self.stopSpeaking()
+        if not text.strip():
+            return
+        self._say_token += 1
+        token, cfg = self._say_token, dict(self._cfg)
+        self._speaking = True
+        self.voiceChanged.emit()
+
+        def run():
+            try:
+                wav = voice.synthesize(text, cfg)
+                if token != self._say_token:
+                    return
+                self._player = voice.player(wav)
+                self._player.wait()
+                wav.unlink(missing_ok=True)
+                self._voiceEvent.emit("said", str(token))
+            except Exception as e:  # noqa: BLE001 - reported in the console, the presentation carries on silently
+                self._voiceEvent.emit("error", f"{token}|voice: {e}")
+        threading.Thread(target=run, daemon=True).start()
+
+    @Slot()
+    def stopSpeaking(self):
+        self._say_token += 1
+        if self._player and self._player.poll() is None:
+            self._player.terminate()
+        self._player = None
+        if self._speaking:
+            self._speaking = False
+            self.voiceChanged.emit()
+
+    @Slot()
+    def toggleDictation(self):
+        """First call starts recording the microphone, the second stops it and transcribes (signal `dictated`)."""
+        if self._rec is None:
+            try:
+                self._rec = voice.recorder()
+            except RuntimeError as e:
+                self._say(f"dictation: {e}")
+                return
+            self._listening = True
+            self.voiceChanged.emit()
+            return
+        proc, wav = self._rec
+        self._rec = None
+        proc.terminate()
+        self._listening = False
+        self.voiceChanged.emit()
+        cfg = dict(self._cfg)
+
+        def run():
+            try:
+                proc.wait(timeout=5)
+                self._voiceEvent.emit("heard", voice.transcribe(wav, cfg))
+            except Exception as e:  # noqa: BLE001
+                self._voiceEvent.emit("error", f"0|dictation: {e}")
+            finally:
+                wav.unlink(missing_ok=True)
+        threading.Thread(target=run, daemon=True).start()
+
+    def _on_voice(self, kind: str, payload: str):
+        if kind == "heard":
+            self._say(f"dictation: “{payload}”")
+            self.dictated.emit(payload)
+        elif kind == "said":
+            if payload == str(self._say_token) and self._speaking:
+                self._speaking = False
+                self.voiceChanged.emit()
+        else:
+            token, _, msg = payload.partition("|")
+            self._say(msg)
+            if token in ("0", str(self._say_token)) and self._speaking:
+                self._speaking = False
+                self.voiceChanged.emit()

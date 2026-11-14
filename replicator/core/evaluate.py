@@ -343,6 +343,13 @@ class Evaluator:
             out[op["id"]] = m
         return out, hashes
 
+    def trim(self, limit: int) -> None:
+        """Bound the cache: drop the oldest results beyond `limit` (dicts keep insertion order)."""
+        extra = len(self._cache) - limit
+        if extra > 0:
+            for h in list(self._cache)[:extra]:
+                del self._cache[h]
+
     def step(self, program: dict, k: int | None = None) -> list[Shape]:
         """The visible shapes after step k (0-based, inclusive). None = the finished build."""
         ops = program["ops"]

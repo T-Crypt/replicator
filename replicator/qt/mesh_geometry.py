@@ -80,6 +80,7 @@ class MeshGeometry(QQuick3DGeometry):
         super().__init__()
         self._id, self._label, self._part, self._comp = shape.id, shape.label, shape.part, shape.component
         self._phase = phase
+        self.materialName = ""
         self._comp_color = QColor(comp_color)
         self._comp_label = comp_label
         self._offset = QVector3D(0, 0, 0)
