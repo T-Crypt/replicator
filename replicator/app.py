@@ -25,10 +25,14 @@ def main(argv=None) -> int:
     ap.add_argument("--shot")
     ap.add_argument("--step", type=int, default=-1)
     ap.add_argument("--blueprint", type=float, default=0.0)
-    ap.add_argument("--mode", default="", help="build | dissect | reverse | showcase (for --shot)")
+    ap.add_argument("--mode", default="", help="build | dissect | reverse | showcase | present (for --shot)")
     ap.add_argument("--explode", type=float, default=-1.0)
     ap.add_argument("--select", default="")
     ap.add_argument("--size", default="", help="WxH window size for --shot")
+    ap.add_argument("--theme", default="", help="abyss | graphite | carbon | daylight (this run only with --shot)")
+    ap.add_argument("--accent", default="", help="holo | azure | violet | mint | amber | rose")
+    ap.add_argument("--density", default="", help="compact | cozy | roomy")
+    ap.add_argument("--ui", default="", help="open an overlay for --shot: commander | preferences | materials | console")
     a = ap.parse_args(argv)
 
     gpu.apply(software=a.software)
@@ -42,8 +46,19 @@ def main(argv=None) -> int:
     from .qt.bridge import Studio
 
     QGuiApplication.setApplicationName("Replicator")
+    QGuiApplication.setOrganizationName("Replicator")       # preferences: ~/.config/Replicator/Replicator.conf
+    QGuiApplication.setOrganizationDomain("replicator.local")
     QGuiApplication.setDesktopFileName("replicator")
     app = QGuiApplication(sys.argv[:1])
+    if a.shot:  # a headless frame never reads or writes the operator's preferences
+        import tempfile
+        from PySide6.QtCore import QSettings
+        QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope, tempfile.mkdtemp(prefix="replicator-shot-"))
+    from PySide6.QtGui import QFont, QFontDatabase
+    if "Inter" in QFontDatabase.families():
+        f = QFont("Inter")
+        f.setPixelSize(12)
+        app.setFont(f)
     from PySide6.QtGui import QSurfaceFormat
     QSurfaceFormat.setDefaultFormat(QQuick3D.idealSurfaceFormat(4))  # needs the app; before any window
     QQuickStyle.setStyle("Fusion")
@@ -61,6 +76,9 @@ def main(argv=None) -> int:
     engine = QQmlApplicationEngine()
     engine.warnings.connect(lambda ws: [print("QML:", w.toString(), file=sys.stderr) for w in ws])
     engine.rootContext().setContextProperty("studio", studio)
+    engine.rootContext().setContextProperty("boot", {"theme": a.theme, "accent": a.accent, "density": a.density,
+                                                     "ui": a.ui, "shot": bool(a.shot)})
+    engine.addImportPath(str(ROOT / "qml"))                 # the Replicator.UI module
     if a.shot:  # never shown: grabWindow renders a non-exposed window offscreen
         engine.setInitialProperties({"visible": False})
     engine.load(str(ROOT / "qml" / "Main.qml"))

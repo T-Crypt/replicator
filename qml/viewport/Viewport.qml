@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick3D
 import QtQuick3D.Helpers
+import Replicator.UI
 
 // The workshop viewport. A custom orbit camera (pivot + yaw/pitch/distance, damped), C4D and Blender bindings,
 // zoom to cursor, adaptive clip planes, ortho views, a move gizmo with grid snapping, display modes,
@@ -19,7 +20,11 @@ Item {
     property var hidden: ({})                 // component id -> true
     property string tool: "select"            // select | move
     property bool showcase: false
+    property bool present: false
     property bool turntable: false
+    property bool gridOn: true
+    property bool referenceOn: true
+    property bool renderGate: false   // [DEBUG-rg] harness: freeze the per-frame animation so grabWindow does not race the render thread
     property real revealMs: 1100
     property alias view: view
     signal picked(string shapeId)
@@ -35,11 +40,18 @@ Item {
     property bool ortho: false
     property string viewName: "Perspective"
     readonly property real fov: 35
+    readonly property real gridCell: Math.pow(10, Math.floor(Math.log(Math.max(dist, 1) / 14) / Math.LN10))   // as grid.frag
     property int tick: 0                      // bumps every frame so 2D overlays re-project
     property real idle: 0
 
     readonly property real minDist: Math.max(studio.radius * 0.03, 2)
     readonly property real maxDist: studio.radius * 60
+    // Present: the object stands on the white stage, or levitates with a slow bob when its footprint is
+    // too small to stand on (studio.restPose, measured from the geometry)
+    property real bobClock: 0
+    readonly property real lift: root.present && studio.restPose === "levitate"
+                               ? studio.radius * 0.18 + Math.sin(bobClock * Math.PI / 2) * studio.radius * 0.012
+                               : 0
     readonly property vector3d camDir: Qt.vector3d(Math.cos(pitch * Math.PI / 180) * Math.sin(yaw * Math.PI / 180),
                                                 Math.sin(pitch * Math.PI / 180),
                                                 Math.cos(pitch * Math.PI / 180) * Math.cos(yaw * Math.PI / 180))
@@ -60,6 +72,16 @@ Item {
         tPivot = Qt.vector3d(g.center.x + o.x * explode, g.center.y + studio.ground + o.y * explode,
                              g.center.z + o.z * explode)
         tDist = Math.max(minDist * 2, studio.radius * 0.6 / Math.sin(fov / 2 * Math.PI / 180))
+    }
+    function frameComponent(cid) {
+        for (let i = 0; i < studio.components.length; i++)
+            if (studio.components[i].id === cid) {
+                const c = studio.components[i]
+                tPivot = Qt.vector3d(c.center[0], c.center[1], c.center[2])
+                tDist = Math.max(minDist * 2, Math.max(c.size[0], c.size[1], c.size[2]) * 0.6 / Math.sin(fov / 2 * Math.PI / 180))
+                return
+            }
+        frameAll(true)
     }
     function setView(name) {
         viewName = name
@@ -87,9 +109,10 @@ Item {
     }
 
     FrameAnimation {
-        running: true
+        running: !root.renderGate
         onTriggered: {
             const k = 1 - Math.exp(-frameTime * 16)
+            if (root.present) root.bobClock += frameTime
             if (root.turntable && root.idle > 1.5) root.tYaw -= frameTime * 9
             root.idle += frameTime
             root.yaw += (root.tYaw - root.yaw) * k
@@ -115,17 +138,17 @@ Item {
             antialiasingQuality: SceneEnvironment.High
             specularAAEnabled: true
             tonemapMode: SceneEnvironment.TonemapModeFilmic
-            exposure: root.showcase ? 1.35 : 1.0
+            exposure: root.showcase ? 1.3 : 1.0
             lightProbe: Texture { textureData: studio.envMap; mappingMode: Texture.LightProbe }
-            probeExposure: root.showcase ? 1.25 : 0.9
+            probeExposure: root.showcase ? 1.7 : 0.9
             probeOrientation: Qt.vector3d(0, 30, 0)
             glowEnabled: true
             glowStrength: root.showcase ? 1.25 : 1.0
             glowIntensity: 0.7
             glowBloom: root.showcase ? 0.35 : 0.2
             glowHDRMinimumValue: 1.0
-            aoEnabled: root.showcase
-            aoStrength: 70
+            aoEnabled: root.showcase || root.present
+            aoStrength: 50
             aoDistance: studio.radius * 0.06
             aoSoftness: 40
             depthOfFieldEnabled: root.showcase && !root.ortho
@@ -133,13 +156,13 @@ Item {
             depthOfFieldFocusRange: studio.radius * 1.6
             depthOfFieldBlurAmount: 1.6
             vignetteEnabled: root.showcase
-            vignetteStrength: 0.9
+            vignetteStrength: 0.55
             vignetteRadius: 0.38
             vignetteColor: "#000000"
             ditheringEnabled: true
             fog: Fog {   // melts the Showcase stage into the backdrop (no hard horizon)
                 enabled: root.showcase
-                color: "#0b0c0f"
+                color: Theme.stageTop
                 depthEnabled: true
                 depthNear: root.dist * 1.2
                 depthFar: root.dist * 3.2
@@ -165,57 +188,91 @@ Item {
 
         DirectionalLight {
             eulerRotation: Qt.vector3d(-52, -35, 0)
-            brightness: root.showcase ? 1.7 : 1.05
+            brightness: root.showcase ? 2.3 : root.present ? 2.8 : 1.05
             castsShadow: true
             shadowMapQuality: Light.ShadowMapQualityVeryHigh
-            shadowFactor: root.showcase ? 75 : 50
+            shadowFactor: root.showcase ? 75 : root.present ? 100 : 50
             csmNumSplits: 2
             shadowBias: 2
-            softShadowQuality: Light.PCF16
-            pcfFactor: 3
+            pcfFactor: root.present ? 6 : 3
         }
         DirectionalLight { eulerRotation: Qt.vector3d(-18, 140, 0); brightness: 0.45; color: "#dfe8ff" }
         DirectionalLight { eulerRotation: Qt.vector3d(12, 205, 0); brightness: root.showcase ? 1.6 : 0.7 }
+        DirectionalLight {   // Showcase rim: a cool edge from behind lifts dark parts off the dark stage
+            visible: root.showcase
+            eulerRotation: Qt.vector3d(-28, root.yaw + 150, 0)
+            brightness: 2.4; color: "#bcd8ff"
+        }
         SpotLight {   // Showcase top light: a soft pool on the stage
             visible: root.showcase
             position: Qt.vector3d(studio.center[0], studio.radius * 4, studio.center[2])
             eulerRotation.x: -90
-            brightness: 18
+            brightness: 7
             coneAngle: 50; innerConeAngle: 20
             constantFade: 1; linearFade: 0; quadraticFade: 0
         }
 
         Model {   // workshop floor grid
-            visible: !root.showcase
+            visible: !root.showcase && !root.present && root.gridOn
             source: "#Rectangle"
             eulerRotation.x: -90
             scale: Qt.vector3d(1200, 1200, 1)
             materials: GridMaterial {
                 blueprint: root.blueprint
                 fade: Math.max(root.dist * 6, studio.radius * 8)
-                lineColor: Qt.tint("#6c7078", Qt.rgba(0.2, 0.55, 0.85, root.blueprint))
-                majorColor: Qt.tint("#8a8f98", Qt.rgba(0.3, 0.8, 1.0, root.blueprint))
+                span: root.dist
+                lineColor: Qt.tint(Theme.gridMinor, Qt.rgba(0.2, 0.55, 0.85, root.blueprint))
+                majorColor: Qt.tint(Theme.gridMajor, Qt.rgba(0.3, 0.8, 1.0, root.blueprint))
             }
         }
-        Model {   // shadow catcher in the workshop; a glossy stage in Showcase
+        Model {   // shadow catcher in the workshop; a glossy stage in Showcase; a white matte stage in Present
             source: "#Rectangle"
             eulerRotation.x: -90
             y: -0.3
-            scale: Qt.vector3d(1200, 1200, 1)
+            scale: Qt.vector3d(root.present ? 50000 : 1200, root.present ? 50000 : 1200, 1)
             receivesShadows: true
             castsShadows: false
-            opacity: root.showcase ? 1.0 : 0.55 * (1 - root.blueprint)
+            opacity: root.showcase ? 1.0 : root.present ? 1.0 : (Theme.dark ? 0.5 : 0.4) * (1 - root.blueprint)
             materials: PrincipledMaterial {
-                baseColor: root.showcase ? "#0d0e11" : "#2b2d31"
+                baseColor: root.showcase ? "#0d0e11" : root.present ? "#ffffff" : Theme.dark ? Theme.raised : "#8a929c"
                 roughness: root.showcase ? 0.22 : 1
                 metalness: 0
                 specularAmount: root.showcase ? 0.6 : 0
             }
         }
 
+        // ---- reference images (image to 3D keeps the views it was built from): one plane per view, standing on
+        //      the floor behind the model on its own axis, the way a DCC places blueprints. Front looks down -Z.
+        Node {
+            id: refs
+            visible: root.referenceOn && !root.showcase && !root.present && studio.reference.length > 0
+            readonly property real h: studio.dimensions.length === 3 ? studio.dimensions[1] : 100
+            readonly property real away: studio.radius * 1.15
+            readonly property var place: ({ front: [Qt.vector3d(0, 0, -1), 0], back: [Qt.vector3d(0, 0, 1), 180],
+                                            left: [Qt.vector3d(-1, 0, 0), 90], right: [Qt.vector3d(1, 0, 0), -90] })
+            Repeater3D {
+                model: studio.reference
+                delegate: Model {
+                    required property var modelData
+                    readonly property var pl: refs.place[modelData.key] || refs.place.front
+                    readonly property real side: refs.h / modelData.fill     // the figure in the picture is as tall as the model
+                    source: "#Rectangle"
+                    position: Qt.vector3d(studio.center[0] + pl[0].x * refs.away, refs.h / 2 + (modelData.cy - 0.5) * side,
+                                          studio.center[2] + pl[0].z * refs.away)
+                    eulerRotation.y: pl[1]
+                    scale: Qt.vector3d(side / 100, side / 100, 1)
+                    castsShadows: false; receivesShadows: false
+                    pickable: false
+                    materials: ReferenceMaterial {
+                        tex: TextureInput { texture: Texture { source: "file://" + modelData.path } }
+                    }
+                }
+            }
+        }
+
         Node {
             id: build
-            y: studio.ground
+            y: studio.ground + root.lift
             Repeater3D {
                 model: studio.shapes
                 delegate: Node {
@@ -437,30 +494,19 @@ Item {
         }
     }
 
-    Keys.onPressed: (e) => {
-        root.idle = 0
-        if (e.key === Qt.Key_H || e.key === Qt.Key_Home) { frameAll(true); e.accepted = true }
-        else if (e.key === Qt.Key_F || e.key === Qt.Key_O) { frameSelected(); e.accepted = true }
-        else if (e.key === Qt.Key_F1) { setView("Perspective"); e.accepted = true }
-        else if (e.key === Qt.Key_F2) { setView("Top"); e.accepted = true }
-        else if (e.key === Qt.Key_F3) { setView("Right"); e.accepted = true }
-        else if (e.key === Qt.Key_F4) { setView("Front"); e.accepted = true }
-        else if (e.key === Qt.Key_W || e.key === Qt.Key_E) { root.tool = root.tool === "move" ? "select" : "move"; e.accepted = true }
-        else if (e.key === Qt.Key_Escape) { studio.select(""); root.isolate = ""; e.accepted = true }
-    }
-
     // ---- HUD: view name, axis triad (click an axis to look down it)
-    Text {
-        x: 12; y: 10
-        visible: !root.showcase
-        text: root.viewName + (root.ortho ? "  ·  ortho" : "") + "     " + Math.round(root.dist) + " mm"
-              + (root.tool === "move" ? "     MOVE (W)" : "")
-        color: Theme.dim
-        font.pixelSize: Theme.fsSmall; font.family: Theme.mono
+    Text {   // camera read-out, bottom right
+        anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 14
+        visible: !root.showcase && !root.present && studio.stepCount > 0
+        text: "GRID " + (root.gridCell >= 1000 ? root.gridCell / 1000 + " m" : root.gridCell + " mm") + "    "
+              + (root.ortho ? "ORTHO" : "PERSP " + root.fov + "°") + "    " + Math.round(root.dist) + " mm"
+              + (root.tool === "move" ? "    MOVE" : "")
+        color: Theme.viewDim
+        font.pixelSize: Theme.fsTiny; font.family: Theme.mono
     }
     NavGizmo {
         anchors.right: parent.right; anchors.top: parent.top; anchors.margins: 10
-        visible: !root.showcase
+        visible: !root.showcase && !root.present && studio.stepCount > 0
         yaw: root.yaw; pitch: root.pitch
         onSnap: (name) => root.setView(name)
     }

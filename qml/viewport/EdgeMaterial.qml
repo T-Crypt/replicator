@@ -11,6 +11,6 @@ CustomMaterial {
     shadingMode: CustomMaterial.Unshaded
     sourceBlend: CustomMaterial.SrcAlpha
     destinationBlend: CustomMaterial.OneMinusSrcAlpha
-    vertexShader: "../shaders/edge.vert"
-    fragmentShader: "../shaders/edge.frag"
+    vertexShader: "../../shaders/edge.vert"
+    fragmentShader: "../../shaders/edge.frag"
 }

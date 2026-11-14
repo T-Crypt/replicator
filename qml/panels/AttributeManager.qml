@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import Replicator.UI
 
 // Attribute Manager: the selected step's parameters as real fields. Drag a number to scrub it.
 Rectangle {
@@ -8,22 +9,43 @@ Rectangle {
     color: Theme.panel
     function commit(key, value) { studio.setParam(studio.selected, key, JSON.stringify(value)) }
 
+    Column {
+        anchors.centerIn: parent; visible: studio.selectedOpKind === "" && studio.selectedComponent === ""; spacing: 8
+        Icon { name: "sliders"; size: 26; color: Theme.faint; anchors.horizontalCenter: parent.horizontalCenter }
+        Text {
+            text: "Nothing selected.\nClick a part in the viewport\nor a row in Objects."
+            horizontalAlignment: Text.AlignHCenter; color: Theme.faint; font.pixelSize: Theme.fs; font.family: Theme.sans; lineHeight: 1.3
+        }
+    }
+
     Flickable {
         anchors.fill: parent
-        contentHeight: col.implicitHeight + 16
+        contentHeight: col.implicitHeight + 20
         clip: true
         boundsBehavior: Flickable.StopAtBounds
         ScrollBar.vertical: ScrollBar {}
+        visible: studio.selectedOpKind !== "" || studio.selectedComponent !== ""
         ColumnLayout {
             id: col
-            x: 10; y: 8
-            width: am.width - 20
-            spacing: 6
+            x: Theme.pad; y: 10
+            width: am.width - Theme.pad * 2
+            spacing: 7
+            RowLayout {
+                spacing: 8
+                Rectangle {
+                    implicitWidth: kind.implicitWidth + 14; implicitHeight: 20; radius: 10
+                    color: Theme.accentSoft
+                    Text { id: kind; anchors.centerIn: parent
+                           text: studio.selectedOpKind ? studio.selectedOpKind.toUpperCase() : "COMPONENT"
+                           color: Theme.accentHi; font.pixelSize: Theme.fsTiny; font.family: Theme.sans; font.weight: Font.Bold; font.letterSpacing: 1.2 }
+                }
+                Text { text: studio.selectedOpKind ? studio.selected : studio.selectedComponent
+                       color: Theme.text; font.pixelSize: Theme.fs; font.family: Theme.mono; elide: Text.ElideRight; Layout.fillWidth: true }
+            }
             Text {
-                text: studio.selectedOpKind ? studio.selectedOpKind.toUpperCase() + "  ·  " + studio.selected
-                      : studio.selectedComponent ? "Component  ·  " + studio.selectedComponent : "Nothing selected"
-                color: studio.selectedOpKind ? Theme.holo : Theme.faint
-                font.pixelSize: Theme.fsSmall; font.bold: true; font.letterSpacing: 1.2
+                visible: studio.selectedOpKind === ""
+                text: "A component groups parts. Pick one of its parts to edit parameters, or use the Materials tab to paint the whole component."
+                color: Theme.dim; font.pixelSize: Theme.fsSmall; font.family: Theme.sans; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
             Repeater {
                 model: studio.selectedParams
@@ -32,19 +54,21 @@ Rectangle {
                     required property var modelData
                     required property int index
                     Layout.fillWidth: true
-                    spacing: 3
-                    Text {
+                    spacing: 4
+                    RowLayout {
                         visible: rowc.modelData.group === "Coordinates" && rowc.modelData.key === "translate"
-                        text: "COORDINATES"; color: Theme.faint; font.pixelSize: 10; font.letterSpacing: 1.5
-                        Layout.topMargin: 6
+                        Layout.topMargin: 8; spacing: 8
+                        Text { text: "COORDINATES"; color: Theme.faint; font.pixelSize: Theme.fsTiny; font.family: Theme.sans
+                               font.weight: Font.DemiBold; font.letterSpacing: Theme.caps }
+                        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.lineSoft }
                     }
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 6
                         Text {
                             text: rowc.modelData.key.replace(/_/g, " ")
-                            color: Theme.dim; font.pixelSize: Theme.fsSmall
-                            Layout.preferredWidth: 78; elide: Text.ElideRight
+                            color: Theme.dim; font.pixelSize: Theme.fsSmall; font.family: Theme.sans
+                            Layout.preferredWidth: 84; elide: Text.ElideRight
                         }
                         Loader {
                             Layout.fillWidth: true
@@ -58,8 +82,8 @@ Rectangle {
             Text {
                 visible: studio.selectedOpKind !== ""
                 Layout.topMargin: 8
-                text: "Drag a number to scrub (Shift fine, Ctrl coarse). Enter to type. Edits rebuild instantly; Undo walks back."
-                color: Theme.faint; font.pixelSize: 10; wrapMode: Text.WordWrap; Layout.fillWidth: true
+                text: "Drag a number to scrub (Shift fine, Ctrl coarse). Click to type. Edits rebuild at once; Undo walks back."
+                color: Theme.faint; font.pixelSize: Theme.fsTiny; font.family: Theme.sans; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
         }
     }
@@ -97,11 +121,12 @@ Rectangle {
     }
     Component {
         id: enumC
-        ComboBox {
+        RCombo {
             property var row: parent ? parent.row : ({})
-            implicitHeight: 24
+            implicitHeight: Theme.ctl - 2
             model: row.options
             currentIndex: Math.max(0, row.options.indexOf(row.value))
+            displayText: currentText === "" ? "inherit" : currentText
             onActivated: am.commit(row.key, row.options[currentIndex])
         }
     }
@@ -113,8 +138,9 @@ Rectangle {
         id: textC
         TextField {
             property var row: parent ? parent.row : ({})
-            implicitHeight: 24; text: row.value; font.pixelSize: Theme.fs; color: Theme.text
-            background: Rectangle { color: Theme.field; radius: 3; border.color: parent.activeFocus ? Theme.accent : Theme.line }
+            implicitHeight: Theme.ctl - 2; text: row.value; font.pixelSize: Theme.fsSmall; font.family: Theme.sans; color: Theme.text
+            leftPadding: 8; selectionColor: Theme.accent; selectedTextColor: Theme.onAccent
+            background: Rectangle { color: Theme.field; radius: Theme.r1; border.color: parent.activeFocus ? Theme.accent : Theme.line }
             onEditingFinished: if (text !== row.value) am.commit(row.key, text)
         }
     }
@@ -122,9 +148,10 @@ Rectangle {
         id: jsonC
         TextArea {
             property var row: parent ? parent.row : ({})
-            text: row.value; wrapMode: TextEdit.WrapAnywhere; font.family: Theme.mono; font.pixelSize: 10
+            text: row.value; wrapMode: TextEdit.WrapAnywhere; font.family: Theme.mono; font.pixelSize: Theme.fsTiny
             color: Theme.text; implicitHeight: Math.min(110, contentHeight + 12)
-            background: Rectangle { color: Theme.field; radius: 3; border.color: parent.activeFocus ? Theme.accent : Theme.line }
+            selectionColor: Theme.accent; selectedTextColor: Theme.onAccent
+            background: Rectangle { color: Theme.field; radius: Theme.r1; border.color: parent.activeFocus ? Theme.accent : Theme.line }
             onEditingFinished: { try { am.commit(row.key, JSON.parse(text)) } catch (e) { } }
         }
     }

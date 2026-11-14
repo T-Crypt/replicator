@@ -1,4 +1,5 @@
 import QtQuick
+import Replicator.UI
 
 // Dissect callouts: one label per component, pinned to the exploded part by a leader line. Labels sit in two
 // columns (left and right of the build), sorted by height and pushed apart so they never overlap; everything is
@@ -67,15 +68,15 @@ Item {
             required property var modelData
             x: modelData.side < 0 ? modelData.lx - width : modelData.lx
             y: modelData.ly - height / 2
-            width: lbl.implicitWidth + 30; height: 22; radius: 4
-            color: studio.selectedComponent === modelData.id ? "#f02a3a4c" : "#e0181a1e"
-            border.color: modelData.color
-            Rectangle { x: 8; anchors.verticalCenter: parent.verticalCenter; width: 7; height: 7; radius: 2; color: tag.modelData.color }
+            width: lbl.implicitWidth + 32; height: 24; radius: 12
+            color: studio.selectedComponent === modelData.id ? Theme.raised : Theme.glass
+            border.color: studio.selectedComponent === modelData.id ? modelData.color : Qt.rgba(modelData.color.r, modelData.color.g, modelData.color.b, 0.55)
+            Rectangle { x: 10; anchors.verticalCenter: parent.verticalCenter; width: 7; height: 7; radius: 3.5; color: tag.modelData.color }
             Text {
                 id: lbl
-                x: 21; anchors.verticalCenter: parent.verticalCenter
+                x: 23; anchors.verticalCenter: parent.verticalCenter
                 text: tag.modelData.label + (tag.modelData.count > 1 && !/x\d/.test(tag.modelData.label) ? "  ×" + tag.modelData.count : "")
-                color: "#e9ecf1"; font.pixelSize: 11
+                color: Theme.text; font.pixelSize: Theme.fsSmall; font.family: Theme.sans
             }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: co.chosen(tag.modelData.id) }
         }

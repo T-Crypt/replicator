@@ -16,5 +16,5 @@ CustomMaterial {
     property real xray: 0.0
     shadingMode: CustomMaterial.Shaded
     cullMode: Material.NoCulling
-    fragmentShader: "../shaders/holo.frag"
+    fragmentShader: "../../shaders/holo.frag"
 }

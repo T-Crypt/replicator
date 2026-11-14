@@ -1,4 +1,5 @@
 import QtQuick
+import Replicator.UI
 
 // Axis triad like C4D / Blender: X red, Y green, Z blue, positive ends labelled. Click an end to look down it.
 Item {
@@ -30,7 +31,8 @@ Item {
         out.sort((p, q) => p.p.z - q.p.z)
         return out
     }
-    Rectangle { anchors.fill: parent; radius: width / 2; color: hover.containsMouse ? "#30ffffff" : "#18ffffff" }
+    Rectangle { anchors.fill: parent; radius: width / 2; color: hover.containsMouse ? Theme.press : Theme.hover
+                border.color: Theme.glassLine }
     Canvas {
         id: cv
         anchors.fill: parent
