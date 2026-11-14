@@ -46,8 +46,8 @@ GEOMETRY CONVENTIONS (follow exactly)
   For a body lying along Z use "axis": "z" and place the source off-axis in X or Y.
 - boolean: "mode" union | difference (first input minus all the others) | intersection. Inputs must overlap.
 - hull: convex hull of the inputs (fairings, blended bodies). group: keep inputs together, no CSG.
-- smooth: subdivision ("levels" 1-3); use on organic or car-body shapes. round: rounds every edge by "radius"
-  (the part grows by that radius). shell: hollows a solid ("thickness").
+- smooth: subdivision ("levels" 1-3); use on organic or car-body shapes. round: rounds every edge by "radius" (keeps the size; features thinner than 2x radius vanish)
+  shell: hollows a solid with an even wall ("thickness").
 - An op used as an input disappears from the scene; the result takes its place. Only ops nobody consumes are
   visible at the end, so every visible part is a leaf.
 - Bodies that house other parts MUST be hollow (a revolve with an inner wall, a "shell", or a boolean difference),
