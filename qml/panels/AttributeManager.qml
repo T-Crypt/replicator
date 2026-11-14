@@ -47,6 +47,20 @@ Rectangle {
                 text: "A component groups parts. Pick one of its parts to edit parameters, or use the Materials tab to paint the whole component."
                 color: Theme.dim; font.pixelSize: Theme.fsSmall; font.family: Theme.sans; wrapMode: Text.WordWrap; Layout.fillWidth: true
             }
+            Flow {
+                Layout.fillWidth: true; spacing: 6
+                visible: facts.size !== undefined || facts.kg !== undefined
+                readonly property var facts: studio.selectedFacts
+                Chip { visible: parent.facts.size !== undefined
+                       label: "SIZE"; value: parent.facts.size ? parent.facts.size.map(v => Math.round(v)).join(" × ") + " mm" : "" }
+                Chip { visible: parent.facts.kg !== undefined
+                       label: studio.selectedOpKind ? "PART MASS" : "MASS"
+                       value: parent.facts.kg === undefined ? "" : parent.facts.kg < 1 ? Math.round(parent.facts.kg * 1000) + " g"
+                              : parent.facts.kg.toFixed(parent.facts.kg < 10 ? 2 : 1) + " kg" }
+                Text { visible: studio.selectedOpKind !== "" && parent.facts.kg !== undefined
+                       text: "of component " + parent.facts.component
+                       color: Theme.faint; font.pixelSize: Theme.fsTiny; font.family: Theme.sans }
+            }
             Repeater {
                 model: studio.selectedParams
                 delegate: ColumnLayout {
@@ -68,7 +82,7 @@ Rectangle {
                         Text {
                             text: rowc.modelData.key.replace(/_/g, " ")
                             color: Theme.dim; font.pixelSize: Theme.fsSmall; font.family: Theme.sans
-                            Layout.preferredWidth: 84; elide: Text.ElideRight
+                            Layout.preferredWidth: 100; elide: Text.ElideRight
                         }
                         Loader {
                             Layout.fillWidth: true
@@ -92,10 +106,9 @@ Rectangle {
         NumField {
             property var row: parent ? parent.row : ({})
             value: row.value
-            stepSize: Math.max(Math.abs(row.value) * 0.01, 0.1)
-            decimals: Math.abs(row.value) >= 100 ? 1 : 2
-            onCommitted: (v) => am.commit(row.key, row.key === "count" || row.key === "teeth" || row.key === "turns"
-                                                     || row.key === "segments" || row.key === "levels" ? Math.round(v) : v)
+            stepSize: row.step
+            decimals: row.integer ? 0 : Math.abs(row.value) >= 100 ? 1 : 2
+            onCommitted: (v) => am.commit(row.key, row.integer ? Math.round(v) : v)
         }
     }
     Component {
