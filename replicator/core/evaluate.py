@@ -88,9 +88,8 @@ class RawMesh:
     def calculate_normals(self, _idx=0, _angle=0.0):
         a, b, c = (self.V[self.F[:, i]] for i in range(3))
         fn = np.cross(b - a, c - a)
-        vn = np.zeros_like(self.V)
-        for i in range(3):
-            np.add.at(vn, self.F[:, i], fn)
+        vn = np.stack([sum(np.bincount(self.F[:, i], fn[:, k], len(self.V)) for i in range(3))
+                       for k in range(3)], axis=1)
         vn /= np.linalg.norm(vn, axis=1, keepdims=True) + 1e-12
         return RawMesh(self.V, self.F, vn)
 
@@ -125,12 +124,24 @@ def _segs(p: dict, default: int = 64) -> int:
     return n
 
 
-def _vec3(v, name: str) -> list[float]:
+def _vec3(v, name: str, positive: bool = False) -> list[float]:
     if isinstance(v, (int, float)):
-        return [float(v)] * 3
+        v = [v] * 3
     if not (isinstance(v, (list, tuple)) and len(v) == 3):
         raise EvalError(f"{name} must be a number or [x, y, z]")
-    return [float(x) for x in v]
+    out = [float(x) for x in v]
+    if not all(math.isfinite(x) for x in out):
+        raise EvalError(f"{name} must be finite numbers, got {v}")
+    if positive and min(out) <= 0:
+        raise EvalError(f"{name} must be greater than 0 on every axis, got {v}")
+    return out
+
+
+def _pos(p: dict, key: str, default: float | None = None) -> float:
+    v = float(p[key] if key in p else default)
+    if not math.isfinite(v) or v <= 0:
+        raise EvalError(f"{key} must be a positive finite number, got {p.get(key, default)}")
+    return v
 
 
 def _poly(points, name: str) -> list[list[float]]:
@@ -141,6 +152,8 @@ def _poly(points, name: str) -> list[list[float]]:
         if not (isinstance(pt, (list, tuple)) and len(pt) == 2):
             raise EvalError(f"{name}: every point is [x, y]")
         out.append([float(pt[0]), float(pt[1])])
+    if not np.isfinite(out).all():
+        raise EvalError(f"{name} must hold finite numbers")
     return out
 
 
@@ -175,21 +188,23 @@ def build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
     if kind == "mesh":
         return load_asset(base, str(p["asset"]))
     if kind == "box":
-        return Manifold.cube(_vec3(p["size"], "size"), center=bool(p.get("center", True)))
+        return Manifold.cube(_vec3(p["size"], "size", positive=True), center=bool(p.get("center", True)))
     if kind == "cylinder":
-        r0 = float(p["radius"])
+        r0 = _pos(p, "radius")
         r1 = float(p.get("radius_top", r0))
-        return Manifold.cylinder(float(p["height"]), r0, r1, _segs(p), center=True).rotate(Z_TO_Y)
+        if not math.isfinite(r1) or r1 < 0 or r0 == r1 == 0:
+            raise EvalError("cylinder radius_top must be >= 0 (0 makes a cone)")
+        return Manifold.cylinder(_pos(p, "height"), r0, r1, _segs(p), center=True).rotate(Z_TO_Y)
     if kind == "sphere":
-        return Manifold.sphere(float(p["radius"]), _segs(p))
+        return Manifold.sphere(_pos(p, "radius"), _segs(p))
     if kind == "torus":
-        R, r = float(p["major_radius"]), float(p["minor_radius"])
+        R, r = _pos(p, "major_radius"), _pos(p, "minor_radius")
         if r >= R:
             raise EvalError("torus minor_radius must be smaller than major_radius")
         circle = CrossSection.circle(r, _segs(p, 32)).translate((R, 0.0))
         return Manifold.revolve(circle, _segs(p)).rotate(Z_TO_Y)
     if kind == "capsule":
-        h, r = float(p["height"]), float(p["radius"])
+        h, r = _pos(p, "height"), _pos(p, "radius")
         a = Manifold.sphere(r, _segs(p)).translate((0, -h / 2, 0))
         b = Manifold.sphere(r, _segs(p)).translate((0, h / 2, 0))
         return Manifold.batch_hull([a, b])
@@ -198,8 +213,8 @@ def build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
         cs = CrossSection(polys)
         st = p.get("scale_top", [1.0, 1.0])
         st = [float(st)] * 2 if isinstance(st, (int, float)) else [float(st[0]), float(st[1])]
-        h = float(p["height"])
-        if abs(float(p.get("twist", 0))) > 3600:
+        h = _pos(p, "height")
+        if not abs(float(p.get("twist", 0))) <= 3600:
             raise EvalError("extrude twist must be within +-3600 degrees")
         m = Manifold.extrude(cs, h, n_divisions=int(abs(float(p.get("twist", 0))) // 10),
                              twist_degrees=float(p.get("twist", 0.0)), scale_top=st)
@@ -213,7 +228,13 @@ def build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
         pts = _poly(p["points"], "points")
         if any(x < 0 for x, _ in pts):
             raise EvalError("revolve points are [radius, height]; radius must be >= 0")
-        return Manifold.revolve(CrossSection([pts]), _segs(p), float(p.get("degrees", 360.0))).rotate(Z_TO_Y)
+        if max(x for x, _ in pts) <= 0:
+            raise EvalError("revolve profile lies on the axis; give some points a radius > 0 (points are "
+                            "[radius, height] pairs)")
+        deg = float(p.get("degrees", 360.0))
+        if not 0 < deg <= 360:
+            raise EvalError("revolve degrees must be in (0, 360]")
+        return Manifold.revolve(CrossSection([pts]), _segs(p), deg).rotate(Z_TO_Y)
     raise EvalError(f"unknown primitive {kind}")
 
 
@@ -252,24 +273,35 @@ def build_modifier(kind: str, p: dict, m: Manifold) -> Manifold:
         if levels < 1 or levels > 4:
             raise EvalError("smooth levels must be 1..4")
         return m.smooth_out(float(p.get("sharp_angle", 60.0))).refine(2 ** levels)
-    if kind == "round":
-        r = float(p["radius"])
-        if r <= 0:
-            raise EvalError("round radius must be > 0")
-        # rounded edges via a Minkowski sum; the part grows by r on every side (true bevel = Blender worker)
-        return m.minkowski_sum(Manifold.sphere(r, _segs(p, 12)))
-    if kind == "shell":
-        t = float(p["thickness"])
-        lo, hi = np.array(m.bounding_box()[:3]), np.array(m.bounding_box()[3:])
-        size = hi - lo
-        if t <= 0 or t * 2 >= size.min():
-            raise EvalError("shell thickness must be > 0 and under half the smallest size")
-        inner = m.scale(((size - 2 * t) / size).tolist())
-        c0, c1 = (lo + hi) / 2, None
-        lo2, hi2 = np.array(inner.bounding_box()[:3]), np.array(inner.bounding_box()[3:])
-        c1 = (lo2 + hi2) / 2
-        return m - inner.translate((c0 - c1).tolist())
+    if kind in ("round", "shell"):
+        return _offset_modifier(kind, p, m)
     raise EvalError(f"unknown modifier {kind}")
+
+
+def _erode(m: Manifold, r: float, segments: int) -> Manifold:
+    """m pulled in by r on every side: the complement inside a padded box, grown by r, and taken back out."""
+    lo, hi = np.array(m.bounding_box()[:3]), np.array(m.bounding_box()[3:])
+    box = Manifold.cube((hi - lo + 6 * r).tolist()).translate((lo - 3 * r).tolist())
+    return box - (box - m).minkowski_sum(Manifold.sphere(r, segments))
+
+
+def _offset_modifier(kind: str, p: dict, m: Manifold) -> Manifold:
+    """round: erode then grow back (a morphological opening), so convex edges are rounded by `radius` and the part
+    keeps its size; anything thinner than 2 x radius disappears. shell: m minus its own inward offset, an even wall
+    whatever the shape."""
+    key = "radius" if kind == "round" else "thickness"
+    r = float(p[key])
+    if not math.isfinite(r) or r <= 0:
+        raise EvalError(f"{kind} {key} must be a positive number")
+    size = np.array(m.bounding_box()[3:]) - np.array(m.bounding_box()[:3])
+    if r * 2 >= size.min():
+        raise EvalError(f"{kind} {key} {r:g} must be under half the smallest size ({size.min() / 2:g})")
+    eroded = _erode(m, r, _segs(p, 12))
+    if eroded.is_empty():
+        raise EvalError(f"{kind} {key} {r:g} is too large for this shape: it has parts thinner than {2 * r:g}")
+    if kind == "shell":
+        return m - eroded
+    return eroded.minkowski_sum(Manifold.sphere(r, _segs(p, 12)))
 
 
 def _need_manifold(m, what: str):

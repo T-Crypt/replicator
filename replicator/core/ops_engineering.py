@@ -83,11 +83,16 @@ def _build_nozzle(p: dict) -> Manifold:
     rt = _positive_float(p, "throat_radius", "nozzle")
     eps = _positive_float(p, "expansion_ratio", "nozzle")
     cr = _positive_float(p, "contraction_ratio", "nozzle", 4.0)
-    if eps <= 1.5 or cr <= 1.2:
-        raise _err("nozzle expansion_ratio must be > 1.5 and contraction_ratio > 1.2")
+    if not 1.5 < eps <= 400 or not 1.2 < cr <= 30:
+        raise _err("nozzle expansion_ratio must be 1.5..400 (real engines: 4 sea level, 40-100 vacuum) and "
+                   "contraction_ratio 1.2..30")
     lc = _positive_float(p, "chamber_length", "nozzle") if "chamber_length" in p else None
     frac = _positive_float(p, "bell_fraction", "nozzle", 0.8)
     w = _positive_float(p, "wall", "nozzle", max(rt * 0.08, 0.5))
+    if w >= rt:
+        raise _err("nozzle wall must be thinner than the throat radius")
+    if lc is not None and lc > 100 * rt:
+        raise _err("nozzle chamber_length is over 100 throat radii; it is a length in model units, not a ratio")
     n = _optional_int(p, "segments", 96, 16, 512, "nozzle")
     inner = nozzle_contour(rt, eps, cr, lc, frac)
     x_top, x_exit = inner[0, 0] - w, inner[-1, 0]
@@ -122,6 +127,11 @@ def _build_rotor(p: dict) -> Manifold:
     tip_chord = _positive_float(p, "tip_chord", "rotor", chord * 0.7)
     pitch = float(p.get("pitch", 40.0))
     twist = float(p.get("twist", 25.0))
+    if not (math.isfinite(pitch) and math.isfinite(twist) and abs(twist) <= 360):
+        raise _err("rotor pitch and twist are finite angles in degrees, twist within +-360")
+    if chord > 2 * rtip:
+        raise _err("rotor chord is wider than the whole rotor; chord is a length, comparable to a fraction of "
+                   "tip_radius")
     t = _positive_float(p, "thickness", "rotor", 0.10)
     hub_len = _positive_float(p, "hub_length", "rotor", chord * 1.3)
     root = rh * 0.92
@@ -144,6 +154,8 @@ def _build_grille(p: dict) -> Manifold:
     if not (isinstance(size, list) and len(size) == 3):
         raise _err("grille size is [width, thickness, depth]")
     sx, sy, sz = (float(v) for v in size)
+    if not all(math.isfinite(v) and v > 0 for v in (sx, sy, sz)):
+        raise _err("grille size must be three positive numbers [width, thickness, depth]")
     d = _positive_float(p, "hole_size", "grille")
     pitch = _positive_float(p, "pitch", "grille", d * 1.5)
     if pitch <= d:

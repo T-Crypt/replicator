@@ -42,28 +42,6 @@ def _finite_float(params: dict, key: str, name: str, default: float | None = Non
     return value
 
 
-def _mesh_to_manifold(vertices: np.ndarray, triangles: np.ndarray, name: str) -> Manifold:
-    V = np.ascontiguousarray(vertices, dtype=np.float32)
-    F = np.ascontiguousarray(triangles, dtype=np.uint32)
-    if len(F) and len(V):
-        area = 0.0
-        for tri in F:
-            a, b, c = V[tri[0]], V[tri[1]], V[tri[2]]
-            area += float(np.dot(a, np.cross(b, c))) / 6.0
-        if area < 0:
-            F = F[:, ::-1]
-    mesh = _make_mesh(V, F)
-    m = Manifold(mesh)
-    if m.is_empty() or float(m.volume()) <= 0:
-        try:
-            flipped = Manifold(_make_mesh(V, F[:, ::-1] if len(F) else F))
-            if not flipped.is_empty() and float(flipped.volume()) > 0:
-                return flipped
-        except Exception:
-            pass
-    raise _eval_error()(f"{name} did not produce a valid non-empty manifold")
-
-
 def _make_mesh(V: np.ndarray, F: np.ndarray):
     from manifold3d import Mesh
 
@@ -99,15 +77,15 @@ def _section_points(sec: dict, name: str) -> np.ndarray:
         raise _eval_error_(f"{name} sections need y")
     if "radius" in sec:
         r = float(sec["radius"])
-        if r <= 0:
-            raise _eval_error_(f"{name} radius must be > 0")
+        if not math.isfinite(r) or r <= 0:
+            raise _eval_error_(f"{name} radius must be a positive finite number, got {sec['radius']}")
         theta = np.linspace(0.0, 2.0 * math.pi, 256, endpoint=False)
         return np.column_stack([r * np.cos(theta), np.zeros_like(theta), r * np.sin(theta)])
     if "rx" in sec or "rz" in sec:
         rx = float(sec.get("rx", sec.get("rz", 1.0)))
         rz = float(sec.get("rz", sec.get("rx", 1.0)))
-        if rx <= 0 or rz <= 0:
-            raise _eval_error_(f"{name} rx and rz must be > 0")
+        if not (math.isfinite(rx) and math.isfinite(rz) and rx > 0 and rz > 0):
+            raise _eval_error_(f"{name} rx and rz must be positive finite numbers")
         theta = np.linspace(0.0, 2.0 * math.pi, 256, endpoint=False)
         return np.column_stack([rx * np.cos(theta), np.zeros_like(theta), rz * np.sin(theta)])
     pts = sec.get("points")
@@ -119,6 +97,8 @@ def _section_points(sec: dict, name: str) -> np.ndarray:
             raise _eval_error_(f"{name} polygon points must be [x, z]")
         arr.append([float(p[0]), float(p[1])])
     arr = np.asarray(arr, dtype=np.float64)
+    if not np.isfinite(arr).all():
+        raise _eval_error_(f"{name} polygon points must be finite")
     if np.allclose(arr[0], arr[-1], rtol=1e-8, atol=1e-9):
         arr = arr[:-1]
     if len(arr) < 3:
@@ -174,11 +154,15 @@ def _build_loft(params: dict) -> Manifold:
             xz = np.vstack([xz[:1], xz[1:][::-1]])
         y = float(sec["y"])
         if not math.isfinite(y):
-            raise _eval_error_("loft section y must be finite")
+            raise _eval_error_(f"loft sections[{i}] y must be finite")
+        if abs(area) <= 1e-9 * max(float(np.ptp(xz[:, 0])), float(np.ptp(xz[:, 1])), 1e-12) ** 2:
+            raise _eval_error_(f"loft sections[{i}] has no area (its points are collinear, repeated or cross themselves): give "
+                               "[x, z] points that enclose a shape")
         ys.append(y)
         rings.append(np.column_stack([xz[:, 0], np.full(n, y), xz[:, 1]]))
     if np.any(np.diff(ys) <= 0):
-        raise _eval_error_("loft section y values must be strictly increasing")
+        raise _eval_error_(f"loft section y values must be strictly increasing, got {ys}; sort the sections "
+                           "from bottom to top")
     from manifold3d import triangulate
     V = np.vstack(rings)
     side = []
@@ -212,7 +196,7 @@ def _catmull_rom(points: np.ndarray, points_per_span: int) -> np.ndarray:
     if points_per_span < 1:
         raise _eval_error_("pipe smooth must be positive")
     if len(pts) == 2:
-        t = np.linspace(0.0, 1.0, points_per_span)
+        t = np.linspace(0.0, 1.0, max(points_per_span, 2))
         return pts[0] + t[:, None] * (pts[1] - pts[0])
     padded = np.vstack([pts[0:1], pts, pts[-1:]])
     out = []
@@ -248,11 +232,16 @@ def _build_pipe(params: dict) -> Manifold:
     arr = np.asarray(arr, dtype=np.float64)
     if np.any(~np.isfinite(arr)):
         raise _eval_error_("pipe path points must be finite")
+    keep = np.r_[True, np.any(np.diff(arr, axis=0) != 0, axis=1)]   # a repeated point makes a kink or a dead segment
+    arr = arr[keep]
 
     r = _positive_float(params, "radius", "pipe")
     smooth = _optional_int(params, "smooth", 0, 0, 64, "pipe")
     segs = _optional_int(params, "segments", 16, 3, 256, "pipe")
 
+    if len(arr) < 2:
+        raise _eval_error_("pipe path points are all the same; give at least two different [x, y, z] points "
+                           "(use sphere for a ball)")
     if smooth > 0:
         path_pts = _catmull_rom(arr, smooth)
     else:
@@ -287,17 +276,27 @@ def _build_helix(params: dict) -> Manifold:
     segs = _optional_int(params, "segments", 16, 3, 256, "helix")
     pts_per_turn = max(24, segs)
     total_pts = max(48, int(math.ceil(abs(turns) * pts_per_turn)) + 1)
+    if total_pts > 6000:
+        raise _eval_error_(f"helix would need {total_pts} path points (limit 6000): fewer turns or segments")
     t = np.linspace(0.0, turns * 2.0 * math.pi, total_pts)
     path = np.column_stack([radius * np.cos(t), pitch * t / (2.0 * math.pi), radius * np.sin(t)])
     return _build_pipe({"path": path.tolist(), "radius": wire, "segments": segs})
 
 
+def _gear_teeth(params: dict) -> int:
+    try:
+        v = float(params["teeth"])
+    except (TypeError, ValueError):
+        v = math.nan
+    if not math.isfinite(v) or v != int(v) or not 6 <= v <= 200:
+        raise _eval_error_(f"gear teeth must be a whole number from 6 to 200, got {params['teeth']}")
+    return int(v)
+
+
 def _involute_gear_profile(params: dict) -> np.ndarray:
     """Closed CCW polygon [(x, z)] of a standard spur gear: involute flanks from the base (or root) circle to the
     tip circle, tip arcs and root arcs. Pitch r = m*z/2, addendum m, dedendum 1.25 m."""
-    teeth = int(params["teeth"])
-    if teeth < 6 or teeth > 200:
-        raise _eval_error_("gear teeth must be 6..200")
+    teeth = _gear_teeth(params)
     m = _positive_float(params, "module", "gear")
     pa = float(params.get("pressure_angle", 20.0))
     if not math.isfinite(pa) or not (5.0 <= pa <= 35.0):
@@ -344,21 +343,19 @@ def _involute_gear_profile(params: dict) -> np.ndarray:
 
 def _build_gear(params: dict) -> Manifold:
     _need_keys(params, {"teeth", "module", "thickness"}, "gear")
-    teeth = int(params["teeth"])
-    if teeth < 6 or teeth > 200:
-        raise _eval_error_("gear teeth must be 6..200")
+    _gear_teeth(params)
     module = _positive_float(params, "module", "gear")
     thickness = _positive_float(params, "thickness", "gear")
-    bore = params.get("bore", 0.0)
-    bore = float(bore)
-    if bore < 0:
-        raise _eval_error_("gear bore must be >= 0")
+    bore = float(params.get("bore", 0.0))
+    if not math.isfinite(bore) or bore < 0:
+        raise _eval_error_("gear bore must be a finite number >= 0")
 
     prof = _involute_gear_profile(params)
     xs, zs = prof[:, 0], prof[:, 1]
-    max_r = float(np.hypot(xs, zs).max())
-    if bore >= max_r:
-        raise _eval_error_("gear bore must be smaller than the gear root radius")
+    root_r = float(np.hypot(xs, zs).min())
+    if bore >= root_r:
+        raise _eval_error_(f"gear bore {bore:g} must be smaller than the root radius {root_r:.4g} "
+                           "(pitch radius is module x teeth / 2, root is 1.25 modules below it)")
 
     # Extrude in Z then rotate to Y. CrossSection expects XY; our profile is XZ, so map x->x, z->y.
     from manifold3d import CrossSection
@@ -368,7 +365,7 @@ def _build_gear(params: dict) -> Manifold:
     if bore > 0:
         m = _optional_int(params, "segments", 64, 12, 512, "gear")
         theta = np.linspace(0.0, 2.0 * math.pi, m, endpoint=False)
-        holes.append([[bore * math.cos(t), bore * math.sin(t)] for t in theta])
+        holes.append([[bore * math.cos(t), bore * math.sin(t)] for t in theta[::-1]])   # clockwise, or it fills in
 
     m = Manifold.extrude(CrossSection([poly] + holes), thickness, n_divisions=0, twist_degrees=0.0, scale_top=[1.0, 1.0])
     m = m.translate((0.0, 0.0, -thickness / 2.0))
@@ -401,7 +398,11 @@ def _build_deform(params: dict, m: Manifold) -> Manifold:
     if not math.isfinite(amount):
         raise _eval_error_("deform amount must be finite")
     if mode == "taper" and (amount <= 0):
-        raise _eval_error_("deform taper amount must be > 0")
+        raise _eval_error_("deform taper amount is the end scale and must be > 0 (1 = no change, 0.5 = half size)")
+    if mode == "twist" and abs(amount) > 3600:
+        raise _eval_error_("deform twist amount is in degrees, within +-3600")
+    if mode == "bend" and not -360 <= amount <= 360:
+        raise _eval_error_("deform bend amount is in degrees, within +-360")
     idx = _axis_index(params.get("axis", "y"), "deform")
 
     bb = np.asarray(m.bounding_box(), dtype=np.float64)
@@ -450,6 +451,10 @@ def _build_deform(params: dict, m: Manifold) -> Manifold:
         theta_total = math.radians(amount)
         R = extent / theta_total
         bend_dir = max(others, key=lambda j: float(size[j]))   # bend in the plane of the wider cross-section side
+        if abs(R) <= size[bend_dir] / 2:
+            raise _eval_error_(f"deform bend of {amount:g} degrees over {extent:g} is too tight for a part "
+                               f"{size[bend_dir]:g} wide (the inside folds through itself): bend less, or bend a "
+                               "longer part")
         def warp(P: np.ndarray) -> np.ndarray:
             P = P.copy()
             th = (P[:, idx] - min_end) / R
@@ -470,6 +475,11 @@ def _wrap_builder(builder: Builder) -> Builder:
         except Exception as e:
             if isinstance(e, _eval_error()):
                 raise
+            if isinstance(e, KeyError):
+                raise _eval_error_(f"missing param {e}")
+            if isinstance(e, (ValueError, TypeError)):
+                raise _eval_error_(f"a param has the wrong type or value ({e}); numbers must be numbers, "
+                                   "lists must be lists")
             raise _eval_error_(str(e))
     return wrapped
 
