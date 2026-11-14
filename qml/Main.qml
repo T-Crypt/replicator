@@ -139,7 +139,7 @@ ApplicationWindow {
         // edit
         { id: "undo", group: "Edit", title: "Undo", keys: "Ctrl+Z", icon: "undo", enabled: () => studio.canUndo, run: () => studio.undo() },
         { id: "redo", group: "Edit", title: "Redo", keys: "Ctrl+Shift+Z", icon: "redo", enabled: () => studio.canRedo, run: () => studio.redo() },
-        { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (window.present) window.setMode("reverse"); else if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else { studio.select(""); window.isolate = "" } } },
+        { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (studio.sheet.png !== undefined) studio.closeSheet(); else if (window.present) window.setMode("reverse"); else if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else { studio.select(""); window.isolate = "" } } },
         { id: "fixIssues", group: "Edit", title: "Fix accuracy issues with the agent", icon: "sparkle", enabled: () => window.idle && studio.issues.some(i => i.severity === "fix"), run: () => studio.fixIssues() },
         { id: "showAll", group: "Edit", title: "Show everything", icon: "eye", run: () => { window.hidden = ({}); window.isolate = "" } },
         { id: "commander", group: "Edit", title: "Commander: search every action", keys: "Ctrl+K", icon: "search", run: () => commander.open() },
@@ -198,6 +198,8 @@ ApplicationWindow {
         { id: "mode.present", group: "Mode", title: "Present mode (play the explanation)", keys: "5", icon: "present", checked: () => studio.mode === "present", run: () => window.setMode("present") },
         // render
         { id: "render", group: "Render", title: "Render a still (Cycles, CPU)", keys: "Ctrl+R", icon: "render", enabled: () => !window.empty && studio.busy === "", run: () => studio.renderShowcase(viewport.cameraJson()) },
+        { id: "sheet.blueprint", group: "Render", title: "Blueprint sheet (A3, dimensioned, parts list)", keys: "Ctrl+Shift+B", icon: "ruler", enabled: () => !window.empty && studio.busy === "", run: () => studio.makeSheet("blueprint") },
+        { id: "sheet.paper", group: "Render", title: "Drawing sheet on white paper (A3, for print)", icon: "printer", enabled: () => !window.empty && studio.busy === "", run: () => studio.makeSheet("paper") },
         { id: "blenderOpen", group: "Render", title: "Open in Blender (MCP socket)", icon: "external", enabled: () => !window.empty && studio.busy === "", run: () => studio.openInBlender() },
         { id: "blenderPull", group: "Render", title: "Pull back from Blender", icon: "importIn", enabled: () => studio.busy === "", run: () => studio.pullFromBlender() },
         { id: "nameParts", group: "Reverse", title: "Name the parts with the local model", icon: "sparkle", enabled: () => !window.empty && studio.busy === "", run: () => studio.nameParts() },
@@ -221,7 +223,7 @@ ApplicationWindow {
         { title: "Part", items: ["part.frame", "part.isolate", "part.hide", "part.play", "-", "part.rework", "part.material", "-", "part.duplicate", "part.delete"] },
         { title: "View", items: ["frameAll", "frameSel", "-", "view.persp", "view.top", "view.right", "view.front", "-",
                                  "disp.shaded", "disp.lines", "disp.wire", "disp.xray", "-", "colorComp", "blueprint", "grid", "reference"] },
-        { title: "Render", items: ["mode.showcase", "render", "-", "blenderOpen", "blenderPull"] },
+        { title: "Render", items: ["mode.showcase", "render", "-", "sheet.blueprint", "sheet.paper", "-", "blenderOpen", "blenderPull"] },
         { title: "Window", items: ["mode.build", "mode.dissect", "mode.reverse", "mode.showcase", "mode.present", "-", "explain",
                                    "-", "toggleLeft", "toggleRight", "toggleTimeline", "focus", "-", "tab.attributes", "tab.materials", "tab.console"] }
     ]
@@ -468,6 +470,28 @@ ApplicationWindow {
                         width: rl.implicitWidth + 18; height: 24; radius: 12; color: "#c0000000"
                         Text { id: rl; anchors.centerIn: parent; text: "CYCLES  ·  PATH TRACED  ·  move the camera to return to live"
                                color: "#e0e0e0"; font.pixelSize: 10; font.letterSpacing: 1; font.family: Theme.sans }
+                    }
+                }
+
+                Rectangle {   // blueprint sheet viewer: the A3 PNG over the viewport until closed
+                    id: sheetView
+                    anchors.fill: parent
+                    visible: studio.sheet.png !== undefined
+                    color: "#e6101418"
+                    z: 5
+                    MouseArea { anchors.fill: parent; onClicked: studio.closeSheet() }
+                    Image {
+                        anchors.fill: parent; anchors.margins: 28; anchors.bottomMargin: 64
+                        source: sheetView.visible ? "file://" + studio.sheet.png : ""
+                        fillMode: Image.PreserveAspectFit; smooth: true; mipmap: true
+                        cache: false; asynchronous: true
+                        MouseArea { anchors.centerIn: parent; width: parent.paintedWidth; height: parent.paintedHeight }
+                    }
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter; anchors.bottom: parent.bottom; anchors.bottomMargin: 18
+                        width: sl.implicitWidth + 22; height: 28; radius: 14; color: "#c0000000"
+                        Text { id: sl; anchors.centerIn: parent; color: "#e0e0e0"; font.pixelSize: 10; font.letterSpacing: 1; font.family: Theme.sans
+                               text: "SHEET  ·  " + (studio.sheet.svg || "") + "  ·  click outside or Esc to close" }
                     }
                 }
 

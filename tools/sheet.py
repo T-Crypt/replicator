@@ -17,19 +17,10 @@ from replicator.core.program import check
 
 def render_png(svg: str, png: Path, dpi: int = 150) -> Path:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PySide6.QtCore import QByteArray
-    from PySide6.QtGui import QGuiApplication, QImage, QPainter
-    from PySide6.QtSvg import QSvgRenderer
+    from PySide6.QtGui import QGuiApplication
+    from replicator.qt.svg import render_png as qt_render
     QGuiApplication.instance() or QGuiApplication([])
-    w, h = (round(v / 25.4 * dpi) for v in drawing.SHEET)
-    img = QImage(w, h, QImage.Format.Format_RGB32)
-    img.fill(0xFFFFFF)
-    painter = QPainter(img)
-    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-    QSvgRenderer(QByteArray(svg.encode())).render(painter)
-    painter.end()
-    img.save(str(png))
-    return png
+    return qt_render(svg, png, drawing.SHEET, dpi)
 
 
 def make(program_path: Path, out: Path, style: str = "blueprint", dpi: int = 150) -> tuple[Path, Path, float]:

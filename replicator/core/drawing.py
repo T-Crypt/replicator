@@ -19,7 +19,7 @@ from manifold3d import Manifold
 
 from .assembly import Component
 from .evaluate import RawMesh, Shape
-from .physics import properties
+from .physics import is_effect, properties
 
 SHEET = (420.0, 297.0)                    # A3 landscape, millimetres
 MARGIN = 10.0
@@ -28,6 +28,7 @@ SCALES = (10, 5, 2, 1, 1 / 2, 1 / 2.5, 1 / 4, 1 / 5, 1 / 10, 1 / 15, 1 / 20, 1 /
           1 / 75, 1 / 100, 1 / 150, 1 / 200, 1 / 250, 1 / 500, 1 / 1000)
 CREASE_DEG = 32.0
 PLAN_HEIGHT = 1200.0                      # mm above the floor: where architects cut a floor plan
+FONT = "Inter, 'DejaVu Sans', 'Liberation Sans', Arial, Helvetica, sans-serif"   # plain sans, ISO 3098 in spirit
 STYLES = {
     "blueprint": {"paper": "#143a6e", "ink": "#eaf2ff", "faint": "#9fb8dc", "cut": "#eaf2ff", "grid": "#1d4a86"},
     "paper": {"paper": "#ffffff", "ink": "#101418", "faint": "#6b7480", "cut": "#101418", "grid": "#e8ecf1"},
@@ -219,7 +220,7 @@ def sheet_svg(program: dict, shapes: list[Shape], comps: list[Component], style:
         views["section"] = section
 
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{SHEET[0]}mm" height="{SHEET[1]}mm" '
-           f'viewBox="0 0 {SHEET[0]} {SHEET[1]}" font-family="DejaVu Sans Mono, monospace">',
+           f'viewBox="0 0 {SHEET[0]} {SHEET[1]}" font-family="{FONT}">',
            f'<rect width="{SHEET[0]}" height="{SHEET[1]}" fill="{st["paper"]}"/>']
     for gx in np.arange(0, SHEET[0], 10):
         out.append(f'<path d="M{_f(gx)} 0V{SHEET[1]}" stroke="{st["grid"]}" stroke-width="0.12"/>')
@@ -316,11 +317,21 @@ def _balloons(art: ViewArt, tf, number: dict[str, int], left: float, right: floa
     return out
 
 
+def _material_cell(names: list[str]) -> str:
+    """One parts-list cell: the component's substance, 'mixed' for several, 'light effect' when it is only light."""
+    real = sorted({n for n in names if n and not is_effect(n)})
+    if not real:
+        return "light effect" if any(is_effect(n) for n in names) else "-"
+    return real[0].replace("_", " ") if len(real) == 1 else "mixed"
+
+
 def _table(program, shapes, comps, number, s, units, st, source, building) -> list[str]:
     ink, faint = st["ink"], st["faint"]
     x = SHEET[0] - MARGIN - TABLE_W
     m = properties(program, [sh for sh in shapes if not isinstance(sh.manifold, RawMesh)])
-    mats = {sh.component: sh.material for sh in shapes}
+    mats: dict[str, list[str]] = {}
+    for sh in shapes:
+        mats.setdefault(sh.component, []).append(sh.material or "")
     counts: dict[str, int] = {}
     for sh in shapes:
         counts[sh.component] = counts.get(sh.component, 0) + 1
@@ -334,7 +345,7 @@ def _table(program, shapes, comps, number, s, units, st, source, building) -> li
     rows = [c for c in comps if c.id in number][:30]
     for c in rows:
         y += 4.6
-        mat = (mats.get(c.id) or "-").replace("_", " ")
+        mat = _material_cell(mats.get(c.id, []))
         out.append(f'<path d="M{_f(x)} {_f(y - 3.3)}H{_f(x + TABLE_W)}" stroke="{st["grid"]}" stroke-width="0.15"/>')
         out.append(_text(x + 3, y, number[c.id], 2.4, fill=ink, weight="bold"))
         out.append(_text(x + 10, y, c.label[:24], 2.3, fill=ink))

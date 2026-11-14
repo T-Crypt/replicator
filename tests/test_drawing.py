@@ -2,7 +2,7 @@ import json
 import re
 from pathlib import Path
 
-from replicator.core import assembly, drawing
+from replicator.core import assembly, drawing, physics
 from replicator.core.evaluate import Evaluator
 
 FIX = Path(__file__).parent.parent / "fixtures"
@@ -29,3 +29,30 @@ def test_a_house_gets_a_floor_plan_cut_at_1200():
     svg = sheet({"version": 1, "units": "mm", "ops": walls + [roof]})
     assert ">PLAN  (CUT AT 1200 mm)<" in svg and ">FRONT ELEVATION<" in svg and "SECTION A-A" not in svg
     assert 'fill-opacity="0.55"' in svg
+
+
+def test_a_light_effect_has_no_mass_and_reads_as_one_in_the_parts_list():
+    assert physics.density("glow") == ("effect", 0.0, True)
+    assert physics.density("glow_titanium")[0] == "titanium"          # a named substance wins over the effect
+    assert physics.density("emissive_led")[0] == "led"                # an LED is a real part
+    p = json.loads((FIX / "vector_engine.json").read_text())
+    shapes = Evaluator().step(p)
+    m = physics.properties(p, shapes)
+    assert "nozzle" not in m.by_component and m.kg > 0
+    assert drawing._material_cell(["glow"]) == "light effect"
+    assert drawing._material_cell(["titanium", "glow", "titanium"]) == "titanium"
+    assert drawing._material_cell(["titanium", "ceramic"]) == "mixed"
+    svg = drawing.sheet_svg(p, shapes, assembly.components(p, shapes))
+    assert ">light effect<" in svg and ">glow<" not in svg
+
+
+def test_the_svg_font_is_a_portable_list_qt_gets_one_installed_family():
+    import os
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtGui import QFontDatabase, QGuiApplication
+    QGuiApplication.instance() or QGuiApplication([])
+    from replicator.qt.svg import _one_family
+    assert drawing.FONT.endswith("sans-serif") and "Mono" not in drawing.FONT
+    have = QFontDatabase.families()
+    assert _one_family("'Nowhere Sans', " + drawing.FONT) in have
+    assert _one_family("'Nowhere Sans', Nowhere2") in have

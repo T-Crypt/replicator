@@ -96,3 +96,21 @@ def test_3mf_export_fails_with_a_message_not_an_exception(studio):
     out = studio.exportAs("3mf")
     assert out == "" or Path(out).exists()
     assert out or "export failed" in studio.lastLog
+
+
+def test_sheet_job_writes_svg_and_png_and_a_new_build_closes_it(studio, tmp_path, monkeypatch):
+    class Now:   # run the job inline so the result lands before the assert
+        def __init__(self, target, daemon):
+            self.target = target
+
+        def start(self):
+            self.target()
+    monkeypatch.setattr(bridge.threading, "Thread", Now)
+    studio.makeSheet("paper")
+    sheet = studio.sheet
+    assert sheet, "the sheet job reported a failure"
+    assert Path(sheet["svg"]).read_text().startswith("<")
+    assert Path(sheet["png"]).stat().st_size > 10_000
+    assert Path(sheet["svg"]).parent == tmp_path / "sheets"
+    studio.duplicateComponent("gimbal")
+    assert studio.sheet == {}

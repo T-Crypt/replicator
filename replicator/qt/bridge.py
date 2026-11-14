@@ -11,7 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import Property, QCoreApplication, QObject, QFileSystemWatcher, QTimer, QUrl, Signal, Slot
 
 from .. import config, voice
-from ..core import assembly, critique, explain, importers, materials, physics, reverse
+from ..core import assembly, critique, drawing, explain, importers, materials, physics, reverse
 from ..core import export as exporter
 from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds
 from ..core.ops_engineering import HOLES
@@ -49,6 +49,7 @@ class Studio(QObject):
     modeChanged = Signal()
     reportChanged = Signal()
     renderChanged = Signal()
+    sheetChanged = Signal()
     holodeckChanged = Signal()
     historyChanged = Signal()
     libraryChanged = Signal()
@@ -86,6 +87,7 @@ class Studio(QObject):
         self._mode_after: str | None = None
         self._report: dict = {}
         self._render_path = ""
+        self._sheet: dict = {}
         self._ground = 0.0
         self._radius = 300.0
         self._center = [0.0, 150.0, 0.0]
@@ -305,6 +307,42 @@ class Studio(QObject):
     def reportInput(self):
         return self._report.get("input", {})
 
+    @Property("QVariantMap", notify=sheetChanged)
+    def sheet(self):
+        """The last blueprint sheet: {png, svg, seconds}; empty when none is open."""
+        return self._sheet
+
+    @Slot()
+    def closeSheet(self):
+        if self._sheet:
+            self._sheet = {}
+            self.sheetChanged.emit()
+
+    @Slot(str)
+    def makeSheet(self, style: str):
+        """A dimensioned A3 blueprint sheet of the finished build (SVG plus PNG), drawn off the GUI thread."""
+        if not self._program:
+            return
+        if self._busy:
+            return self._say("busy: one job at a time (one GPU)")
+        from .svg import render_png
+        prog, shapes = self._program, self._ev.step(self._program)
+        comps = assembly.components(prog, shapes)
+        name = "".join(c if c.isalnum() else "-" for c in self.title.lower()).strip("-") or "build"
+        work = OUT / "sheets"
+        source = f"Replicator · {self._engine}"
+
+        def job(log):
+            t = time.time()
+            svg = drawing.sheet_svg(prog, shapes, comps, style if style in drawing.STYLES else "blueprint", source)
+            work.mkdir(parents=True, exist_ok=True)
+            stem = work / f"{name}-{time.strftime('%Y%m%d-%H%M%S')}"
+            stem.with_suffix(".svg").write_text(svg)
+            png = render_png(svg, stem.with_suffix(".png"), drawing.SHEET, 150)
+            return {"sheet": {"png": str(png), "svg": str(stem.with_suffix(".svg")),
+                              "seconds": round(time.time() - t, 1)}}
+        self._run_job("Drawing the blueprint sheet", job)
+
     @Property(str, notify=renderChanged)
     def renderPath(self):
         return self._render_path
@@ -435,6 +473,7 @@ class Studio(QObject):
             self._future.clear()
         self._program = program
         self._ops_rows = self._comp_rows = None
+        self.closeSheet()
         self.historyChanged.emit()
         self._prev_shapes = []
         self._step = -1
@@ -961,7 +1000,7 @@ class Studio(QObject):
         if self._busy:
             self._say("busy: one job at a time (one GPU)")
             return
-        local = label.startswith(("Reverse", "Render", "Opening", "Pulling", "Image to 3D"))
+        local = label.startswith(("Reverse", "Render", "Opening", "Pulling", "Image to 3D", "Drawing"))
         self.stopSpeaking()
         self._busy = label if local else f"{label} on {self._engine}"
         self.busyChanged.emit()
@@ -1007,6 +1046,10 @@ class Studio(QObject):
                       f"{c['measured']} measured, {c['concept']} concept, {self._explanation['dropped']} dropped")
             self.setMode("present")
             return
+        if "sheet" in res:
+            self._sheet = res["sheet"]
+            self.sheetChanged.emit()
+            return self._say(f"blueprint sheet ready ({self._sheet['seconds']} s): {self._sheet['svg']}")
         if "render" in res:
             self._render_path = res["render"]
             self.renderChanged.emit()

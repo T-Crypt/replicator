@@ -1,6 +1,7 @@
 """Mass properties from the geometry: mass per part from its volume and a density chosen by material name, the centre
 of gravity, and whether the object stands. Volumes are measured; densities are typical handbook values, so every mass
-is `computed`, and a part whose material names no known substance falls back to aluminium and says so.
+is `computed`, and a part whose material names no known substance falls back to aluminium and says so. A light effect
+(a glow, emissive or holo material that names no substance) is not matter: it has no mass and is left out.
 """
 from __future__ import annotations
 
@@ -18,9 +19,10 @@ DENSITY = (                               # kg/m^3; first match in the material 
     ("titanium", 4430), ("ceramic", 3900), ("alumin", 2700), ("anodis", 2700), ("clay", 1800), ("glass", 2500), ("concrete", 2400), ("stone", 2600),
     ("tps", 150), ("carbon", 1600), ("composite", 1800), ("kevlar", 1440), ("peek", 1300), ("rubber", 1150), ("tyre", 1150), ("tire", 1150), ("polymer", 1200),
     ("plastic", 1200), ("abs", 1050), ("pla", 1240), ("nylon", 1150), ("wood", 600), ("foam", 50),
-    ("glow", 1200), ("emissive", 1200), ("led", 1200),
+    ("led", 1200),
 )
 FALLBACK = ("aluminium (assumed)", 2700)
+EFFECTS = ("glow", "emissive", "holo")    # display light, not a substance, unless the name also names one
 
 
 def density(material: str | None) -> tuple[str, float, bool]:
@@ -28,7 +30,14 @@ def density(material: str | None) -> tuple[str, float, bool]:
     for name, rho in DENSITY:
         if name in key:
             return name, rho, True
+    if is_effect(material):
+        return "effect", 0.0, True
     return FALLBACK[0], FALLBACK[1], False
+
+
+def is_effect(material: str | None) -> bool:
+    key = (material or "").lower()
+    return any(e in key for e in EFFECTS) and not any(name in key for name, _ in DENSITY)
 
 
 @dataclass
@@ -49,6 +58,8 @@ def properties(program: dict, shapes: list[Shape]) -> Mass:
         _, rho, known = density(sh.material)
         if not known:
             assumed.append(sh.id)
+        if not rho:                       # a light effect carries no mass
+            continue
         V, F = sh.arrays()
         a, b, c = (V[F[:, i]].astype(np.float64) for i in range(3))
         vol6 = np.einsum("ij,ij->i", a, np.cross(b, c))
