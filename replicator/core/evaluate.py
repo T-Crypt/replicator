@@ -119,7 +119,10 @@ def load_asset(base: Path | None, rel: str):
 
 
 def _segs(p: dict, default: int = 64) -> int:
-    return int(p.get("segments", default))
+    n = int(p.get("segments", default))
+    if not 3 <= n <= 512:
+        raise EvalError("segments must be 3..512")   # millions of segments hang or crash the kernel
+    return n
 
 
 def _vec3(v, name: str) -> list[float]:
@@ -196,6 +199,8 @@ def build_primitive(kind: str, p: dict, base: Path | None = None) -> Manifold:
         st = p.get("scale_top", [1.0, 1.0])
         st = [float(st)] * 2 if isinstance(st, (int, float)) else [float(st[0]), float(st[1])]
         h = float(p["height"])
+        if abs(float(p.get("twist", 0))) > 3600:
+            raise EvalError("extrude twist must be within +-3600 degrees")
         m = Manifold.extrude(cs, h, n_divisions=int(abs(float(p.get("twist", 0))) // 10),
                              twist_degrees=float(p.get("twist", 0.0)), scale_top=st)
         m = m.translate((0, 0, -h / 2))

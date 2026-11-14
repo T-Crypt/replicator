@@ -93,6 +93,7 @@ class Studio(QObject):
         self._explanation: dict = {}
         self._issues: list[dict] = []
         self._issues_of: dict | None = None
+        self._epoch = 0
         self._mass: physics.Mass | None = None
         self._rest = "flush"
         self._say_token = 0
@@ -479,7 +480,11 @@ class Studio(QObject):
             return
         rep = (self._project / "reverse_report.json") if self._project else None
         if rep and rep.exists() and (self._program.get("name", "").startswith("Reverse:") or self._program.get("reference")):
-            self._report = json.loads(rep.read_text())
+            try:
+                self._report = json.loads(rep.read_text())
+            except (OSError, json.JSONDecodeError) as e:
+                self._say(f"reverse report unreadable ({e}); showing the program's own report")
+                self._report = reverse.program_report(self._program, self._ev.step(self._program))
         else:
             self._report = reverse.program_report(self._program, self._ev.step(self._program))
         self.reportChanged.emit()
@@ -528,6 +533,7 @@ class Studio(QObject):
             return self.importModel(str(p))
         try:
             prog = json.loads(p.read_text())
+            self._epoch += 1
             self._project = p.parent
             self._ev = Evaluator(self._project)
             self._history.clear()
@@ -720,6 +726,7 @@ class Studio(QObject):
     @Slot()
     def closeProgram(self):
         """Back to the start screen."""
+        self._epoch += 1
         self._program = None
         self._project = None
         self._history.clear()
@@ -824,7 +831,7 @@ class Studio(QObject):
         """Inferred names for components from their observed measurements (local model, tagged inferred)."""
         if not self._program:
             return
-        prog = copy.deepcopy(self._program)
+        prog, current = copy.deepcopy(self._program), self._program
         facts = [{"id": c.id, "current_label": c.label, "pieces": len(c.shapes),
                   "extent": (c.hi - c.lo).round(1).tolist(), "center": c.center.round(1).tolist()}
                  for c in self._comps]
@@ -837,7 +844,7 @@ class Studio(QObject):
                 if c["id"] in names:
                     c["label"] = names[c["id"]].get("label", c.get("label", c["id"]))
                     c["role"] = names[c["id"]].get("role", "")
-            return {"program": prog, "keep": True, "names": names}
+            return {"program": prog, "keep": True, "names": names, "base": current}
         self._run_job("Naming parts", job)
 
     def _run_job(self, label: str, fn, mode_after: str | None = None):
@@ -850,9 +857,14 @@ class Studio(QObject):
         self.busyChanged.emit()
         self._mode_after = mode_after
 
+        epoch = self._epoch
+
         def run():
             try:
-                self._jobDone.emit(fn(lambda m: self._jobDone.emit(None, "log:" + m)), "done")
+                res = fn(lambda m: self._jobDone.emit(None, "log:" + m))
+                if isinstance(res, dict):
+                    res["epoch"] = epoch
+                self._jobDone.emit(res, "done")
             except Exception as e:  # noqa: BLE001 - every failure is reported in the console
                 self._jobDone.emit(None, f"failed: {e}")
         threading.Thread(target=run, daemon=True).start()
@@ -866,6 +878,14 @@ class Studio(QObject):
         if res is None:
             self._say(msg)
             return
+        if res.get("epoch", self._epoch) != self._epoch:
+            if "program" in res and "project" not in res and "base" not in res:
+                OUT.mkdir(parents=True, exist_ok=True)
+                saved = OUT / time.strftime("%Y%m%d-%H%M%S.json")
+                saved.write_text(json.dumps(res["program"], indent=1))
+                self.libraryChanged.emit()
+                return self._say(f"finished after you switched builds; saved to {saved} (open it from Recents)")
+            return self._say("a job finished for a build that is no longer open; its result was dropped")
         if "note" in res:
             self._say(res["note"])
             return
@@ -882,7 +902,9 @@ class Studio(QObject):
             self.renderChanged.emit()
             self._say(f"render ready ({res.get('seconds', 0):.0f} s): {res['render']}")
             return
-        prog = res["program"]
+        prog = res.get("program")
+        if prog is None:
+            return
         if "base" in res and res["base"] is not self._program:
             self._say("agent result dropped: the build changed while the model was working (nothing lost; ask again)")
             return
@@ -919,19 +941,21 @@ class Studio(QObject):
     # ------------------------------------------------------------------ export and render
     @Slot(str, result=str)
     def exportAs(self, fmt: str) -> str:
-        if not self._program:
+        if not self._program or fmt not in ("glb", "stl", "obj"):
             return ""
-        OUT.mkdir(parents=True, exist_ok=True)
         name = "".join(c if c.isalnum() else "-" for c in self.title.lower()).strip("-") or "build"
-        path = OUT / f"{name}.{fmt}"
+        path, n = OUT / f"{name}.{fmt}", 2
+        while path.exists():                    # never overwrite an earlier export
+            path, n = OUT / f"{name}-{n}.{fmt}", n + 1
         try:
+            OUT.mkdir(parents=True, exist_ok=True)
             shapes = self._ev.step(self._program)
             if fmt == "stl" and any(isinstance(s.manifold, RawMesh) for s in shapes):
                 raise ValueError("imported pieces that are not watertight cannot go to STL")
             exporter.export(shapes, self._program.get("materials", {}), path)
             self._say(f"exported {path}")
             return str(path)
-        except (ValueError, EvalError) as e:
+        except (OSError, ValueError, EvalError) as e:
             self._say(f"export failed: {e}")
             return ""
 
@@ -941,17 +965,17 @@ class Studio(QObject):
         if not self._program:
             return
         from ..core import render
-        cam = json.loads(camera_json)
-        work = OUT / "renders"
-        work.mkdir(parents=True, exist_ok=True)
-        stamp = time.strftime("%Y%m%d-%H%M%S")
-        shapes = self._ev.step(self._program)
-        glb = exporter.export(shapes, self._program.get("materials", {}), work / f"{stamp}.glb")
+        try:
+            cam = json.loads(camera_json)
+            work = OUT / "renders"
+            work.mkdir(parents=True, exist_ok=True)
+            stamp = time.strftime("%Y%m%d-%H%M%S")
+            shapes = self._ev.step(self._program)
+            glb = exporter.export(shapes, self._program.get("materials", {}), work / f"{stamp}.glb")
+        except (OSError, ValueError, EvalError) as e:
+            return self._say(f"render failed: {e}")
         mats = self._program.get("materials", {})
-        labels = {c.id: c.label for c in assembly.components(self._program, shapes)}
-        parts = {s.id: {"id": s.id, "label": s.label, "component": s.component,
-                        "component_label": labels.get(s.component, s.component), "material": s.material}
-                 for s in shapes}
+        part_mats = {s.id: s.material for s in shapes if s.material}
         ground = self._ground
 
         def job(log):
@@ -968,10 +992,14 @@ class Studio(QObject):
         if not self._program:
             return
         from ..core import blender_link
-        work = OUT / "blender"
-        work.mkdir(parents=True, exist_ok=True)
-        shapes = self._ev.step(self._program)
-        glb = exporter.export(shapes, self._program.get("materials", {}), work / time.strftime("%Y%m%d-%H%M%S.glb"))
+        try:
+            work = OUT / "blender"
+            work.mkdir(parents=True, exist_ok=True)
+            shapes = self._ev.step(self._program)
+            glb = exporter.export(shapes, self._program.get("materials", {}),
+                                  work / time.strftime("%Y%m%d-%H%M%S.glb"))
+        except (OSError, ValueError, EvalError) as e:
+            return self._say(f"Blender hand-off failed: {e}")
         mats = self._program.get("materials", {})
         labels = {c.id: c.label for c in assembly.components(self._program, shapes)}
         parts = {s.id: {"id": s.id, "label": s.label, "component": s.component,

@@ -250,15 +250,15 @@ def _build_pipe(params: dict) -> Manifold:
         raise _eval_error_("pipe path points must be finite")
 
     r = _positive_float(params, "radius", "pipe")
-    smooth = int(params.get("smooth", 0))
-    if smooth < 0:
-        raise _eval_error_("pipe smooth must be >= 0")
+    smooth = _optional_int(params, "smooth", 0, 0, 64, "pipe")
     segs = _optional_int(params, "segments", 16, 3, 256, "pipe")
 
     if smooth > 0:
         path_pts = _catmull_rom(arr, smooth)
     else:
         path_pts = arr
+    if len(path_pts) > 6000:
+        raise _eval_error_("pipe path is too long (over 6000 segments): fewer points or less smooth")
 
     parts = []
     for i in range(len(path_pts) - 1):
@@ -281,14 +281,15 @@ def _build_helix(params: dict) -> Manifold:
     if pitch == 0:
         raise _eval_error_("helix pitch must be non-zero")
     turns = _finite_float(params, "turns", "helix")
-    if abs(turns) < 1e-9:
-        raise _eval_error_("helix turns must be non-zero")
+    if not 1e-9 < abs(turns) <= 200:
+        raise _eval_error_("helix turns must be non-zero and at most 200")
     wire = _positive_float(params, "wire_radius", "helix")
-    pts_per_turn = max(24, _optional_int(params, "segments", 24, 24, 512, "helix") if "segments" in params else 24)
+    segs = _optional_int(params, "segments", 16, 3, 256, "helix")
+    pts_per_turn = max(24, segs)
     total_pts = max(48, int(math.ceil(abs(turns) * pts_per_turn)) + 1)
     t = np.linspace(0.0, turns * 2.0 * math.pi, total_pts)
     path = np.column_stack([radius * np.cos(t), pitch * t / (2.0 * math.pi), radius * np.sin(t)])
-    return _build_pipe({"path": path.tolist(), "radius": wire, "segments": _optional_int(params, "segments", 16, 3, 256, "helix")})
+    return _build_pipe({"path": path.tolist(), "radius": wire, "segments": segs})
 
 
 def _involute_gear_profile(params: dict) -> np.ndarray:
@@ -414,8 +415,8 @@ def _build_deform(params: dict, m: Manifold) -> Manifold:
         res = extent / 48.0
     else:
         res = float(res)
-        if res <= 0:
-            raise _eval_error_("deform resolution must be > 0")
+        if not res >= extent / 400.0:
+            raise _eval_error_(f"deform resolution must be at least {extent / 400.0:.3g} (1/400 of the part)")
     refined = m.refine_to_length(res)
 
     center = (lo + hi) / 2.0
