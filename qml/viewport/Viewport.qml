@@ -139,9 +139,9 @@ Item {
             antialiasingQuality: SceneEnvironment.High
             specularAAEnabled: true
             tonemapMode: SceneEnvironment.TonemapModeFilmic
-            exposure: root.showcase ? 1.3 : 1.0
+            exposure: root.showcase ? 0.95 : 1.0
             lightProbe: Texture { textureData: studio.envMap; mappingMode: Texture.LightProbe }
-            probeExposure: root.showcase ? 1.7 : 0.9
+            probeExposure: root.showcase ? 1.3 : 0.9
             probeOrientation: Qt.vector3d(0, 30, 0)
             glowEnabled: true
             glowStrength: root.showcase ? 1.25 : 1.0
@@ -208,7 +208,7 @@ Item {
             visible: root.showcase
             position: Qt.vector3d(studio.center[0], studio.radius * 4, studio.center[2])
             eulerRotation.x: -90
-            brightness: 7
+            brightness: 4.5
             coneAngle: 50; innerConeAngle: 20
             constantFade: 1; linearFade: 0; quadraticFade: 0
         }
