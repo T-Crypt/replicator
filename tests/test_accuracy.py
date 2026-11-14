@@ -140,3 +140,8 @@ def test_a_top_heavy_object_tips():
     p = prog({"id": "post", "op": "box", "component": "post", "params": {"size": [10, 200, 10], "translate": [0, 100, 0]}},
              {"id": "arm", "op": "box", "component": "arm", "params": {"size": [300, 20, 20], "translate": [150, 210, 0]}})
     assert ("tips", "") in issues(p)
+
+
+def test_null_inputs_from_a_model_are_ignored():
+    from replicator.core.program import validate
+    assert validate(prog({"id": "a", "op": "box", "input": None, "inputs": [], "params": {"size": 10}})) == []

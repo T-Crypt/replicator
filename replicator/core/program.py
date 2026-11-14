@@ -135,6 +135,9 @@ def normalize(program: dict) -> dict:
     for op in program.get("ops") or []:
         if not isinstance(op, dict):
             continue
+        for k in ("input", "inputs"):            # local models write "input": null on primitives
+            if k in op and op[k] in (None, "", []):
+                del op[k]
         for k in PLACEMENT & op.keys():
             params = op.setdefault("params", {})
             if isinstance(params, dict):
