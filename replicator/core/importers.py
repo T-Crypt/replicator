@@ -134,7 +134,14 @@ def unpack(src: Path, dest: Path) -> list[Path]:
 
 
 def _scene(path: Path, z_up: bool) -> trimesh.Scene:
-    scene = trimesh.load(str(path), force="scene")
+    if path.stat().st_size == 0:
+        raise ValueError(f"{path.name} is empty")
+    try:
+        scene = trimesh.load(str(path), force="scene")
+    except Exception as e:  # noqa: BLE001 - trimesh raises a dozen types for a broken file
+        raise ValueError(f"{path.name} could not be read as a 3D model ({e})") from None
+    if not scene.geometry:
+        raise ValueError(f"{path.name} holds no geometry")
     if z_up:
         scene.apply_transform(trimesh.transformations.rotation_matrix(-1.5707963267948966, [1, 0, 0]))
     return scene
@@ -148,6 +155,8 @@ def prepare(src: Path, work: Path, log=print) -> tuple[Path, str]:
         models = unpack(src, work / "unpacked")
         log(f"import: {src.name} holds {len(models)} {models[0].suffix} file(s)")
         merged = trimesh.Scene()
+        if len(models) > 200:
+            log(f"import: {src.name} holds {len(models)} models; using the first 200")
         for m in models[:200]:
             glb, _ = prepare(m, work / f"part-{m.stem}", log)
             merged.add_geometry(trimesh.load(str(glb), force="scene").to_geometry(), node_name=m.stem)
