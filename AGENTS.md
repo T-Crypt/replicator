@@ -107,7 +107,7 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
   `replicator_id` and `replicator_component`; the vendored mcp-for-blender socket listens on `localhost:9876` only.
   *Pull back* reverse-engineers the live scene into Reverse.
 - Known limits: no fluid or structural simulation (strength and CFD are planned, not built); the STEP/IGES route
-  (cascadio) is untested against a real CAD file; `round` grows a part by its radius (true bevels need Blender).
+  (cascadio) is untested against a real CAD file; `round` erodes then regrows, so features thinner than twice its radius vanish (with an error).
 
 ## Git
 
