@@ -4,7 +4,7 @@ is `computed`, and a part whose material names no known substance falls back to 
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 from scipy.spatial import ConvexHull
@@ -38,11 +38,13 @@ class Mass:
     by_component: dict[str, float]
     assumed: list[str]                    # shape ids whose density is a fallback
     stands: bool | None                   # None when it does not rest on the floor (levitating display pose)
+    inertia: list[float] = field(default_factory=list)   # principal moments about the CG, kg m^2, ascending
 
 
 def properties(program: dict, shapes: list[Shape]) -> Mass:
     s = UNIT_M.get(program.get("units", "mm"), 1e-3)
     total, moment, by_comp, assumed = 0.0, np.zeros(3), {}, []
+    second = np.zeros((3, 3))             # sum of rho * integral of x x^T dV about the origin, kg mm^2
     for sh in shapes:
         _, rho, known = density(sh.material)
         if not known:
@@ -55,13 +57,26 @@ def properties(program: dict, shapes: list[Shape]) -> Mass:
             continue
         centroid = ((a + b + c) * vol6[:, None]).sum(0) / (4.0 * vol6.sum())
         kg = vol * s ** 3 * rho
+        sgn = 1.0 if vol6.sum() > 0 else -1.0
+        S = a + b + c
+        cov = (np.einsum("n,ni,nj->ij", vol6 * sgn, a, a) + np.einsum("n,ni,nj->ij", vol6 * sgn, b, b)
+               + np.einsum("n,ni,nj->ij", vol6 * sgn, c, c) + np.einsum("n,ni,nj->ij", vol6 * sgn, S, S)) / 120.0
+        second += cov * (kg / vol)
         total += kg
         moment += kg * centroid
         by_comp[sh.component] = by_comp.get(sh.component, 0.0) + kg
     cg = (moment / total) if total else np.zeros(3)
     return Mass(round(float(total), 3), [round(float(v), 1) for v in cg],
                 {k: round(float(v), 3) for k, v in by_comp.items()},
-                assumed, _stands(shapes, cg))
+                assumed, _stands(shapes, cg), _principal(second, total, cg, s))
+
+
+def _principal(second: np.ndarray, total: float, cg: np.ndarray, unit: float) -> list[float]:
+    if not total:
+        return [0.0, 0.0, 0.0]
+    cov = second - total * np.outer(cg, cg)
+    inertia = (np.trace(cov) * np.eye(3) - cov) * (unit / 1e-3) ** 2 * 1e-6
+    return [float(v) for v in np.linalg.eigvalsh(inertia)]
 
 
 def _stands(shapes: list[Shape], cg: np.ndarray) -> bool | None:

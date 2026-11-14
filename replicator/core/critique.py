@@ -12,7 +12,8 @@ from dataclasses import asdict, dataclass
 import numpy as np
 
 from .assembly import Component
-from .evaluate import RawMesh, Shape
+from .evaluate import Evaluator, RawMesh, Shape
+from .program import op_inputs
 from .physics import properties
 
 AXISYM = {"cylinder", "tube", "torus", "revolve", "nozzle", "rotor", "capsule", "gear", "helix"}
@@ -62,32 +63,101 @@ def _gap(alo, ahi, blo, bhi) -> float:
     return float(np.linalg.norm(np.maximum(0.0, np.maximum(alo - bhi, blo - ahi))))
 
 
+def _boxes(shapes: list[Shape]) -> tuple[np.ndarray, np.ndarray]:
+    bb = np.array([s.manifold.bounding_box() for s in shapes], dtype=np.float64).reshape(-1, 6)
+    return bb[:, :3], bb[:, 3:]
+
+
 def floating(b: Build) -> list[Issue]:
     if len(b.comps) < 2:
         return []
     tol = 0.01 * float(np.linalg.norm(b.size))
+    lo, hi = np.array([c.lo for c in b.comps]), np.array([c.hi for c in b.comps])
+    d = np.maximum(0.0, np.maximum(lo[:, None, :] - hi[None, :, :], lo[None, :, :] - hi[:, None, :]))
+    gap = np.linalg.norm(d, axis=2)
+    np.fill_diagonal(gap, np.inf)
     out = []
-    for c in b.comps:
-        gaps = [(_gap(c.lo, c.hi, o.lo, o.hi), o) for o in b.comps if o is not c]
-        gap, near = min(gaps, key=lambda t: t[0])
-        if gap > tol:
+    for i, c in enumerate(b.comps):
+        j = int(np.argmin(gap[i]))
+        if gap[i, j] > tol:
             out.append(Issue("floating", "fix", c.id, f"{c.label} floats free: it touches no other part "
-                             f"(nearest is {near.label}, {gap:.0f} {b.program.get('units', 'mm')} away). "
+                             f"(nearest is {b.comps[j].label}, {gap[i, j]:.0f} {b.program.get('units', 'mm')} away). "
                              "Move it until it is attached."))
+    return out
+
+
+def _grown(s: Shape, tol: float) -> Shape:
+    lo, hi = _box(s)
+    c, size = (lo + hi) / 2, np.maximum(hi - lo, 1e-9)
+    return Shape(s.id, s.label, s.part, s.material, s.manifold.translate((-c).tolist()).scale(((size + 2 * tol) / size).tolist()).translate(c.tolist()), s.hash, s.component)
+
+
+def cavity_floating(b: Build) -> list[Issue]:
+    """A part whose bounding box sits inside another part's box passes the box test even when it hangs loose in a
+    hollow body; grow it by the contact tolerance and test the real solids."""
+    if len(b.comps) < 2:
+        return []
+    tol = 0.01 * float(np.linalg.norm(b.size))
+    by_comp: dict[str, list[Shape]] = {}
+    for s in b.shapes:
+        if _solid(s):
+            by_comp.setdefault(s.component, []).append(s)
+    lo, hi = np.array([c.lo for c in b.comps]), np.array([c.hi for c in b.comps])
+    inside = np.all(lo[:, None, :] >= lo[None, :, :] - tol, axis=2) & np.all(hi[:, None, :] <= hi[None, :, :] + tol, axis=2)
+    np.fill_diagonal(inside, False)
+    out = []
+    for i, c in enumerate(b.comps):
+        mine = by_comp.get(c.id)
+        if not mine or not inside[i].any():
+            continue
+        host = b.comps[int(np.argmax(inside[i]))]
+        grown = [_grown(s, tol) for s in mine]
+        others = [(_box(t), t) for o in b.comps if o is not c for t in by_comp.get(o.id, [])]
+        touches = any(_gap(*_box(g), *tb) == 0.0 and (g.manifold ^ t.manifold).volume() > 0
+                      for g in grown for tb, t in others)
+        if not touches:
+            out.append(Issue("floating", "fix", c.id, f"{c.label} hangs loose inside {host.label}: it touches "
+                             "nothing, so it would fall to the bottom of the cavity. Attach it with a bracket or "
+                             "move it against a wall."))
     return out
 
 
 def _pairs(b: Build):
     solids = [s for s in b.shapes if _solid(s)]
-    boxes = [_box(s) for s in solids]
-    for i in range(len(solids)):
-        for j in range(i + 1, len(solids)):
-            if solids[i].component != solids[j].component and _gap(*boxes[i], *boxes[j]) == 0.0:
-                yield solids[i], solids[j]
+    if len(solids) < 2:
+        return
+    lo, hi = _boxes(solids)
+    vol = np.array([s.manifold.volume() for s in solids])
+    comp = np.array([s.component for s in solids])
+    for i in range(len(solids) - 1):
+        j = np.arange(i + 1, len(solids))
+        inter = np.minimum(hi[i], hi[j]) - np.maximum(lo[i], lo[j])
+        touch = np.all(inter >= 0.0, axis=1) & (comp[j] != comp[i])
+        cap = np.prod(np.maximum(inter, 0.0), axis=1)
+        keep = touch & (cap >= CLIP_SHARE * np.minimum(vol[i], vol[j]))
+        for k in j[keep]:
+            yield solids[i], solids[k]
+
+
+PLUGS = {"pipe", "capsule"}
+PLUG_WORDS = re.compile(r"\b(duct|line|pipe|hose|shaft|strut|rod|pin|bolt|inlet|outlet|axle|spindle|tube)s?\b", re.I)
+SLENDER = 4.0
+
+
+def _plugs_in(b_ops: dict, small: Shape, big: Shape) -> bool:
+    """Pipes, shafts and struts are meant to run into the part they connect: that overlap is contact, not clipping."""
+    if b_ops.get(small.id, {}).get("op") in PLUGS or b_ops.get(big.id, {}).get("op") in PLUGS:
+        return True
+    if PLUG_WORDS.search(small.label) or PLUG_WORDS.search(big.label):
+        return True
+    lo, hi = _box(small)
+    d = np.sort(hi - lo)
+    return bool(d[2] >= SLENDER * max(d[1], 1e-9))
 
 
 def overlaps(b: Build) -> list[Issue]:
     out, buried = [], set()
+    ops = {o["id"]: o for o in b.program["ops"]}
     for s, t in _pairs(b):
         shared = (s.manifold ^ t.manifold).volume()
         if shared <= 0:
@@ -99,9 +169,68 @@ def overlaps(b: Build) -> list[Issue]:
             out.append(Issue("buried", "fix", small.component, f"{small.label} is buried inside {big.label} "
                              f"({share:.0%} of it is inside solid material) and can never be seen. Hollow "
                              f"{big.label} or move the part out."))
-        elif CLIP_SHARE <= share < BURIED_SHARE:
+        elif CLIP_SHARE <= share < BURIED_SHARE and not _plugs_in(ops, small, big):
             out.append(Issue("clipping", "warn", small.component, f"{small.label} passes through {big.label} "
                              f"({share:.0%} of it overlaps)."))
+    return out
+
+
+COPY_OVERLAP = 0.15
+THIN_WALL = 0.001
+
+
+def _closure(ops: dict, oid: str) -> list[dict]:
+    seen: list[str] = []
+
+    def walk(i: str):
+        for j in op_inputs(ops[i]):
+            walk(j)
+        if i not in seen:
+            seen.append(i)
+    walk(oid)
+    return [ops[i] for i in seen]
+
+
+def array_copies(b: Build) -> list[Issue]:
+    """The copies of an array should sit apart; copies that interpenetrate fuse into one lump (a radial array whose
+    source is on the axis stacks every copy in the same place)."""
+    ops = {o["id"]: o for o in b.program["ops"]}
+    out = []
+    for s in b.shapes:
+        op = ops.get(s.id, {})
+        p = op.get("params", {})
+        if op.get("op") != "array" or not _solid(s) or "scale" in p or len(op_inputs(op)) != 1:
+            continue
+        n = 2 if p.get("mode") == "mirror" else int(p.get("count", 1))
+        if n < 2:
+            continue
+        try:
+            src = Evaluator().step({"version": 1, "units": b.program.get("units", "mm"),
+                                    "ops": _closure(ops, op_inputs(op)[0])})
+        except Exception:  # noqa: BLE001 - a broken source is reported by the build, not here
+            continue
+        if not src or not _solid(src[-1]):
+            continue
+        lost = 1.0 - s.manifold.volume() / (n * src[-1].manifold.volume())
+        if lost > COPY_OVERLAP:
+            out.append(Issue("array_overlap", "fix", s.component, f"The {n} copies in {s.label} overlap each other "
+                             f"({lost:.0%} of their volume is shared). Increase the offset or angle, or move the "
+                             "source off the pivot."))
+    return out
+
+
+def thin_wall(b: Build) -> list[Issue]:
+    """A hollow body whose wall is a sliver next to its size will not render, print or survive a load."""
+    out = []
+    for o in b.program["ops"]:
+        p = o.get("params", {})
+        if o.get("op") != "tube" or not isinstance(p.get("wall"), (int, float)):
+            continue
+        reach = max(float(p.get("radius", 0)), float(p.get("radius_top", 0)), float(p.get("height", 0)) / 2)
+        if reach > 0 and p["wall"] < THIN_WALL * reach:
+            out.append(Issue("thin_wall", "warn", next((s.component for s in b.shapes if s.id == o["id"]), ""),
+                             f"{o.get('label', o['id'])} has a {p['wall']:g} {b.program.get('units', 'mm')} wall on a "
+                             f"body {reach:.0f} across: a sliver. Make the wall at least {THIN_WALL * reach:.1f}."))
     return out
 
 
@@ -152,18 +281,26 @@ def size(b: Build) -> list[Issue]:
                   f"(off on {', '.join('XYZ'[i] for i in off)}).")]
 
 
-def _words(s: str) -> set[str]:
-    return {w[:6] for w in re.findall(r"[a-z]+", s.lower()) if len(w) >= 3 and w not in STOP}
+def _words(s: str) -> list[str]:
+    out = []
+    for w in re.findall(r"[a-z]+", s.lower()):
+        if len(w) >= 3 and w not in STOP:
+            out.append((w[:-1] if len(w) > 3 and w.endswith("s") and not w.endswith("ss") else w)[:6])
+    return out
 
 
 def missing(b: Build) -> list[Issue]:
+    """A listed part counts as built when its head noun, or at least half of its words, appears in a part name."""
     parts = (b.program.get("blueprint") or {}).get("parts") or []
-    names = " ".join([c.label for c in b.comps] + [o.get("label", "") for o in b.program["ops"]])
-    have = _words(names)
+    have = set(_words(" ".join([c.label for c in b.comps] + [o.get("label", "") for o in b.program["ops"]])))
     out = []
     for p in parts:
         name = str(p.get("name", "")) if isinstance(p, dict) else ""
-        if name and not (_words(name) & have):
+        words = _words(name)
+        if not words:
+            continue
+        hit = [w in have for w in words]
+        if not (hit[-1] and sum(hit) * 2 >= len(words)):
             out.append(Issue("missing", "warn", "", f"The blueprint lists {name}, but no part is named for it."))
     return out
 
@@ -177,7 +314,7 @@ def stability(b: Build) -> list[Issue]:
     return []
 
 
-CHECKS = (floating, overlaps, off_axis, size, missing, stability)
+CHECKS = (floating, cavity_floating, overlaps, array_copies, thin_wall, off_axis, size, missing, stability)
 
 
 def critique(program: dict, shapes: list[Shape], comps: list[Component]) -> list[Issue]:
