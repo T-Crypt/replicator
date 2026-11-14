@@ -145,6 +145,31 @@ def _build_rotor(p: dict) -> Manifold:
     return Manifold.batch_boolean([hub, *blades], OpType.Add)
 
 
+def _build_wing(p: dict) -> Manifold:
+    """A straight-tapered wing (or tail surface) with a symmetric NACA section: span along X, chord along Z with the
+    leading edge toward +Z (the nose), thickness along Y. The hull of the root and tip sections is an exact linear
+    loft because a symmetric section is convex. `mirror` (default true) builds both halves, so `span` is tip to tip."""
+    span = _positive_float(p, "span", "wing")
+    root = _positive_float(p, "root_chord", "wing")
+    tip = _positive_float(p, "tip_chord", "wing", root * 0.6)
+    t = _positive_float(p, "thickness", "wing", 0.12)
+    if t > 0.3:
+        raise _err("wing thickness is a fraction of the chord (0.12 = 12 %); use at most 0.3")
+    sweep, dihedral = float(p.get("sweep", 0.0)), float(p.get("dihedral", 3.0))
+    if not (-60 <= sweep <= 70 and -15 <= dihedral <= 30):
+        raise _err("wing sweep must be -60..70 degrees and dihedral -15..30")
+    mirror = bool(p.get("mirror", True))
+    half = span / 2 if mirror else span
+    sec = np.asarray(_naca(t, 32))
+    def ring(x, y0, z0, c):
+        return np.column_stack([np.full(len(sec), x), y0 + sec[:, 1] * c, z0 - sec[:, 0] * c])
+    tip_y = half * math.tan(math.radians(dihedral))
+    tip_z = -half * math.tan(math.radians(sweep))
+    pts = np.vstack([ring(0.0, 0.0, 0.0, root), ring(half, tip_y, tip_z, tip)])
+    w = Manifold.hull_points(pts.tolist())
+    return w + w.mirror((1.0, 0.0, 0.0)) if mirror else w
+
+
 HOLES = ("round", "hex", "slot")
 
 
@@ -193,4 +218,6 @@ PRIMITIVES = {
     "rotor": ({"hub_radius", "tip_radius", "chord"},
               {"blades", "tip_chord", "pitch", "twist", "thickness", "hub_length"}, _wrap_builder(_build_rotor)),
     "grille": ({"size", "hole_size"}, {"pitch", "hole", "margin"}, _wrap_builder(_build_grille)),
+    "wing": ({"span", "root_chord"}, {"tip_chord", "thickness", "sweep", "dihedral", "mirror"},
+             _wrap_builder(_build_wing)),
 }

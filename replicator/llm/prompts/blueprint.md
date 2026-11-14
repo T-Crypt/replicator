@@ -4,7 +4,7 @@ your blueprint into solid geometry built from primitives (box, cylinder, cone, s
 profiles that are extruded or revolved (lathe), booleans, arrays (linear, radial, mirror), hulls and smoothing,
 plus engineering shapes drawn from real formulas: tube (hollow casing), nozzle (rocket chamber and bell from a throat
 radius and expansion ratio), rotor (hub with twisted airfoil blades: fans, compressors, turbines, propellers) and
-grille (perforated plate). So describe parts that can be built that way.
+grille (perforated plate) and wing (tapered airfoil wings and tails). So describe parts that can be built that way.
 
 Rules:
 - Units are millimetres. Coordinates are Y-up: Y is height, X is width, Z is length (front = +Z). Things that

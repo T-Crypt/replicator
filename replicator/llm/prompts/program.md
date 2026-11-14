@@ -41,6 +41,9 @@ GEOMETRY CONVENTIONS (follow exactly)
   Use it for fans, compressor and turbine stages, propellers and case fans, never boxes in a radial array.
 - grille: a perforated plate in the XZ plane, thickness along Y: "size" [w, t, d], "hole_size"; optional "pitch",
   "hole" (hex | round | slot), "margin". Vents, fan and speaker grilles.
+- wing: a tapered wing or tail surface (symmetric NACA section), span along X, leading edge toward +Z, thickness
+  along Y. "span" (tip to tip), "root_chord"; optional "tip_chord", "thickness" (0.12 of chord), "sweep",
+  "dihedral" (degrees), "mirror" (default true; false builds one half from x=0, e.g. a fin rotated 90 about Z).
 - array: "mode" "linear" ("count", "offset" [x,y,z] per copy), "radial" ("count", "axis", "angle" default 360;
   copies rotate around the world origin, so place the input off-axis first), "mirror" ("plane" = the mirror
   plane's normal, e.g. [1,0,0] mirrors across X; "count" must be 2).

@@ -158,3 +158,20 @@ def test_scaling_a_build_scales_only_what_is_visible():
     assert after == [[round(v * 1000, 1) for v in e] for e in before]
     assert out["ops"][0]["params"] == p["ops"][0]["params"]
     assert out["ops"][1]["params"]["translate"] == [0, 500, 0] and out["ops"][2]["params"]["scale"] == [1000, 2000, 1000]
+
+
+def test_wing_volume_matches_a_linear_loft_of_its_sections():
+    (s,) = Evaluator().step(prog({"id": "w", "op": "wing", "params": {"span": 11000, "root_chord": 1630,
+                                                                       "tip_chord": 1130, "dihedral": 1.7}}))
+    area = lambda c: 0.0822 * c ** 2  # noqa: E731  (NACA 0012 section area)
+    half = 5500 * (area(1630) + area(1130) + (area(1630) * area(1130)) ** 0.5) / 3
+    assert extent(s)[0] == 11000.0 and extent(s)[2] == 1630.0
+    assert s.manifold.volume() == pytest.approx(2 * half, rel=0.02)
+
+
+def test_new_cards_are_picked():
+    picks = {q: [c.name for c in knowledge.pick(q)] for q in
+             ("a single-storey house with three bedrooms", "a four-seat light aircraft", "an Arduino controller board")}
+    assert picks == {"a single-storey house with three bedrooms": ["house"],
+                     "a four-seat light aircraft": ["light_aircraft"],
+                     "an Arduino controller board": ["electronics_board"]}
