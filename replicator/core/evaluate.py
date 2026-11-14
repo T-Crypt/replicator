@@ -13,7 +13,7 @@ from pathlib import Path
 
 from manifold3d import CrossSection, Manifold, Mesh, OpType
 
-from .program import COMBINERS, check, op_hash, op_inputs
+from .program import COMBINERS, check, component_map, op_hash, op_inputs
 
 Z_TO_Y = (-90.0, 0.0, 0.0)  # rotate +Z onto +Y
 AXIS_ROT = {"y": Z_TO_Y, "z": (0.0, 0.0, 0.0), "x": (0.0, 90.0, 0.0)}
@@ -368,15 +368,6 @@ class Evaluator:
                 for op in sub["ops"] if op["id"] not in consumed]
 
 
-def component_map(program: dict) -> dict[str, str]:
-    """op id -> component id: its own `component`, else its first input's, else its `part`, else its id."""
-    out: dict[str, str] = {}
-    for op in program["ops"]:
-        ins = op_inputs(op)
-        out[op["id"]] = op.get("component") or (out.get(ins[0]) if ins else None) or op.get("part") or op["id"]
-    return out
-
-
 def bounds(shapes: list[Shape]) -> tuple[list[float], list[float]]:
     lo = [math.inf] * 3
     hi = [-math.inf] * 3
@@ -388,10 +379,11 @@ def bounds(shapes: list[Shape]) -> tuple[list[float], list[float]]:
 
 
 def _register_extensions() -> None:
-    from . import ops_advanced
+    from . import ops_advanced, ops_engineering
     from .program import register
-    register(ops_advanced.PRIMITIVES, ops_advanced.MODIFIERS)
-    EXT_PRIMITIVES.update(ops_advanced.PRIMITIVES)
+    prims = {**ops_advanced.PRIMITIVES, **ops_engineering.PRIMITIVES}
+    register(prims, ops_advanced.MODIFIERS)
+    EXT_PRIMITIVES.update(prims)
     EXT_MODIFIERS.update(ops_advanced.MODIFIERS)
 
 

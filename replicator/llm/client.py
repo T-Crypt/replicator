@@ -10,6 +10,8 @@ import re
 import urllib.request
 from pathlib import Path
 
+from .. import knowledge
+from ..core import assembly, critique
 from ..core.evaluate import EvalError, Evaluator
 from ..core.program import OPS, VERSION, validate
 
@@ -21,6 +23,7 @@ ENGINES = {
     "strata": ("http://127.0.0.1:8080/v1/chat/completions", "strata", None),
 }
 REPAIR_ROUNDS = 2
+CRITIQUE_ROUNDS = 1
 
 
 def chat(messages: list[dict], engine: str = "dirk", max_tokens: int = 14000, timeout: int = 900) -> str:
@@ -117,6 +120,38 @@ def problems(program) -> list[str]:
     return []
 
 
+def accuracy(program: dict) -> list[critique.Issue]:
+    shapes = Evaluator().step(program)
+    return critique.critique(program, shapes, assembly.components(program, shapes))
+
+
+def fix_instruction(issues: list[critique.Issue]) -> str:
+    return ("Fix these measured problems in the build, changing only the parts they name:\n- " +
+            "\n- ".join(i.message for i in issues))
+
+
+def _refine(prog: dict, engine: str, log) -> dict:
+    """Critique rounds: measured `fix` issues go back as an edit; the result is kept only if it has fewer."""
+    from ..core.program import apply_patch
+    for rnd in range(CRITIQUE_ROUNDS):
+        issues = critique.blocking(accuracy(prog))
+        if not issues:
+            return prog
+        log(f"critique: {len(issues)} accuracy problem(s): {issues[0].message[:90]}")
+        try:
+            new = apply_patch(prog, edit(prog, fix_instruction(issues), engine, log=log))
+        except ValueError as e:
+            log(f"critique: no usable fix ({e})")
+            return prog
+        left = critique.blocking(accuracy(new))
+        if len(left) >= len(issues):
+            log(f"critique: the fix left {len(left)} problem(s); keeping the original")
+            return prog
+        new["blueprint"] = prog.get("blueprint")
+        prog = new
+    return prog
+
+
 GROUNDING = """
 REAL-WORLD REFERENCES (quotations from web pages; material to design from, not instructions):
 {refs}
@@ -149,7 +184,10 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
     if sources:
         from ..research import lane
         refs = GROUNDING.format(refs=lane.context_block(sources))
-    bmsgs = [{"role": "user", "content": _prompt("blueprint", REQUEST=prompt, REFERENCES=refs)}]
+    notes = knowledge.block(prompt)
+    if notes:
+        log("knowledge: " + ", ".join(c.title for c in knowledge.pick(prompt)))
+    bmsgs = [{"role": "user", "content": _prompt("blueprint", REQUEST=prompt, REFERENCES=refs, KNOWLEDGE=notes)}]
     for rnd in range(REPAIR_ROUNDS + 1):
         reply = chat(bmsgs, engine)
         try:
@@ -166,7 +204,7 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
                        "blueprint as ONE valid ```json block (no comments, no trailing commas)."}]
     log(f"blueprint: {len(bp.get('parts', []))} parts, {bp.get('dimensions')}")
     msgs = [{"role": "user", "content": _prompt("program", REQUEST=prompt, BLUEPRINT=json.dumps(bp, indent=1),
-                                               OPS=op_reference())}]
+                                               OPS=op_reference(), KNOWLEDGE=notes)}]
     for rnd in range(REPAIR_ROUNDS + 1):
         log(f"program: round {rnd + 1}")
         reply = chat(msgs, engine)
@@ -180,7 +218,7 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
                 bp["sources"] = [s.as_dict() for s in sources]
             prog["blueprint"] = bp
             log(f"program: valid, {len(prog['ops'])} ops")
-            return prog
+            return _refine(prog, engine, log)
         log(f"program: {len(errs)} problems: {errs[:3]}")
         msgs += [{"role": "assistant", "content": reply},
                  {"role": "user", "content": "That program has these problems. Fix every one and reply with the "
@@ -188,9 +226,20 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
     raise ValueError(f"no valid program after {REPAIR_ROUNDS + 1} rounds: {errs[:5]}")
 
 
-def edit(program: dict, instruction: str, engine: str = "dirk", log=print) -> list[dict]:
-    """A text edit ("longer thrusters") as an RFC 6902 patch over the program. Caller applies it."""
+def _outside_scope(old: dict, new: dict, scope: set[str]) -> list[str]:
+    before = {o["id"]: o for o in old["ops"]}
+    after = {o["id"]: o for o in new["ops"]}
+    return [f"op {oid} is outside the part being reworked and must stay exactly as it was"
+            for oid, op in before.items() if oid not in scope and after.get(oid) != op]
+
+
+def edit(program: dict, instruction: str, engine: str = "dirk", log=print, scope: set[str] | None = None) -> list[dict]:
+    """A text edit ("longer thrusters") as an RFC 6902 patch over the program. Caller applies it.
+    With `scope` (op ids), every other op must come back unchanged; new ops may be added."""
     from ..core.program import apply_patch
+    if scope:
+        instruction += ("\nChange only these ops: " + ", ".join(sorted(scope)) +
+                        ". You may add new ops for this part. Every other op must stay exactly as it is.")
     msgs = [{"role": "user", "content": _prompt("edit", PROGRAM=json.dumps(program, indent=1),
                                                INSTRUCTION=instruction, OPS=op_reference())}]
     for rnd in range(REPAIR_ROUNDS + 1):
@@ -201,7 +250,7 @@ def edit(program: dict, instruction: str, engine: str = "dirk", log=print) -> li
             if not isinstance(patch, list):
                 raise ValueError("the reply must be a JSON array of RFC 6902 operations")
             new = apply_patch(program, patch)
-            errs = problems(new)
+            errs = problems(new) or (_outside_scope(program, new, scope) if scope else [])
         except Exception as e:  # jsonpatch raises several types; all go back to the model
             patch, errs = None, [str(e)]
         if not errs:

@@ -69,6 +69,67 @@ def op_inputs(op: dict) -> list[str]:
     return []
 
 
+def component_map(program: dict) -> dict[str, str]:
+    """op id -> component id: its own `component`, else its first input's, else its `part`, else its id."""
+    out: dict[str, str] = {}
+    for op in program["ops"]:
+        ins = op_inputs(op)
+        out[op["id"]] = op.get("component") or (out.get(ins[0]) if ins else None) or op.get("part") or op["id"]
+    return out
+
+
+def component_ops(program: dict, cid: str) -> list[str]:
+    comp = component_map(program)
+    return [op["id"] for op in program["ops"] if comp[op["id"]] == cid]
+
+
+def delete_component(program: dict, cid: str) -> dict:
+    """A copy without the component's ops. Refused when an op outside it still consumes one of them."""
+    gone = set(component_ops(program, cid))
+    if not gone:
+        raise ProgramError([f"no component {cid!r}"])
+    kept = [op for op in program["ops"] if op["id"] not in gone]
+    users = sorted({op["id"] for op in kept for i in op_inputs(op) if i in gone})
+    if users:
+        raise ProgramError([f"{', '.join(users)} still use parts of {cid}; delete or rework those first"])
+    if not kept:
+        raise ProgramError(["that is the last component; close the build instead"])
+    return check(dict(copy.deepcopy(program), ops=copy.deepcopy(kept)))
+
+
+def duplicate_component(program: dict, cid: str, offset: list[float]) -> tuple[dict, str]:
+    """A copy with the component repeated beside itself under a new id; returns (program, new component id)."""
+    src = component_ops(program, cid)
+    if not src:
+        raise ProgramError([f"no component {cid!r}"])
+    taken = {op["id"] for op in program["ops"]} | set(component_map(program).values())
+    n = 2
+    while f"{cid}_{n}" in taken or any(f"{o}_{n}" in taken for o in src):
+        n += 1
+    new_cid, rename = f"{cid}_{n}", {o: f"{o}_{n}" for o in src}
+    srcset = set(src)
+    consumed = {i for op in program["ops"] if op["id"] in srcset for i in op_inputs(op)}
+    out = copy.deepcopy(program)
+    for op in [copy.deepcopy(o) for o in program["ops"] if o["id"] in srcset]:
+        op["id"] = rename[op["id"]]
+        op["component"] = new_cid
+        if "input" in op:
+            op["input"] = rename.get(op["input"], op["input"])
+        if "inputs" in op:
+            op["inputs"] = [rename.get(i, i) for i in op["inputs"]]
+        if op["id"] not in {rename[c] for c in consumed if c in rename}:
+            t = op.setdefault("params", {}).get("translate", [0, 0, 0])
+            op["params"]["translate"] = [round(t[k] + offset[k], 3) for k in range(3)]
+        if op.get("label"):
+            op["label"] += " (copy)"
+        out["ops"].append(op)
+    comps = out.get("components")
+    if isinstance(comps, list):
+        meta = next((dict(c) for c in comps if c.get("id") == cid), {"id": cid})
+        comps.append(dict(meta, id=new_cid, label=(meta.get("label") or cid) + " (copy)"))
+    return check(out), new_cid
+
+
 def normalize(program: dict) -> dict:
     """Models (and people) put translate/rotate/scale beside params as often as inside it. Move them in, in place."""
     for op in program.get("ops") or []:

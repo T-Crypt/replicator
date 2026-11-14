@@ -29,6 +29,17 @@ GEOMETRY CONVENTIONS (follow exactly)
 - revolve: a lathe. "points" are [radius, height] pairs (radius >= 0) tracing a closed profile; it spins around the
   Y axis. This is the best op for nozzles, bells, bottles, wheels, domes, turbine casings. For a hollow shell,
   trace the outer wall going up and the inner wall coming down.
+- tube: a hollow cylinder along Y: "height", "radius" (outer), "wall"; optional "radius_top" for a tapered casing.
+  Use it for every casing, nacelle, duct, liner, sleeve and pipe section instead of a cylinder minus a cylinder.
+- nozzle: a rocket thrust chamber and bell along Y, injector face closed at +Y, exit open at -Y. "throat_radius",
+  "expansion_ratio" (exit area / throat area: 10-30 at sea level, 40-200 in vacuum); optional "contraction_ratio"
+  (default 4), "chamber_length", "wall", "bell_fraction" (0.8). Its height is about 6-15 throat radii; check the
+  exit radius = throat_radius * sqrt(expansion_ratio).
+- rotor: a hub with twisted airfoil blades in the XZ plane, spinning about Y. "hub_radius", "tip_radius", "chord";
+  optional "blades" (12), "tip_chord", "pitch" (root angle, 40), "twist" (25), "thickness" (0.10), "hub_length".
+  Use it for fans, compressor and turbine stages, propellers and case fans, never boxes in a radial array.
+- grille: a perforated plate in the XZ plane, thickness along Y: "size" [w, t, d], "hole_size"; optional "pitch",
+  "hole" (hex | round | slot), "margin". Vents, fan and speaker grilles.
 - array: "mode" "linear" ("count", "offset" [x,y,z] per copy), "radial" ("count", "axis", "angle" default 360;
   copies rotate around the world origin, so place the input off-axis first), "mirror" ("plane" = the mirror
   plane's normal, e.g. [1,0,0] mirrors across X; "count" must be 2).
@@ -43,11 +54,16 @@ GEOMETRY CONVENTIONS (follow exactly)
 - Bodies that house other parts MUST be hollow (a revolve with an inner wall, a "shell", or a boolean difference),
   or they hide everything inside. Leave openings (intakes, cut-aways, vents) so the interesting internals show.
   The viewer sees outer surfaces first: make the silhouette read as the thing that was asked for.
+- Every part touches the part that carries it; nothing floats. A part that would sit inside solid material is
+  invisible: hollow the outer body or move the part.
+- Anything axially symmetric that sits on a body's centre line (rings, casings, rotors, tori) spins around the
+  body's axis: a torus, tube, rotor or cylinder is built around Y, so on a body along Z give it "rotate": [90, 0, 0].
 - "label" is the human callout in Title Case ("Reverser Cascade Vanes"), never the id.
 - 8 to 30 ops. Ids unique, inputs only reference EARLIER ids. Every material key used must be defined.
 
 Reply with ONE ```json block holding the whole program and nothing after it.
 
+{{KNOWLEDGE}}
 The request: {{REQUEST}}
 
 The blueprint:

@@ -476,6 +476,11 @@
      0,
      500,
      -150
+    ],
+    "rotate": [
+     90,
+     0,
+     0
     ]
    }
   },
@@ -758,13 +763,18 @@
    "part": "Status glow ring",
    "material": "cyan_glow",
    "params": {
-    "major_radius": 490,
+    "major_radius": 349,
     "minor_radius": 12,
     "segments": 96,
     "translate": [
      0,
      500,
      450
+    ],
+    "rotate": [
+     90,
+     0,
+     0
     ]
    }
   }
