@@ -64,6 +64,10 @@ blueprint stage receives the excerpts and records which real mechanism each part
 
 1. Present mode UI, services in Preferences, dictation button (HANDOFF steps 1 to 4).
 2. README and homelab docs.
-3. 3D printing: printability check, orient and split, slice, send to OctoPrint or Moonraker on the tailnet.
-4. Split the bridge; node editor over the op DAG; four-up viewport.
-5. Holodeck "Replicate" action; texturing lane; floor plans (M2); sculpting (M4).
+3. Accuracy first (session 4, done): engineering ops (tube, nozzle, rotor, grille), knowledge cards, the accuracy
+   critic with a critique round, mass and stability, scoped agent rework, right-click part menus, aerospace
+   materials and whole-build swaps, every common 3D format on import. See `AGENTS.md`.
+4. The Workbench: fabrication, breakdown, mechanics, wiring, sourcing and refinement, built for 27B local models.
+   Requirements: `docs/REQUIREMENTS-workbench.md` (draft, open questions in section 8; no printer yet).
+5. Split the bridge; node editor over the op DAG; four-up viewport.
+6. Holodeck "Replicate" action; texturing lane; floor plans (M2); sculpting (M4).

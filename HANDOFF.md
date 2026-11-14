@@ -1,3 +1,18 @@
+# Session 4 (2026-11-14): accuracy workshop, on branch `accuracy-workshop`
+
+Read `AGENTS.md` first; it is the current map. Committed in small units (`git log main..accuracy-workshop`).
+Verified with 60 pytest, `tools.check` on every fixture and headless shots (build, showcase, materials, context menu).
+
+- New: `tube`, `nozzle` (Rao bell), `rotor` (NACA blades), `grille`; `core/critique.py` (floating, buried, clipping,
+  off-axis, size, missing, tips); `core/physics.py` (mass, CG); knowledge cards; critique round in `client.dream`;
+  scoped edits (`rework`, `fixIssues`); delete and duplicate components; aerospace materials and `swapMaterial`;
+  `core/importers.py` (3MF, STEP/IGES, FBX/USD/ABC/.blend, gallery ZIPs); Blender collections per component;
+  `fixtures/rocket_engine.json` from `tools/rocket_fixture.py`; `tools/check.py`.
+- Fixed: Showcase vignette blacked out the stage; RMenu ignored live enabled/checked; unbounded params hung the kernel;
+  stale job results could land on a newer build; numpy floats reached QML as garbage.
+- Open: the STEP route is untested against a real CAD file; critique and mass run on the GUI thread (about 50 ms on
+  fixtures, 0.5 s on a 400-op grid); right-click menus not yet tried with a real mouse.
+
 # Handoff: workspace v2 + Explain (2026-11-13, end of session 3)
 
 Read `docs/DESIGN.md` first (the review and the ten improvements), then this file. Nothing from session 3 is
