@@ -96,7 +96,17 @@ def main(argv=None) -> int:
     QTimer.singleShot(4000, self_check)
 
     if a.shot:
+        state = {"waited": 0, "settled": False}
+
         def grab():
+            if studio.busy and state["waited"] < 180_000:  # an import or render job is still running
+                state["waited"] += 500
+                QTimer.singleShot(500, grab)
+                return
+            if state["waited"] and not state["settled"]:  # let the new scene materialize after the job lands
+                state["settled"] = True
+                QTimer.singleShot(3000, grab)
+                return
             img = win.grabWindow()
             img.save(a.shot)
             print("saved", a.shot, img.width(), img.height())

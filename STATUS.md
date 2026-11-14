@@ -1,5 +1,7 @@
 # Replicator status (2026-11-13, end of session 1)
 
+**Session 2 (2026-11-13 late): README, Blender MCP and the image-to-3D backend are done. Next steps for agents: HANDOFF.md.**
+
 "You dream it, you build it." Private repo T-Crypt/replicator, checkout ~/projects/replicator. Plan of record:
 ~/.claude/plans/i-want-some-kind-ancient-honey.md (decisions, milestones, operator leads). Operator guide:
 ~/homelab/guide/replicator.md. Open it with SUPER+SHIFT+H or ./launch.sh [program.json | model.glb].

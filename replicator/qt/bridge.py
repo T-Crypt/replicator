@@ -294,7 +294,7 @@ class Studio(QObject):
         if not self._program:
             return
         rep = (self._project / "reverse_report.json") if self._project else None
-        if rep and rep.exists() and self._program.get("name", "").startswith("Reverse:"):
+        if rep and rep.exists() and (self._program.get("name", "").startswith("Reverse:") or self._program.get("reference")):
             self._report = json.loads(rep.read_text())
         else:
             self._report = reverse.program_report(self._program, self._ev.step(self._program))
