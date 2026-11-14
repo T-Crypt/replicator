@@ -106,8 +106,9 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
 - Blender: *Open in Blender* puts one collection per component, objects named by label with custom properties
   `replicator_id` and `replicator_component`; the vendored mcp-for-blender socket listens on `localhost:9876` only.
   *Pull back* reverse-engineers the live scene into Reverse.
-- Known limits: no fluid or structural simulation (strength and CFD are planned, not built); the STEP/IGES route
-  (cascadio) is untested against a real CAD file; `round` erodes then regrows, so features thinner than twice its radius vanish (with an error).
+- Known limits: no fluid or structural simulation (strength and CFD are planned, not built); STEP/IGES is tested on
+  one SolidWorks part (`tests/data/featuretype.STEP`), not yet on large assemblies; `round` erodes then regrows, so
+  features thinner than twice its radius vanish (with an error).
 
 ## Git
 

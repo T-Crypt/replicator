@@ -1,0 +1,1 @@
+featuretype.STEP: SolidWorks 2013 AP214 sample from the trimesh test models (github.com/mikedh/trimesh, models/), MIT licence.

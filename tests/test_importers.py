@@ -52,3 +52,15 @@ def test_archive_entries_cannot_escape_their_folder(tmp_path):
 def test_unknown_formats_are_refused_with_the_supported_list(tmp_path):
     with pytest.raises(ValueError, match=r"\.xyz is not a 3D format"):
         importers.route(tmp_path / "cloud.xyz")
+
+
+def test_a_real_step_part_arrives_welded_and_in_millimetres(tmp_path):
+    from pathlib import Path
+    step = Path(__file__).parent / "data" / "featuretype.STEP"
+    glb, what = importers.prepare(step, tmp_path / "w")
+    part = trimesh.load(str(glb), force="scene").to_geometry()
+    assert what == "STEP (CAD)"
+    assert [round(float(v), 1) for v in part.extents] == [127.0, 63.5, 34.9]
+    assert part.is_watertight and round(part.volume / 1000) == 191
+    meshes, _ = reverse.load_pieces(glb)
+    assert len(meshes) == 1

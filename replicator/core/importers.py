@@ -90,10 +90,16 @@ def _blender(src: Path, dst: Path) -> Path:
 def _cad(src: Path, dst: Path) -> Path:
     import cascadio
     kind = cascadio.FileType.IGES if src.suffix.lower() in (".iges", ".igs") else cascadio.FileType.STEP
-    dst.write_bytes(cascadio.to_glb_bytes(src.read_bytes(), file_type=kind, tol_linear=0.05, tol_angular=0.3,
+    raw = dst.with_suffix(".raw.glb")
+    raw.write_bytes(cascadio.to_glb_bytes(src.read_bytes(), file_type=kind, tol_linear=0.05, tol_angular=0.3,
                                           include_materials=True))
-    if dst.stat().st_size == 0:
+    scene = trimesh.load(str(raw), force="scene")
+    if not scene.geometry:
         raise RuntimeError(f"{src.name}: OpenCASCADE produced no geometry")
+    for g in scene.geometry.values():
+        g.merge_vertices(merge_tex=True, merge_norm=True)   # each B-rep face arrives as its own patch; weld them into solids
+    scene.apply_scale(1000.0)                      # glTF is metres by definition; Replicator works in millimetres
+    scene.export(dst)
     return dst
 
 
