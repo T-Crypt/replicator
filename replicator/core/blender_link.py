@@ -27,11 +27,23 @@ def setup():
     for o in list(bpy.data.objects):
         bpy.data.objects.remove(o, do_unlink=True)
     bpy.ops.import_scene.gltf(filepath=args["glb"])
-    mats, part = args["materials"], args["part_materials"]
-    made = {}
-    for o in bpy.context.scene.objects:
-        key = part.get(o.name) or part.get(o.name.split(".")[0])
-        if o.type != "MESH" or key not in mats:
+    mats, parts = args["materials"], args["parts"]
+    made, cols = {}, {}
+    for o in list(bpy.context.scene.objects):
+        info = parts.get(o.name) or parts.get(o.name.split(".")[0])
+        if o.type != "MESH" or info is None:
+            continue
+        o["replicator_id"], o["replicator_component"] = info["id"], info["component"]
+        col = cols.get(info["component"])
+        if col is None:
+            col = cols[info["component"]] = bpy.data.collections.new(info["component_label"])
+            bpy.context.scene.collection.children.link(col)
+        for c in list(o.users_collection):
+            c.objects.unlink(o)
+        col.objects.link(o)
+        o.name = info["label"]
+        key = info["material"]
+        if key not in mats:
             continue
         if key not in made:
             m = bpy.data.materials.new(key); m.use_nodes = True
@@ -95,8 +107,10 @@ def send(cmd: str, params: dict | None = None, timeout: float = 120) -> dict:
     raise ConnectionError("Blender closed the connection without a reply")
 
 
-def open_in_blender(glb: Path, materials: dict, part_materials: dict) -> subprocess.Popen:
-    args = {"glb": str(glb), "materials": materials, "part_materials": part_materials}
+def open_in_blender(glb: Path, materials: dict, parts: dict) -> subprocess.Popen:
+    """`parts`: shape id -> {id, label, component, component_label, material}; objects land in one collection per
+    component, named by label and tagged with their replicator id."""
+    args = {"glb": str(glb), "materials": materials, "parts": parts}
     fd, script = tempfile.mkstemp(suffix=".py", prefix="replicator_open_")
     with os.fdopen(fd, "w") as f:
         f.write(OPEN_SCRIPT)

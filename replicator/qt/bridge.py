@@ -948,7 +948,10 @@ class Studio(QObject):
         shapes = self._ev.step(self._program)
         glb = exporter.export(shapes, self._program.get("materials", {}), work / f"{stamp}.glb")
         mats = self._program.get("materials", {})
-        part_mats = {s.id: s.material for s in shapes if s.material}
+        labels = {c.id: c.label for c in assembly.components(self._program, shapes)}
+        parts = {s.id: {"id": s.id, "label": s.label, "component": s.component,
+                        "component_label": labels.get(s.component, s.component), "material": s.material}
+                 for s in shapes}
         ground = self._ground
 
         def job(log):
@@ -970,12 +973,15 @@ class Studio(QObject):
         shapes = self._ev.step(self._program)
         glb = exporter.export(shapes, self._program.get("materials", {}), work / time.strftime("%Y%m%d-%H%M%S.glb"))
         mats = self._program.get("materials", {})
-        part_mats = {s.id: s.material for s in shapes if s.material}
+        labels = {c.id: c.label for c in assembly.components(self._program, shapes)}
+        parts = {s.id: {"id": s.id, "label": s.label, "component": s.component,
+                        "component_label": labels.get(s.component, s.component), "material": s.material}
+                 for s in shapes}
 
         def job(log):
             if blender_link.is_up():
                 raise RuntimeError("a Blender with the MCP socket is already open (localhost:9876); close it first")
-            blender_link.open_in_blender(glb, mats, part_mats)
+            blender_link.open_in_blender(glb, mats, parts)
             log("blender: starting (iGPU, CUDA hidden, update check off)")
             if not blender_link.wait_up(60):
                 raise RuntimeError("Blender opened but the MCP socket did not come up on localhost:9876")
