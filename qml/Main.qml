@@ -81,6 +81,7 @@ ApplicationWindow {
         if (boot.ui === "commander" || boot.ui === "preferences" || boot.ui === "context") bootUi.start()
         if (boot.ui === "materials") rightTab = 1
         if (boot.ui === "console") rightTab = 2
+        if (boot.ui === "issues") issuesCard.open = true
     }
 
     Timer { id: bootUi; interval: 400
@@ -132,6 +133,7 @@ ApplicationWindow {
         { id: "image3d", group: "File", title: "Image to 3D…", keys: "Ctrl+Shift+I", icon: "image", run: () => image3DDlg.open() },
         { id: "exportGlb", group: "File", title: "Export GLB", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("glb") },
         { id: "exportStl", group: "File", title: "Export STL for 3D printing", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("stl") },
+        { id: "export3mf", group: "File", title: "Export 3MF for printing", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("3mf") },
         { id: "exportObj", group: "File", title: "Export OBJ", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("obj") },
         { id: "close", group: "File", title: "Close the build (start screen)", keys: "Ctrl+W", icon: "close", enabled: () => !window.empty, run: () => { timeline.stop(); window.setMode("build"); studio.closeProgram() } },
         // edit
@@ -212,7 +214,7 @@ ApplicationWindow {
     readonly property var byId: { const m = {}; for (const a of actions) m[a.id] = a; return m }
     function pick(ids) { return ids.map(i => i === "-" ? "-" : byId[i]) }
     readonly property var menus: [
-        { title: "File", items: ["open", "import", "image3d", "-", "exportGlb", "exportStl", "exportObj", "-", "close"] },
+        { title: "File", items: ["open", "import", "image3d", "-", "exportGlb", "exportStl", "export3mf", "exportObj", "-", "close"] },
         { title: "Edit", items: ["undo", "redo", "-", "deselect", "showAll", "-", "fixIssues", "-", "commander", "preferences"] },
         { title: "Create", items: ["add.box", "add.cylinder", "add.sphere", "add.torus", "add.capsule", "-", "add.gear", "add.helix", "add.pipe", "add.loft",
                                    "-", "add.tube", "add.nozzle", "add.rotor", "add.grille"] },
@@ -520,6 +522,7 @@ ApplicationWindow {
 
                 // ---- title card
                 Column {
+                    id: titleCard
                     x: window.showcase ? 48 : 18; y: window.showcase ? 40 : 60
                     visible: !window.empty && !window.present
                     Text {
@@ -551,15 +554,16 @@ ApplicationWindow {
                 }
 
                 IssuesCard {
+                    id: issuesCard
                     visible: !window.empty && !window.showcase && !window.present && studio.mode !== "reverse"
-                    x: 18; y: 118
+                    x: 18; y: titleCard.y + titleCard.height + 10
                     onChosen: (cid) => { studio.select(cid); viewport.frameComponent(cid) }
                 }
 
                 // ---- selection read-out (bottom left)
                 Rectangle {
                     visible: !window.showcase && !window.present && studio.selected !== "" && viewport.selectedGeo() !== null
-                    x: 12; y: parent.height - height - 14
+                    x: 12; y: parent.height - height - 62     // above the prompt bar, which spans the bottom centre
                     width: selRow.implicitWidth + 22; height: 30; radius: 15
                     color: Theme.glass; border.color: Qt.rgba(Theme.amber.r, Theme.amber.g, Theme.amber.b, 0.5)
                     Row {

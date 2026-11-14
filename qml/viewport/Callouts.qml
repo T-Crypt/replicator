@@ -37,8 +37,9 @@ Item {
                 it.ly = Math.max(it.y - 40, lastY + gap, 70)
                 lastY = it.ly
                 const spread = Math.min(220, Math.max(90, Math.abs(it.x - mid) * 0.35 + 70))
-                it.lx = side < 0 ? Math.max(20, Math.min(it.x - spread, mid - 260))
-                                 : Math.min(width - 20, Math.max(it.x + spread, mid + 260))
+                const tagW = 40 + (it.label.length + (it.count > 1 ? 4 : 0)) * 6.8     // estimated: keeps the tag inside the view
+                it.lx = side < 0 ? Math.max(tagW + 12, Math.min(it.x - spread, mid - 260))
+                                 : Math.min(width - tagW - 12, Math.max(it.x + spread, mid + 260))
             }
             const over = col.length ? col[col.length - 1].ly - (height - 150) : 0   // stay above the bottom bar
             if (over > 0) for (const it of col) it.ly = Math.max(60, it.ly - over)

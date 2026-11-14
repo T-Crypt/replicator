@@ -8,12 +8,13 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import Property, QObject, QFileSystemWatcher, QUrl, Signal, Slot
+from PySide6.QtCore import Property, QCoreApplication, QObject, QFileSystemWatcher, QTimer, QUrl, Signal, Slot
 
 from .. import config, voice
 from ..core import assembly, critique, explain, importers, materials, physics, reverse
 from ..core import export as exporter
 from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds
+from ..core.ops_engineering import HOLES
 from ..core.program import (ProgramError, apply_patch, check, component_map, component_ops,
                              delete_component, duplicate_component, op_inputs)
 from ..image3d import pipeline, sheet
@@ -29,7 +30,9 @@ EVAL_CACHE_LIMIT = 4000    # kernel results kept (op hash -> solid)
 MODES = ("build", "dissect", "reverse", "showcase", "present")
 ENUMS = {"mode": {"boolean": ["union", "difference", "intersection"], "array": ["linear", "radial", "mirror"],
                   "deform": ["taper", "twist", "bend"]},
-         "axis": ["x", "y", "z"]}
+         "axis": ["x", "y", "z"], "hole": list(HOLES)}
+INT_PARAMS = {"count", "teeth", "turns", "segments", "levels", "blades", "smooth"}
+MEASURE_DELAY_MS = 150     # critique and mass wait for edits to settle, then run off the GUI thread
 
 
 def _local(path: str) -> Path:
@@ -51,6 +54,9 @@ class Studio(QObject):
     libraryChanged = Signal()
     explanationChanged = Signal()
     issuesChanged = Signal()
+    factsChanged = Signal()
+    measuringChanged = Signal()
+    _measured = Signal(object, object, object)
     servicesChanged = Signal()
     voiceChanged = Signal()
     dictated = Signal(str)
@@ -89,6 +95,17 @@ class Studio(QObject):
             self._holodeck_watcher.addPath(str(sheet.CHARACTERS))
             self._holodeck_watcher.directoryChanged.connect(self.holodeckChanged.emit)
         self._jobDone.connect(self._on_job)
+        self._measured.connect(self._on_measured)
+        self.selectionChanged.connect(self.factsChanged)
+        self.shapesChanged.connect(self.factsChanged)
+        self.issuesChanged.connect(self.factsChanged)
+        self._measure_timer = QTimer(self)
+        self._measure_timer.setSingleShot(True)
+        self._measure_timer.setInterval(MEASURE_DELAY_MS)
+        self._measure_timer.timeout.connect(self._start_measure)
+        self._measure_job = None
+        self._measure_thread: threading.Thread | None = None
+        self._measuring = False
         self._cfg = config.load()
         self._explanation: dict = {}
         self._issues: list[dict] = []
@@ -228,7 +245,9 @@ class Studio(QObject):
             if isinstance(v, bool):
                 rows.append({"key": k, "kind": "bool", "value": v})
             elif isinstance(v, (int, float)):
-                rows.append({"key": k, "kind": "number", "value": float(v)})
+                whole = k in INT_PARAMS
+                rows.append({"key": k, "kind": "number", "value": float(v), "integer": whole,
+                             "step": 1.0 if whole else max(abs(float(v)) * 0.01, 0.1)})
             elif k in ENUMS and isinstance(v, str):
                 opts = ENUMS[k] if isinstance(ENUMS[k], list) else ENUMS[k].get(op["op"], [v])
                 rows.append({"key": k, "kind": "enum", "value": v, "options": opts})
@@ -236,6 +255,8 @@ class Studio(QObject):
                 rows.append({"key": k, "kind": "vec3", "value": [float(x) for x in v]})
             else:
                 rows.append({"key": k, "kind": "json", "value": json.dumps(v)})
+        if op["op"] == "grille" and "hole" not in params:
+            rows.append({"key": "hole", "kind": "enum", "value": "hex", "options": list(HOLES)})
         for k in ("translate", "rotate", "scale"):
             v = params.get(k)
             if isinstance(v, (int, float)):
@@ -243,6 +264,26 @@ class Studio(QObject):
             rows.append({"key": k, "kind": "vec3", "group": "Coordinates",
                          "value": [float(x) for x in v] if v else ([1.0] * 3 if k == "scale" else [0.0] * 3)})
         return rows
+
+    @Property("QVariantMap", notify=factsChanged)
+    def selectedFacts(self):
+        """Measured facts for the selection: size (mm) of the part or component, and its component's mass (kg)."""
+        if not self._program or not self._selected:
+            return {}
+        comp = self.selectedComponent
+        try:
+            full = self._ev.step(self._program)
+        except EvalError:
+            return {}
+        parts = [s for s in full if s.id == self._selected] or [s for s in full if s.component == comp]
+        out: dict = {"component": comp}
+        if parts:
+            lo, hi = bounds(parts)
+            out["size"] = [round(float(hi[i] - lo[i]), 1) for i in range(3)]
+        kg = (self._mass.by_component.get(comp) if self._mass else None)
+        if kg is not None:
+            out["kg"] = float(kg)
+        return out
 
     @Property(str, constant=True)
     def importPatterns(self):
@@ -309,6 +350,10 @@ class Studio(QObject):
                 return g.materialName
         op = self._op(self._selected)
         return (op or {}).get("material") or ""
+
+    @Property(bool, notify=measuringChanged)
+    def measuring(self):
+        return self._measuring
 
     @Property("QVariantList", notify=issuesChanged)
     def issues(self):
@@ -399,6 +444,54 @@ class Studio(QObject):
         if self._mode == "reverse":
             self._refresh_report()
 
+    def _set_measuring(self, on: bool):
+        if on != self._measuring:
+            self._measuring = on
+            self.measuringChanged.emit()
+
+    def _start_measure(self):
+        job = self._measure_job
+        if job is None:
+            return
+        if self._measure_thread is not None and self._measure_thread.is_alive():
+            self._measure_timer.start()           # one measurement at a time; try again when it is done
+            return
+        self._measure_job = None
+        self._measure_thread = threading.Thread(target=self._measure, args=job, daemon=True)
+        self._measure_thread.start()
+
+    def _measure(self, program, full, comps):
+        try:
+            issues = [i.as_dict() for i in critique.critique(program, full, comps)]
+            solids = [s for s in full if not isinstance(s.manifold, RawMesh)]
+            mass = physics.properties(program, solids) if solids else None
+        except Exception as e:      # a measurement bug must not leave the card on "measuring" forever
+            issues, mass = [], None
+            self._measured.emit(program, None, f"measurement failed: {e}")
+            return
+        self._measured.emit(program, issues, mass)
+
+    def _on_measured(self, program, issues, mass):
+        if program is not self._program:              # the program moved on while this was measured
+            return
+        if issues is None:
+            self._say(str(mass))
+            self._set_measuring(False)
+            return
+        self._issues, self._mass = issues, mass
+        self._set_measuring(self._measure_job is not None)
+        self.issuesChanged.emit()
+
+    def waitMeasured(self):
+        """Block until the pending measurement has landed (tests, tools); the GUI never calls this."""
+        self._measure_timer.stop()
+        while self._measure_job is not None or (self._measure_thread and self._measure_thread.is_alive()):
+            if self._measure_job is not None and not (self._measure_thread and self._measure_thread.is_alive()):
+                self._start_measure()
+            if self._measure_thread:
+                self._measure_thread.join()
+        QCoreApplication.sendPostedEvents(self, 0)
+
     def _rebuild(self, prev=None):
         if not self._program:
             self._shapes, self._comps = [], []
@@ -422,10 +515,9 @@ class Studio(QObject):
         self._comps = assembly.components(self._program, full)
         if self._issues_of is not self._program:       # measured once per program version, not per scrub step
             self._issues_of = self._program
-            self._issues = [i.as_dict() for i in critique.critique(self._program, full, self._comps)]
-            solids = [s for s in full if not isinstance(s.manifold, RawMesh)]
-            self._mass = physics.properties(self._program, solids) if solids else None
-            self.issuesChanged.emit()
+            self._measure_job = (self._program, full, self._comps)
+            self._set_measuring(True)
+            self._measure_timer.start()
         offsets = assembly.explode(full, self._comps)
         cinfo = {c.id: c for c in self._comps}
         cur = {s.hash for s in shapes}
@@ -666,6 +758,8 @@ class Studio(QObject):
         oid = f"{kind}_{n}"
         prog["ops"].append({"id": oid, "op": kind, "label": f"{kind.title()} {n}", "component": oid,
                             "material": "steel", "params": defaults[kind]})
+        if "components" in prog:
+            prog["components"].append({"id": oid, "label": f"{kind.title()} {n}"})
         self._set_program(prog, f"added {oid}", keep_step=True)
         self.select(oid)
 
@@ -741,7 +835,9 @@ class Studio(QObject):
         self._stats = {}
         self._dims = []
         self._explanation = {}
-        self._issues, self._issues_of = [], None
+        self._issues, self._issues_of, self._mass, self._measure_job = [], None, None, None
+        self._measure_timer.stop()
+        self._set_measuring(False)
         self.issuesChanged.emit()
         self.explanationChanged.emit()
         self.stopSpeaking()
@@ -785,6 +881,8 @@ class Studio(QObject):
     @Slot()
     def fixIssues(self):
         """Hand the critic's measured problems to the model as one scoped edit."""
+        if self._measuring:
+            return self._say("still measuring this version; try again in a moment")
         if not self._program or not self._issues:
             return self._say("no accuracy issues to fix")
         issues = [critique.Issue(**i) for i in self._issues]
@@ -941,7 +1039,7 @@ class Studio(QObject):
     # ------------------------------------------------------------------ export and render
     @Slot(str, result=str)
     def exportAs(self, fmt: str) -> str:
-        if not self._program or fmt not in ("glb", "stl", "obj"):
+        if not self._program or fmt not in ("glb", "stl", "obj", "3mf"):
             return ""
         name = "".join(c if c.isalnum() else "-" for c in self.title.lower()).strip("-") or "build"
         path, n = OUT / f"{name}.{fmt}", 2
@@ -955,8 +1053,9 @@ class Studio(QObject):
             exporter.export(shapes, self._program.get("materials", {}), path)
             self._say(f"exported {path}")
             return str(path)
-        except (OSError, ValueError, EvalError) as e:
-            self._say(f"export failed: {e}")
+        except (OSError, ValueError, EvalError, ImportError) as e:
+            path.unlink(missing_ok=True)
+            self._say(f"export failed: {e}" + (" (3MF needs core support that is not installed)" if fmt == "3mf" else ""))
             return ""
 
     @Slot(str)
