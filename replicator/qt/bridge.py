@@ -11,7 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import Property, QObject, QFileSystemWatcher, QUrl, Signal, Slot
 
 from .. import config, voice
-from ..core import assembly, critique, explain, materials, physics, reverse
+from ..core import assembly, critique, explain, importers, materials, physics, reverse
 from ..core import export as exporter
 from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds
 from ..core.program import (ProgramError, apply_patch, check, component_map, component_ops,
@@ -242,6 +242,10 @@ class Studio(QObject):
             rows.append({"key": k, "kind": "vec3", "group": "Coordinates",
                          "value": [float(x) for x in v] if v else ([1.0] * 3 if k == "scale" else [0.0] * 3)})
         return rows
+
+    @Property(str, constant=True)
+    def importPatterns(self):
+        return importers.patterns()
 
     @Property("QVariantList", constant=True)
     def engines(self):
@@ -520,7 +524,7 @@ class Studio(QObject):
     @Slot(str)
     def openFile(self, path: str):
         p = _local(path)
-        if p.suffix.lower() in (".glb", ".gltf", ".obj", ".stl", ".ply", ".off"):
+        if p.suffix.lower() in importers.ROUTES:
             return self.importModel(str(p))
         try:
             prog = json.loads(p.read_text())
@@ -538,14 +542,22 @@ class Studio(QObject):
 
     @Slot(str)
     def importModel(self, path: str):
-        """Reverse engineering: decompose a GLB/OBJ/STL into pieces and components, with an evidence ledger."""
+        """Reverse engineering: any supported 3D file (mesh, CAD, Blender scene, gallery ZIP) into pieces and
+        components, with an evidence ledger."""
         src = _local(path)
+        try:
+            kind = importers.route(src)
+        except ValueError as e:
+            return self._say(f"import refused: {e}")
         proj = OUT / "reverse" / (src.stem + time.strftime("-%Y%m%d-%H%M%S"))
 
         def job(log):
-            log(f"reverse: reading {src.name}")
+            log(f"import: {src.name} ({kind.label})")
             proj.mkdir(parents=True, exist_ok=True)
-            prog, rep = reverse.analyze_mesh(src, proj)
+            glb, what = importers.prepare(src, proj / "import", log=log)
+            prog, rep = reverse.analyze_mesh(glb, proj)
+            rep["input"].update(file=src.name, format=what)
+            (proj / "reverse_report.json").write_text(json.dumps(rep, indent=1))
             log(f"reverse: {len(prog['ops'])} pieces, {len(prog['components'])} components, "
                 f"{len(rep['ledger'])} ledger entries")
             return {"program": prog, "project": str(proj)}

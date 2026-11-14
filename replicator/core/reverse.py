@@ -52,11 +52,6 @@ def load_pieces(path: Path) -> tuple[list[trimesh.Trimesh], dict]:
                     meshes.append(piece)
     facts = {"file": path.name, "format": path.suffix.lower().lstrip("."), "nodes": nodes,
              "pieces_raw": len(meshes), "triangles": int(sum(len(m.faces) for m in meshes))}
-    if path.suffix.lower() == ".stl":       # STL is conventionally Z-up; glTF is Y-up
-        R = trimesh.transformations.rotation_matrix(-math.pi / 2, [1, 0, 0])
-        for m in meshes:
-            m.apply_transform(R)
-        facts["up_axis"] = "Z (STL) rotated to Y"
     return meshes, facts
 
 

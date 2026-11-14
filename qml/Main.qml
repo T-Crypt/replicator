@@ -245,14 +245,14 @@ ApplicationWindow {
     FileDialog {
         id: openDlg
         title: "Open a BuildProgram or import a model"
-        nameFilters: ["Replicator programs and models (*.json *.glb *.gltf *.obj *.stl *.ply)", "BuildProgram (*.json)",
-                      "3D models (*.glb *.gltf *.obj *.stl *.ply)"]
+        nameFilters: ["Replicator programs and models (*.json " + studio.importPatterns + ")", "BuildProgram (*.json)",
+                      "3D models, CAD and gallery bundles (" + studio.importPatterns + ")"]
         onAccepted: window.openPath(selectedFile.toString())
     }
     FileDialog {
         id: importDlg
         title: "Import a model to reverse engineer"
-        nameFilters: ["3D models (*.glb *.gltf *.obj *.stl *.ply)"]
+        nameFilters: ["3D models, CAD and gallery bundles (" + studio.importPatterns + ")"]
         onAccepted: studio.importModel(selectedFile.toString())
     }
     FileDialog {
