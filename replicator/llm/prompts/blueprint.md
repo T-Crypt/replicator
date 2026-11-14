@@ -20,3 +20,4 @@ Reply with ONE ```json block, nothing after it:
  "callouts": ["short notes for the blueprint sheet"]}
 
 The request: {{REQUEST}}
+{{REFERENCES}}

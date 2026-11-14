@@ -1,80 +1,120 @@
-# Handoff: M3 image to 3D (2026-11-13, end of session 2)
+# Handoff: workspace v2 + Explain (2026-11-13, end of session 3)
 
-Read STATUS.md first, then this file. Plan of record: `~/.claude/plans/i-want-some-kind-ancient-honey.md`.
+Read `docs/DESIGN.md` first (the review and the ten improvements), then this file. Nothing from session 3 is
+committed yet: review `git status`, then commit in the three groups listed at the bottom.
 
-## Done this session (committed and verified)
+Verify every step with a headless frame and the tests:
 
-1. **README**: banner and how-it-works SVGs drawn by `tools/readme_art.py` (rerun it after editing), four mode
-   previews in `assets/`, full README. The README's example program builds (checked with `Evaluator().run`).
-2. **Blender MCP** registered in OMP, OpenCode, Pi and Empryo (homelab `harnesses/agents/mcp-servers.json`, entry
-   `blender`). Wrapper `tools/blender-mcp`, server `uv tool` `mcp-for-blender` pinned at 8f40787. Handshake lists 10 tools.
-3. **Image to 3D backend, headless, works end to end:**
-   - Weights on `/data/models/hunyuan3d/`: Hunyuan3D 2.1 (single image), Hunyuan3D-2mv (multi-view), BiRefNet.
-     Registered in `~/comfy/extra_model_paths.yaml` (backup `.bak-20261113-hunyuan3d`) and its homelab mirror
-     `reference/comfyui-extra_model_paths.yaml`.
-   - `replicator/image3d/sheet.py`: splits a Holodeck sheet into views (labels come from the prompt sidecar), drops
-     watermarks and specks, centres every view on white at one shared scale.
-   - `replicator/image3d/comfy.py`: gets the card through homelab `bridge.ensure_up()` (Berth), uploads views, runs the
-     BiRefNet mask workflow and the Hunyuan workflow, then releases the batch.
-   - `replicator/image3d/pipeline.py`: CLI `python -m replicator.image3d.pipeline <png> [--single] [--side-as right]
-     [--height MM]`. It writes `out/image3d/<name>/{views/, raw.glb, model.glb, program.json, reverse_report.json,
-     image3d.json}`.
-   - Measured on the orc sheet (`/mnt/models/comfy/output/characters/sheet-fantasy_00001_.png`): **34 s on the card**.
-     The raw surface had 303k triangles in 24k pieces. The pipeline kept 4 parts, 150k triangles, at 1800 mm tall.
-     The result opens cleanly: `./launch.sh out/image3d/orc-mv/program.json` shows one component plus the evidence ledger.
-4. `app.py --shot` now waits for a running job before it grabs the frame. `bridge.py` loads the report for image-to-3D
-   programs (any program that has a `reference` key).
+```sh
+.venv/bin/python -m pytest -q                      # 36 pass
+.venv/bin/python -m replicator.app fixtures/dirk_engine_v2.json --software --shot out/x.png \
+    [--mode dissect|reverse|showcase] [--theme graphite] [--accent amber] [--ui commander|preferences|materials]
+```
+
+`--shot` never reads or writes the operator's preferences. In a hidden window the popup overlay has zero size, so
+the dim behind Commander and Preferences does not show in shots; it does in the real window.
+
+## Done in session 3 (working, shot-verified, not committed)
+
+- **Structure.** `qml/Replicator/UI/` (design system module), `qml/panels/`, `qml/viewport/`. `Main.qml` holds one
+  action registry that feeds the menus, the shortcuts and the Commander.
+- **Design system.** `Theme.qml`: 4 themes, 6 accents, 3 densities, motion switch, persisted. Vector icon set
+  (`Icon.qml`), `IconButton`, `Pill`, `Segmented`, `Chip`, `Kbd`, `RSlider`, `RCombo`, `RMenu`, `DockHeader`, `Swatch`.
+- **New UI.** Start screen (examples, recents), Commander (`Ctrl+K`), Preferences (`Ctrl+,`), status bar with kernel
+  read-outs, floating viewport bar, material shelf (27 presets), restyled managers, timeline and ledger, resizable
+  dock, focus mode (`F11`).
+- **Viewport.** Adaptive decimal grid (no horizon shimmer), reference planes for image-to-3D (old step 3: done),
+  selection read-out.
+- **Engine.** Edits validate on the shared cache, redo, bounded caches, cached row models, `studio.stats`.
+- **Explain backend (no UI yet).** `research/lane.py` (bounded web lookup: Wikipedia API, optional SearXNG),
+  `core/explain.py` (every sentence checked: cited / measured / concept), `llm/prompts/explain.md`,
+  `research_queries.md`, grounded dreaming in `client.dream(sources=...)`, `config.py` (services file),
+  `voice.py` (Kokoro/OpenAI-compatible TTS, espeak-ng, Whisper server or command), bridge slots `explain()`,
+  `speak()`, `stopSpeaking()`, `toggleDictation()`, `setService()`, properties `explanation`, `restPose`,
+  `services`, `speaking`, `listening`, mode `"present"`. Measured once: engine fixture, role `agent`, 50 s,
+  4 cited / 10 measured / 11 concept sentences, 0 dropped (`out/explain_try.py` reruns it).
 
 ## Remaining work, in order
 
-Each step is small enough for a local agent (`coder` for code, `agent` for docs). Verify each one with the headless shot:
-`.venv/bin/python -m replicator.app <program.json> --software --shot out/x.png --mode reverse`
+### 1. Present mode in the viewport (coder) - `qml/viewport/Viewport.qml`, `qml/Main.qml`
+1. Add `property bool present: false` to `Viewport.qml`. In `Main.qml` add
+   `readonly property bool present: studio.mode === "present"`, pass it down, and replace `chrome` with
+   `!showcase && !present && !focusMode`.
+2. Backdrop in `Main.qml` (the gradient `Rectangle`): when `present`, white to `#e6e9ee`; hide the vignette `Shape`.
+3. In `Viewport.qml` when `present`: hide the grid; floor `PrincipledMaterial` white, `roughness 1`, opacity 1 (it
+   only catches the shadow); `aoEnabled: true`, no fog, no vignette, no DOF; key light brightness about 2.0.
+4. Levitate: `build.y: studio.ground + lift`, where `lift` is `studio.radius * 0.18` plus a slow sine bob
+   (`FrameAnimation`, 4 s period, amplitude `radius * 0.012`) when `studio.restPose === "levitate"`, else 0.
+5. Add `function frameComponent(cid)`: read `studio.components`, set `tPivot` to its `center` and `tDist` from its
+   `size` (same formula as `frameSelected`). Empty id calls `frameAll(true)`.
+6. Add the mode to the header `Segmented` (`{ key: "present", label: "Present", icon: "present", hint: "5" }`) and
+   an action `mode.present` with key `5`. Also add an action `explain` ("Explain how it works", icon `book`,
+   `studio.explain()`), and a Pill for it in `LedgerPanel.qml` next to "Name parts".
+7. Check: `--mode present` shot of the engine (floats) and of `out/image3d/orc-mv/program.json` (stands).
 
-### 1. Bridge slots (coder) - `replicator/qt/bridge.py`
-- Add a `@Slot(str, bool) imageTo3D(path, single)`. Run it through `self._run_job("Image to 3D", job, mode_after="reverse")`.
-  The job calls `pipeline.image_to_mesh(Path(path), single=single, log=log)` and returns
-  `{"program": json.loads(Path(info["program"]).read_text()), "project": str(Path(info["program"]).parent)}`.
-  Copy the pattern of `importModel` exactly.
-- Add a `holodeckSheets` Property (list of dicts: `path`, `name`, `subject`, `mtime`), newest first, built from
-  `sheet.CHARACTERS` `*.png` (skip `*.png.json`). Use `sheet.subject(sheet.sidecar(p))` for the subject.
-  Add a `QFileSystemWatcher` on that directory that emits `holodeckChanged`.
-- Test: call `studio.imageTo3D(...)` from a tiny script, or temporarily from `app.py`, and check that the shot shows the orc.
+### 2. Presenter overlay (coder) - new `qml/panels/Presenter.qml`
+Shown over the viewport when `present`. Fixed light palette (ink `#14181f`, dim `#5b6472`), not theme tokens.
+- State: `property int chapter: 0`, `property bool playing: true`. `readonly property var doc: studio.explanation`.
+- On chapter change: `window.isolate = doc.chapters[chapter].component`, `viewport.frameComponent(...)`, and
+  `if (studio.services.speak) studio.speak(doc.chapters[chapter].text)`.
+- Advance: a `Timer` with `interval: chapters[chapter].seconds * 1000` when not speaking; when speaking, advance on
+  `studio.speakingChanged` going false. Keys: Left, Right, Space, Esc (leave to Reverse).
+- Layout: title and, if `doc.concept`, an amber "CONCEPT" badge with `doc.notice` (icon `alert`) top left; a caption
+  card bottom centre with the chapter title and its sentences; after each sentence a chip: `[n]` in the accent for
+  cited, a ruler icon for measured, "concept" in amber. Progress dots, previous / play / next, a speaker toggle.
+- Sources list on the right: number, title, domain; click runs `Qt.openUrlExternally(url)`.
+- Empty state (no `doc.chapters`): one card with an "Explain how it works" Pill, and a line saying web research is
+  off when `!studio.services.research`.
+- Do not show anything the document does not contain. No decorative HUD rings or fake telemetry.
 
-### 2. Holodeck deck panel (coder) - new `qml/HolodeckPanel.qml`
-- Show it in Reverse mode above `LedgerPanel`, or as a third tab in `Main.qml`'s right dock: thumbnails
-  (`Image { source: "file://" + path }`), the subject text, and two Pills: **"Make 3D (sheet)"** calls
-  `studio.imageTo3D(path, false)`, **"Front only"** calls `imageTo3D(path, true)`. Disable both while `studio.busy !== ""`.
-- Add `File > Image to 3D…` (a FileDialog for any png/jpg, which calls `imageTo3D(path, false)`) next to the Import item.
-- Match the style in `Theme.qml` and `Pill.qml`. Verify Qt APIs in `~/docs-local` before using them.
+### 3. Services in Preferences (coder) - `qml/panels/Preferences.qml`
+A "RESEARCH AND VOICE" section: toggles `research` and `speak` (`studio.setService(key, JSON.stringify(v))`), text
+fields `search_url`, `tts_url`, `tts_voice`, `stt_url`, `stt_cmd`, and the status lines from
+`studio.services.status`. State plainly: research sends only search words; voice never uses the RTX card.
 
-### 3. Reference planes (coder) - `qml/Viewport.qml`
-- When `studio.reference` (a new Property: the program's `reference.views` as absolute paths) is not empty, draw one
-  `Model { source: "#Rectangle" }` per view with a `DefaultMaterial` (`lightingMode: DefaultMaterial.NoLighting`,
-  `diffuseMap: Texture { source }`, `opacity: 0.55`). Place them C4D-style: front on -Z facing +Z, left on -X, back
-  on +Z, right on +X. Size them to the model height, standing on the floor.
-- Add a View menu toggle "Reference images". The `views/<key>.png` images are already 512 px squares on white.
+### 4. Dictation button (coder) - `qml/Main.qml`, the dream capsule
+An `IconButton` (icon `mic`, `on: studio.listening`) visible only when `studio.services.status.stt !== ""`, calling
+`studio.toggleDictation()`. `Connections { target: studio; function onDictated(t) { prompt.text = t } }`.
+The operator then presses Enter; do not auto-submit.
 
-### 4. Holodeck "Replicate" action (agent, in homelab; ask the operator first, since it touches Holodeck)
-- In `~/homelab/scripts/comfy/holodeck/studios.json` / the Characters UI: a button that runs
-  `~/projects/replicator/launch.sh <sheet.png>`. Then make `app.py` treat a `.png`/`.jpg` argument as `imageTo3D`.
-  `launch.sh` single-instance focus needs a way to pass the file to the running app (simplest: a small socket or
-  a `--send` flag; or start a second instance only when given a file).
+### 5. Voice setup (operator decision, then agent)
+Nothing was installed. Kokoro on galaxy did not answer on 2026-11-13. Ask the operator which they want:
+Kokoro-FastAPI on the CPU (`CUDA_VISIBLE_DEVICES=`), a second machine, or espeak-ng only; and whisper.cpp
+(`whisper-cli`, CPU) or a faster-whisper server for dictation. Per the GPU rule neither may touch the 4090.
 
-### 5. Quality passes (coder, optional)
-- `--side-as`: the orc ran with side as `left`. Run once with `right` and compare (look at the arm and cloak). Keep the better one as the default.
-- Surface pits: try `octree=384` in `mesh_workflow` (slower, finer), or the `basic` algorithm with threshold 0.5.
-- Texturing (Meshy-style): Hunyuan3D 2.1 paint is not native in ComfyUI. Evaluate TRELLIS.2 (MIT, PBR) as the textured lane.
+### 6. Wider web search (operator decision)
+Public search sites answer scripts with a bot check and the lane does not work around it, so today the lane reads
+Wikipedia only. A SearXNG guest (community script, tailnet only, inventory row) would open the wider web: ask first.
 
-### 6. Docs (agent) - required before the feature counts as done
-- `~/homelab/guide/replicator.md`: an "Image to 3D" section (CLI, timings, where weights live, licence: Tencent Hunyuan
-  community licence, not for EU/UK/KR).
-- `~/homelab/state/changes.md`: a dated entry for the weights and the extra_model_paths change. The undo: delete the
-  `hunyuan3d:` block, `rm -r /data/models/hunyuan3d`, `uv tool uninstall mcp-for-blender`.
-- README "Image to 3D" section: replace "being built" with the real flow. Tick the M3 roadmap box once steps 1 to 3 land.
-- STATUS.md: move items to Working.
+### 7. Showcase lighting (coder, small)
+Showcase still reads flat and grey on dark materials (`out/review/a-show.png`). Try: lower the floor
+`specularAmount`, `glowBloom` 0.15, and check whether the haze is the SSAO pass by toggling `aoEnabled`.
+
+### 8. README and docs (writer) - required before this counts as done
+- README: new previews from the commands above (build, dissect, reverse with reference planes, start screen,
+  Commander, material shelf in Daylight, Present once step 2 lands) into `assets/`; sections for the workspace,
+  themes, Commander, materials, Image to 3D (real flow, 34 s on the card), Explain and Present (the three sentence
+  kinds, the concept notice, what is and is not guaranteed), voice (optional), updated project layout and roadmap.
+  "What Replicator never does" must change: it now reads the web when research is on (search words only); it still
+  never calls a cloud model.
+- `~/homelab/guide/replicator.md`, `~/homelab/state/changes.md` (the old step 6 items still stand), STATUS.md.
+
+### 9. Later (roadmap, not started)
+- **3D printers** (operator note, 2026-11-13): after Explain, send a build to a printer. Printability check
+  (overhangs, wall thickness, bed fit), orient and split by component, slice through a CLI slicer, send to
+  OctoPrint / Moonraker on the tailnet, show progress in the status bar.
+- Split `qt/bridge.py` (now about 1,000 lines) into document, jobs, voice and explain services behind `Studio`.
+- Node editor over the op DAG, four-up viewport, Holodeck "Replicate" action (old step 4), texturing lane.
+
+## Commit groups (no AI attribution)
+1. `qml/`, `shaders/`, `replicator/app.py`: workspace v2 (design system, action registry, panels, viewport).
+2. `replicator/core/materials.py`, `qt/library.py`, `qt/bridge.py`, `core/evaluate.py`, `qt/mesh_geometry.py`:
+   engine and bridge features.
+3. `replicator/research/`, `core/explain.py`, `config.py`, `voice.py`, `llm/`, `tests/test_explain.py`, docs.
 
 ## Rules for whoever picks this up
-- The GPU is reached only through `comfy.acquire()` (Berth). Never load models in-process; the app stays on the iGPU.
-- One GPU job at a time. Check `berth status` first; Dirk-27B is usually resident and gets parked automatically.
-- Local agent output is a draft: run the headless shot and `pytest -q` before committing. No AI attribution in commits.
-- `out/` is gitignored; test artefacts stay there.
+- The GPU is reached only through `comfy.acquire()` (Berth) and llama-swap. Never load models in-process.
+- One GPU job at a time. Local agent output is a draft: run the shot and `pytest -q` before committing.
+- Qt APIs: check `~/docs-local` first. A `Behavior on y` whose target moves every frame stalled here; animate a
+  0..1 factor and compute the position from it (see the dream capsule in `Main.qml`).
+- `out/` is gitignored; `out/shot.sh <name> [args]` writes `out/review/<name>.png`.
