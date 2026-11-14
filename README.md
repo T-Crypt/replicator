@@ -111,7 +111,7 @@ and runs on any Linux machine with Qt 6.12.
 ```sh
 git clone git@github.com:T-Crypt/replicator.git && cd replicator
 python -m venv .venv --system-site-packages        # PySide6 6.12 comes from the system pyside6 package
-.venv/bin/pip install manifold3d trimesh numpy scipy networkx pillow jsonpatch
+.venv/bin/pip install manifold3d trimesh numpy scipy networkx pillow jsonpatch cascadio pycollada
 .venv/bin/python -m pytest -q tests                # kernel, schema and reverse tests
 ./launch.sh fixtures/vector_engine.json
 ```
