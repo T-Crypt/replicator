@@ -6,6 +6,7 @@ import QtQuick.Controls
 Popup {
     id: menu
     property var actions: []
+    function val(x) { return typeof x === "function" ? x() : x }   // registry fields may be live functions
     padding: 5
     implicitWidth: 286
     background: Rectangle { radius: Theme.r3; color: Theme.raised; border.color: Theme.line }
@@ -18,14 +19,15 @@ Popup {
                 id: it
                 required property var modelData
                 readonly property bool sep: modelData === "-"
-                readonly property bool ok: !sep && (modelData.enabled === undefined || modelData.enabled)
+                readonly property bool ok: !sep && (modelData.enabled === undefined || menu.val(modelData.enabled))
+                readonly property bool on: !sep && modelData.checked !== undefined && menu.val(modelData.checked)
                 width: menu.availableWidth
                 height: sep ? 9 : Theme.row
                 Rectangle { visible: it.sep; anchors.centerIn: parent; width: parent.width - 12; height: 1; color: Theme.line }
                 Rectangle { visible: !it.sep && mma.containsMouse && it.ok; anchors.fill: parent; radius: Theme.r1; color: Theme.accentSoft }
                 Icon { visible: !it.sep; x: 8; anchors.verticalCenter: parent.verticalCenter
-                       name: it.sep ? "" : (it.modelData.checked ? "check" : (it.modelData.icon || ""))
-                       size: 15; color: it.modelData.checked ? Theme.accentHi : Theme.dim; opacity: it.ok ? 1 : 0.4 }
+                       name: it.sep ? "" : (it.on ? "check" : (it.modelData.icon || ""))
+                       size: 15; color: it.on ? Theme.accentHi : Theme.dim; opacity: it.ok ? 1 : 0.4 }
                 Text { visible: !it.sep; x: 32; anchors.verticalCenter: parent.verticalCenter
                        text: it.sep ? "" : it.modelData.title; color: Theme.text; opacity: it.ok ? 1 : 0.4
                        font.pixelSize: Theme.fs; font.family: Theme.sans }

@@ -32,7 +32,7 @@ def main(argv=None) -> int:
     ap.add_argument("--theme", default="", help="abyss | graphite | carbon | daylight (this run only with --shot)")
     ap.add_argument("--accent", default="", help="holo | azure | violet | mint | amber | rose")
     ap.add_argument("--density", default="", help="compact | cozy | roomy")
-    ap.add_argument("--ui", default="", help="open an overlay for --shot: commander | preferences | materials | console")
+    ap.add_argument("--ui", default="", help="open an overlay for --shot: commander | preferences | materials | console | context")
     a = ap.parse_args(argv)
 
     gpu.apply(software=a.software)

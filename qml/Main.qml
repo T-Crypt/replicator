@@ -78,12 +78,15 @@ ApplicationWindow {
         if (boot.theme) Theme.themeName = boot.theme
         if (boot.accent) Theme.accentName = boot.accent
         if (boot.density) Theme.density = boot.density
-        if (boot.ui === "commander" || boot.ui === "preferences") bootUi.start()
+        if (boot.ui === "commander" || boot.ui === "preferences" || boot.ui === "context") bootUi.start()
         if (boot.ui === "materials") rightTab = 1
         if (boot.ui === "console") rightTab = 2
     }
 
-    Timer { id: bootUi; interval: 400; onTriggered: boot.ui === "commander" ? commander.open() : preferences.open() }
+    Timer { id: bootUi; interval: 400
+            onTriggered: boot.ui === "commander" ? commander.open()
+                       : boot.ui === "context" ? window.openContext(studio.shapes.length ? studio.shapes[0].shapeId : "", 760, 330)
+                       : preferences.open() }
 
     function setMode(m) {
         studio.setMode(m)
@@ -268,7 +271,7 @@ ApplicationWindow {
         onOpenFile: (path) => window.openPath(path)
     }
     Preferences { id: preferences; workspace: window }
-    RMenu { id: ctxMenu; parent: Overlay.overlay; implicitWidth: 250 }
+    RMenu { id: ctxMenu; implicitWidth: 250 }
     AgentPrompt { id: agentPrompt; onSubmitted: (cid, text) => studio.rework(cid, text) }
 
     // ------------------------------------------------------------------ header: brand, menus, modes, Commander, engine
