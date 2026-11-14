@@ -13,7 +13,7 @@ from pathlib import Path
 from .. import knowledge
 from ..core import assembly, critique
 from ..core.evaluate import EvalError, Evaluator
-from ..core.program import OPS, VERSION, validate
+from ..core.program import OPS, PLACEMENT, VERSION, validate
 
 PROMPTS = Path(__file__).parent / "prompts"
 ENGINES = {
@@ -100,10 +100,57 @@ def op_reference() -> str:
     from ..core import program as P
     lines = []
     for name, (req, opt) in OPS.items():
+        if name == "mesh":
+            continue
         kind = "primitive" if name in P.PRIMITIVES else "modifier (one input)" if name in P.MODIFIERS \
             else "combiner (inputs: 2+)"
         lines.append(f"- {name}: {kind}; required {sorted(req) or '-'}; optional {sorted(opt) or '-'}")
     return "\n".join(lines)
+
+
+def tidy(program):
+    """Lossless clean-up of a model's program before it is validated: counter-clockwise profiles (a clockwise
+    revolve or extrude profile builds as empty), null params and a redundant "center": true dropped, a
+    placement-only "rotate"/"translate"/"scale" op named as the transform it is. Geometry is never changed."""
+    if not isinstance(program, dict) or not isinstance(program.get("ops"), list):
+        return program
+    for op in program["ops"]:
+        params = op.get("params", {}) if isinstance(op, dict) else None
+        if not isinstance(params, dict):
+            continue
+        for k in [k for k, v in params.items() if v is None]:
+            del params[k]
+        if op.get("op") in OPS and "center" not in OPS[op["op"]][1] and params.get("center") is True:
+            del params["center"]  # every primitive is already centred
+        placed = (params.keys() | op.keys()) & PLACEMENT
+        if op.get("op") in ("rotate", "translate", "scale", "move") and placed and params.keys() <= PLACEMENT:
+            op["op"] = "transform"
+        if op.get("op") in ("revolve", "extrude"):
+            pts = params.get("points")
+            if _is_poly(pts) and _area(pts) < 0:
+                params["points"] = pts[::-1]
+    return program
+
+
+def _is_poly(pts) -> bool:
+    return (isinstance(pts, list) and len(pts) >= 3 and
+            all(isinstance(p, list) and len(p) == 2 and all(isinstance(v, (int, float)) for v in p) for p in pts))
+
+
+def _area(pts) -> float:
+    return sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1])) / 2
+
+
+REPAIR_HINTS = (
+    ("result is empty", "an empty result usually means a profile wound clockwise, a boolean difference that removed "
+     "everything, or an intersection of shapes that do not overlap; check the op's points and translate"),
+)
+
+
+def repair_message(errs: list[str]) -> str:
+    hints = sorted({h for key, h in REPAIR_HINTS if any(key in e for e in errs)})
+    return ("That program has these problems. Fix every one and reply with the complete corrected program as one "
+            "```json block.\n- " + "\n- ".join(errs[:20]) + ("\nHints: " + "; ".join(hints) if hints else ""))
 
 
 def problems(program) -> list[str]:
@@ -209,7 +256,7 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
         log(f"program: round {rnd + 1}")
         reply = chat(msgs, engine)
         try:
-            prog = extract_json(reply)
+            prog = tidy(extract_json(reply))
             errs = problems(prog)
         except ValueError as e:
             prog, errs = None, [str(e)]
@@ -221,8 +268,7 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
             return _refine(prog, engine, log)
         log(f"program: {len(errs)} problems: {errs[:3]}")
         msgs += [{"role": "assistant", "content": reply},
-                 {"role": "user", "content": "That program has these problems. Fix every one and reply with the "
-                  "complete corrected program as one ```json block.\n- " + "\n- ".join(errs[:20])}]
+                 {"role": "user", "content": repair_message(errs)}]
     raise ValueError(f"no valid program after {REPAIR_ROUNDS + 1} rounds: {errs[:5]}")
 
 

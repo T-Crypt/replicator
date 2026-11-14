@@ -43,10 +43,9 @@ GEOMETRY CONVENTIONS (follow exactly)
 - array: "mode" "linear" ("count", "offset" [x,y,z] per copy), "radial" ("count", "axis", "angle" default 360;
   copies rotate around the world origin, so place the input off-axis first), "mirror" ("plane" = the mirror
   plane's normal, e.g. [1,0,0] mirrors across X; "count" must be 2).
-  Radial rings go around the object's own axis: for an engine or fuselage lying along Z use "axis": "z" and place
-  the source part off-axis in X or Y (never Y-axis rings on a Z-axis body).
+  For a body lying along Z use "axis": "z" and place the source off-axis in X or Y.
 - boolean: "mode" union | difference (first input minus all the others) | intersection. Inputs must overlap.
-- hull: convex hull of the inputs (great for fairings and blended bodies). group: keep inputs together, no CSG.
+- hull: convex hull of the inputs (fairings, blended bodies). group: keep inputs together, no CSG.
 - smooth: subdivision ("levels" 1-3); use on organic or car-body shapes. round: rounds every edge by "radius"
   (the part grows by that radius). shell: hollows a solid ("thickness").
 - An op used as an input disappears from the scene; the result takes its place. Only ops nobody consumes are
@@ -54,10 +53,9 @@ GEOMETRY CONVENTIONS (follow exactly)
 - Bodies that house other parts MUST be hollow (a revolve with an inner wall, a "shell", or a boolean difference),
   or they hide everything inside. Leave openings (intakes, cut-aways, vents) so the interesting internals show.
   The viewer sees outer surfaces first: make the silhouette read as the thing that was asked for.
+- The finished build must measure the blueprint's "dimensions" (x, y, z): size and place parts to fit inside it.
 - Every part touches the part that carries it; nothing floats. A part that would sit inside solid material is
   invisible: hollow the outer body or move the part.
-- Anything axially symmetric that sits on a body's centre line (rings, casings, rotors, tori) spins around the
-  body's axis: a torus, tube, rotor or cylinder is built around Y, so on a body along Z give it "rotate": [90, 0, 0].
 - "label" is the human callout in Title Case ("Reverser Cascade Vanes"), never the id.
 - 8 to 30 ops. Ids unique, inputs only reference EARLIER ids. Every material key used must be defined.
 
