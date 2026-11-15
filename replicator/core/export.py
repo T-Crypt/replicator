@@ -1,12 +1,15 @@
 """Export a build to GLB, OBJ, STL, 3MF (trimesh) or STEP (faceted B-rep, core/step.py). STL and 3MF are for printers: they refuse anything that is not
-watertight (prints must not fail) and are written Z-up, the printer convention, so importing them back is lossless."""
+watertight (prints must not fail) and are written Z-up, the printer convention, so importing them back is lossless. With a printer given, print formats
+are also refused when the build overflows its bed (core/fit.py), naming the overflow per axis; it is never clipped."""
 from __future__ import annotations
 
 from pathlib import Path
 
 import trimesh
 
+from . import fit
 from .evaluate import Shape
+from .printers import Printer
 
 PRINT_FORMATS = ("stl", "3mf")
 CAD_FORMATS = ("step", "stp")
@@ -44,6 +47,19 @@ def _printable(shapes: list[Shape], fmt: str) -> None:
                          "Imported surfaces are shown and moved but cannot be printed; export GLB instead")
 
 
+def _gate_bed(shapes: list[Shape], units: str, printer: Printer) -> None:
+    """Refuse a build that overflows the printer's bed, naming every axis and how much, and the replica
+    scale that would fit it. The as-built factor, because the file stands as built and cannot be rotated."""
+    r = fit.check(shapes, units, printer)
+    if r.fits:
+        return
+    over = ", ".join(f"{ax} by {v:.1f} mm" for ax, v in zip(fit.AXES, r.overflow) if v > 0)
+    s = fit.scale_to_fit(shapes, units, printer, allow_rotate=False).scale
+    raise ValueError(f"{printer.name} ({printer.id}): the build is {r.size[0]:.1f} x {r.size[1]:.1f} x "
+                     f"{r.size[2]:.1f} mm but only {r.usable[0]:.1f} x {r.usable[1]:.1f} x {r.usable[2]:.1f} mm "
+                     f"is usable; it overflows {over}. A {s:.3f}x replica would fit")
+
+
 def _print_file(shapes: list[Shape], materials: dict, fmt: str, path: Path) -> None:
     _printable(shapes, fmt)
     scene = to_scene(shapes, materials)
@@ -58,7 +74,8 @@ def _print_file(shapes: list[Shape], materials: dict, fmt: str, path: Path) -> N
     merged.export(path)
 
 
-def export(shapes: list[Shape], materials: dict, path: str | Path, name: str = "", units: str = "mm") -> Path:
+def export(shapes: list[Shape], materials: dict, path: str | Path, name: str = "", units: str = "mm",
+           printer: Printer | None = None) -> Path:
     path = Path(path)
     fmt = path.suffix.lower().lstrip(".")
     if fmt not in FORMATS:
@@ -69,6 +86,8 @@ def export(shapes: list[Shape], materials: dict, path: str | Path, name: str = "
         from . import step
         step.write(shapes, path, name=name or path.stem, units=units)
     elif fmt in PRINT_FORMATS:
+        if printer is not None:
+            _gate_bed(shapes, units, printer)
         _print_file(shapes, materials, fmt, path)
     elif fmt == "obj":
         to_scene(shapes, materials).export(path, mtl_name=f"{path.stem}.mtl")

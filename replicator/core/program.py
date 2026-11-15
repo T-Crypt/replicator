@@ -145,6 +145,9 @@ def scale_program(program: dict, factor: float) -> dict:
         p["scale"] = [v * factor for v in s] if isinstance(s, list) else s * factor
         if "translate" in p:
             p["translate"] = [v * factor for v in p["translate"]]
+    dims = (out.get("blueprint") or {}).get("dimensions")
+    if isinstance(dims, list) and all(isinstance(v, (int, float)) for v in dims):
+        out["blueprint"]["dimensions"] = [v * factor for v in dims]   # the plan scales with the build it describes
     return check(out)
 
 

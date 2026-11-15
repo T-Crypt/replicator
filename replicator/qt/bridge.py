@@ -11,7 +11,7 @@ from pathlib import Path
 from PySide6.QtCore import Property, QCoreApplication, QObject, QFileSystemWatcher, QTimer, QUrl, Signal, Slot
 
 from .. import config, voice
-from ..core import assembly, critique, drawing, explain, importers, materials, physics, reverse
+from ..core import assembly, critique, drawing, explain, importers, materials, physics, printers, reverse
 from ..core import export as exporter
 from ..core.evaluate import EvalError, Evaluator, RawMesh, bounds
 from ..core.ops_engineering import HOLES
@@ -426,6 +426,16 @@ class Studio(QObject):
     def services(self):
         """Optional services (web research, voice) and what is usable right now."""
         return {**self._cfg, "status": voice.status(self._cfg)}
+
+    @Property("QVariantMap", notify=servicesChanged)
+    def activePrinter(self):
+        """The printer prints are gated on (id, name, usable build volume); empty when none is active
+        or the saved profiles are broken (a status bar must not take the window down)."""
+        try:
+            p = printers.active(self._cfg)
+        except ValueError:
+            p = None
+        return {} if p is None else {"id": p.id, "name": p.name, "usable": list(p.usable())}
 
     @Property(bool, notify=voiceChanged)
     def speaking(self):
@@ -1146,7 +1156,7 @@ class Studio(QObject):
             if fmt in ("stl", "step") and any(isinstance(s.manifold, RawMesh) for s in shapes):
                 raise ValueError(f"imported pieces that are not watertight cannot go to {fmt.upper()}")
             exporter.export(shapes, self._program.get("materials", {}), path, name=self.title,
-                            units=self._program.get("units", "mm"))
+                            units=self._program.get("units", "mm"), printer=printers.active(self._cfg))
             self._say(f"exported {path}")
             return str(path)
         except (OSError, ValueError, EvalError, ImportError) as e:

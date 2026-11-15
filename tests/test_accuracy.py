@@ -124,6 +124,7 @@ def test_scoped_edit_rejects_changes_outside_the_part():
 def test_knowledge_cards_are_picked_by_subject():
     assert [c.name for c in knowledge.pick("a rocket engine with turbopumps")] == ["rocket_engine"]
     assert [c.name for c in knowledge.pick("a gaming PC with a big graphics card")] == ["desktop_pc"]
+    assert [c.name for c in knowledge.pick("a printable replica of a house for a 3D printer")] == ["print_replica", "house"]
     assert knowledge.pick("a ceramic teapot") == []
 
 

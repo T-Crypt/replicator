@@ -19,10 +19,12 @@ os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")           # the RTX card belon
 
 from mcp.server import MCPServer  # noqa: E402
 
-from .core import assembly, critique, physics  # noqa: E402
+from . import config  # noqa: E402
+from .core import assembly, critique, fit, physics  # noqa: E402
+from .core import printers as printers_mod  # noqa: E402 (the `printers` tool name takes the bare one)
 from .core import export as exporter  # noqa: E402
 from .core.evaluate import EvalError, Evaluator, bounds  # noqa: E402
-from .core.program import ProgramError, apply_patch, check  # noqa: E402
+from .core.program import ProgramError, apply_patch, check, scale_program  # noqa: E402
 
 mcp = MCPServer("replicator", instructions=(
     "Replicator builds physical things from a BuildProgram: a JSON document of typed ops (primitives, modifiers, "
@@ -30,7 +32,10 @@ mcp = MCPServer("replicator", instructions=(
     "It covers houses and floor plans, electronics, household objects, engines, aircraft and concepts. "
     "Start with `op_reference`, read a program with `read_program`, change it with `patch_program` (RFC 6902 JSON "
     "Patch; rejected patches leave the file untouched), and confirm with `build_report`, which returns size, mass, "
-    "parts and every accuracy issue. `specify` asks the local models for a new program from a description."))
+    "parts and every accuracy issue. `specify` asks the local models for a new program from a description. "
+    "To print: `printers` lists the catalog and the active bed, `fit_check` measures a build against a bed and "
+    "suggests the scale and orientation that fit, and `scale_for_printer` writes a scaled copy of the program that "
+    "fits the bed. Nothing is ever clipped: an oversized print is refused with the overflow per axis."))
 
 
 def _path(p: str) -> Path:
@@ -144,6 +149,88 @@ def export(path: str, out: str) -> dict:
         exporter.export(shapes, program.get("materials", {}), o, name=program.get("name", p.stem),
                         units=program.get("units", "mm"))
         return {"ok": True, "file": str(o), "bytes": o.stat().st_size}
+    except (OSError, json.JSONDecodeError, ProgramError, EvalError, ValueError) as e:
+        return _err(e)
+
+
+def _printer(printer_id: str, cfg: dict):
+    """Named printer (catalog, then saved profiles), else the active one. Raises when none is usable."""
+    if printer_id:
+        if printer_id in printers_mod.CATALOG:
+            return printers_mod.CATALOG[printer_id]
+        for p in printers_mod.configured(cfg):
+            if p.id == printer_id:
+                return p
+        raise ValueError(f"printer {printer_id!r} is not in the catalog or saved profiles (see `printers`)")
+    p = printers_mod.active(cfg)
+    if p is None:
+        raise ValueError("no printer: pass printer_id (see `printers`) or set active_printer in services.json")
+    return p
+
+
+def _fit_fields(f) -> dict:
+    return {"fits": f.fits, "scale": f.scale, "orientation": f.orientation, "size": list(f.size),
+            "usable": list(f.usable), "clearance": list(f.clearance), "overflow": list(f.overflow)}
+
+
+@mcp.tool()
+def printers() -> dict:
+    """The printer catalog (Bambu Lab models, published build volumes to verify on the device), the
+    profiles saved in services.json, and the active printer with its usable build volume."""
+    try:
+        cfg = config.load()
+        active = printers_mod.active(cfg)
+        return {"ok": True,
+                "catalog": [p.as_dict() for p in printers_mod.CATALOG.values()],
+                "saved": [p.as_dict() for p in printers_mod.configured(cfg)],
+                "active": active.as_dict() if active else None}
+    except (OSError, ValueError) as e:
+        return _err(e)
+
+
+@mcp.tool()
+def fit_check(path: str, printer_id: str = "", scale: float = 1.0) -> dict:
+    """Does the build fit the printer's bed (active printer when printer_id is empty)? Size in the
+    print frame (Z up, mm), clearance or overflow per axis, plus the best orientation at scale 1 and
+    the largest scale that fits."""
+    try:
+        p = _path(path)
+        program = _load(p)
+        shapes = Evaluator(p.parent).step(program)
+        units = program.get("units", "mm")
+        printer = _printer(printer_id, config.load())
+        f = fit.check(shapes, units, printer, scale=scale)
+        return {"ok": True, "printer": printer.id, "name": printer.name, "scale": scale,
+                **_fit_fields(f),
+                "best_orientation": _fit_fields(fit.best_orientation(shapes, units, printer)),
+                "scale_to_fit": _fit_fields(fit.scale_to_fit(shapes, units, printer))}
+    except (OSError, json.JSONDecodeError, ProgramError, EvalError, ValueError) as e:
+        return _err(e)
+
+
+@mcp.tool()
+def scale_for_printer(path: str, out: str, printer_id: str = "", preset: str = "fit") -> dict:
+    """Write `out` as a scaled copy of the program sized for the printer (active when printer_id is
+    empty). preset: 1:1, 1:<n>, fit (largest factor the as-built build takes on the bed) or height:<mm>.
+    Rejected (nothing written) unless the scaled build passes the fit check; returns the factor and
+    the final print-frame size."""
+    try:
+        p, o = _path(path), _path(out)
+        program = _load(p)
+        shapes = Evaluator(p.parent).step(program)
+        units = program.get("units", "mm")
+        printer = _printer(printer_id, config.load())
+        factor = fit.replica_scale(preset, shapes, units, printer)
+        scaled = scale_program(program, factor)
+        f = fit.check(Evaluator(o.parent).step(scaled), units, printer)
+        if not f.fits:
+            over = ", ".join(f"{ax} by {v:.1f} mm" for ax, v in zip(fit.AXES, f.overflow) if v > 0)
+            raise ValueError(f"{printer.name} ({printer.id}): the {preset} build still overflows {over}; "
+                             f"use a smaller preset or a bigger bed")
+        o.parent.mkdir(parents=True, exist_ok=True)
+        o.write_text(json.dumps(scaled, indent=1))
+        return {"ok": True, "file": str(o), "printer": printer.id, "factor": factor,
+                "size": list(f.size), "orientation": f.orientation}
     except (OSError, json.JSONDecodeError, ProgramError, EvalError, ValueError) as e:
         return _err(e)
 
