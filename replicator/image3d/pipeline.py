@@ -21,7 +21,7 @@ from PIL import Image
 
 from . import comfy, sheet
 
-OUT = Path(__file__).resolve().parents[2] / "out" / "image3d"
+OUT = Path.home() / "Replicator" / "image3d"
 MV_KEYS = {"front": "front", "back": "back", "left": "left", "right": "right"}
 
 

@@ -26,6 +26,31 @@ jobs:
           QT_QPA_PLATFORM: offscreen
       - name: Check every fixture builds
         run: |
-          for f in fixtures/*.json; do
+          for f in replicator/fixtures/*.json; do
             python -m tools.check "$f" > /dev/null || { echo "FAIL $f"; exit 1; }
           done
+
+  package:
+    # the installed wheel, not the checkout: the window's QML, shaders and examples must ship inside it
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: pip wheel --no-deps -w dist .
+      - run: python -m venv /tmp/env && /tmp/env/bin/pip install "$(ls dist/*.whl)[mcp]"
+      - name: The installed package carries its assets and builds an example
+        working-directory: /tmp
+        run: |
+          /tmp/env/bin/python - <<'PY'
+          from replicator import FIXTURES, QML
+          from replicator import mcp_server as M
+          assert (QML / "Main.qml").exists() and (QML / "Replicator" / "UI" / "qmldir").exists(), QML
+          assert (QML.parent / "shaders" / "grid.frag").exists()
+          examples = sorted(FIXTURES.glob("*.json"))
+          assert len(examples) >= 9, examples
+          r = M.build_report(str(FIXTURES / "rocket_engine.json"))
+          assert r["ok"] and r["report"]["parts"] == 19, r
+          print("installed package OK:", len(examples), "examples")
+          PY

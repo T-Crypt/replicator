@@ -6,12 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from replicator import FIXTURES
 from replicator.core.evaluate import Evaluator
 from replicator.core.program import check
 from replicator.llm import client
 import tools.corpus as corpus
 
-FIX = Path(__file__).parent.parent / "fixtures"
+FIX = FIXTURES
 ROW_KEYS = {"id", "file", "prompt", "engine", "program", "geometry", "mass_kg", "mass_assumed", "verdict", "kernel"}
 
 

@@ -1,7 +1,7 @@
 """Path-traced README stills: frame a BuildProgram from a three-quarter view and render it with Blender Cycles on
 the CPU (the same renderer as Render > Cycles in the app; no GPU).
 
-    .venv/bin/python -m tools.showcase fixtures/gaming_pc_liquid.json [more.json] [--out assets] [--samples 128]
+    .venv/bin/python -m tools.showcase replicator/fixtures/gaming_pc_liquid.json [more.json] [--out assets] [--samples 128]
         [--yaw 35] [--pitch 22] [--size 1600x1000]
 
 Writes <out>/showcase-<name>.png and prints the time each took.

@@ -12,9 +12,8 @@ import os
 import sys
 from pathlib import Path
 
-from . import gpu
+from . import QML, gpu
 
-ROOT = Path(__file__).resolve().parent.parent
 
 
 def main(argv=None) -> int:
@@ -87,10 +86,10 @@ def main(argv=None) -> int:
     engine.rootContext().setContextProperty("studio", studio)
     engine.rootContext().setContextProperty("boot", {"theme": a.theme, "accent": a.accent, "density": a.density,
                                                      "ui": a.ui, "shot": bool(a.shot or a.record)})
-    engine.addImportPath(str(ROOT / "qml"))                 # the Replicator.UI module
+    engine.addImportPath(str(QML))                          # the Replicator.UI module
     if a.shot:  # never shown: grabWindow renders a non-exposed window offscreen (once; a second grab crashes Qt)
         engine.setInitialProperties({"visible": False})
-    engine.load(str(ROOT / "qml" / "Main.qml"))
+    engine.load(str(QML / "Main.qml"))
     if not engine.rootObjects():
         print("QML failed to load", file=sys.stderr)
         return 2

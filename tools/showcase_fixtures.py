@@ -1,19 +1,20 @@
-"""Writes the two showcase fixtures from real dimensions: fixtures/raspberry_pi_5.json and fixtures/gaming_pc_liquid.json.
+"""Writes the two showcase fixtures from real dimensions: replicator/fixtures/raspberry_pi_5.json and replicator/fixtures/gaming_pc_liquid.json.
 
 Every position is worked out here (board outline, connector pitches, case panels, fan and radiator sizes, the
 coolant loop's ports), not dreamed, so the parts touch where they should and nothing passes through anything:
 
-    .venv/bin/python -m tools.showcase_fixtures && .venv/bin/python -m tools.check fixtures/raspberry_pi_5.json fixtures/gaming_pc_liquid.json
+    .venv/bin/python -m tools.showcase_fixtures && .venv/bin/python -m tools.check replicator/fixtures/raspberry_pi_5.json replicator/fixtures/gaming_pc_liquid.json
 
 Pi 5 positions follow the published mechanical drawing (85 x 56 mm board, M2.5 holes on a 58 x 49 mm pattern 3.5 mm
 in from the edges). Connector bodies are simplified boxes at their real footprint and height.
 """
 from __future__ import annotations
 
+from replicator import FIXTURES
 import json
 from pathlib import Path
 
-FIX = Path(__file__).resolve().parent.parent / "fixtures"
+FIX = FIXTURES
 
 
 def box(oid, label, comp, mat, lo, hi, **extra):

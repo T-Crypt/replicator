@@ -54,4 +54,4 @@ Roadmap = "https://github.com/T-Crypt/replicator/blob/main/docs/ROADMAP.md"
 include = ["replicator*"]
 
 [tool.setuptools.package-data]
-replicator = ["knowledge/*.md", "llm/prompts/*.md"]
+replicator = ["knowledge/*.md", "llm/prompts/*.md", "qml/**/*", "shaders/*", "fixtures/*.json"]

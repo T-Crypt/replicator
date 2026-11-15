@@ -1,0 +1,687 @@
+{
+ "version": 1,
+ "name": "5-Inch FPV Freestyle Quad",
+ "units": "mm",
+ "materials": {
+  "carbon_fibre": {
+   "base_color": [
+    0.025,
+    0.026,
+    0.03
+   ],
+   "metalness": 0.0,
+   "roughness": 0.38
+  },
+  "aluminium": {
+   "base_color": [
+    0.72,
+    0.73,
+    0.75
+   ],
+   "metalness": 0.9,
+   "roughness": 0.32
+  },
+  "matte_polymer": {
+   "base_color": [
+    0.03,
+    0.03,
+    0.033
+   ],
+   "metalness": 0.0,
+   "roughness": 0.82
+  },
+  "dark_ceramic": {
+   "base_color": [
+    0.05,
+    0.052,
+    0.058
+   ],
+   "metalness": 0.05,
+   "roughness": 0.42
+  },
+  "rubber": {
+   "base_color": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "metalness": 0.0,
+   "roughness": 0.95
+  }
+ },
+ "ops": [
+  {
+   "id": "arm_box",
+   "op": "box",
+   "label": "Front-Right Arm",
+   "part": "Front-right arm",
+   "material": "carbon_fibre",
+   "params": {
+    "size": [
+     112,
+     3,
+     26
+    ],
+    "rotate": [
+     0,
+     45,
+     0
+    ],
+    "translate": [
+     40.6,
+     24.5,
+     40.6
+    ]
+   }
+  },
+  {
+   "id": "arm_boss",
+   "op": "cylinder",
+   "label": "Front-Right Motor Boss",
+   "part": "Front-right arm",
+   "material": "carbon_fibre",
+   "params": {
+    "height": 3,
+    "radius": 17,
+    "translate": [
+     81,
+     24.5,
+     81
+    ]
+   }
+  },
+  {
+   "id": "arm",
+   "op": "boolean",
+   "label": "Front-Right Arm Assembly",
+   "part": "Front-right arm",
+   "material": "carbon_fibre",
+   "params": {
+    "mode": "union"
+   },
+   "inputs": [
+    "arm_box",
+    "arm_boss"
+   ]
+  },
+  {
+   "id": "arms",
+   "op": "array",
+   "label": "Carbon X Arms",
+   "part": "Arms",
+   "material": "carbon_fibre",
+   "params": {
+    "count": 4,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "arm"
+  },
+  {
+   "id": "stack_bottom_plate",
+   "op": "box",
+   "label": "Bottom Plate",
+   "part": "Centre stack",
+   "material": "carbon_fibre",
+   "params": {
+    "size": [
+     80,
+     3,
+     80
+    ],
+    "translate": [
+     0,
+     1.5,
+     0
+    ]
+   }
+  },
+  {
+   "id": "stack_top_plate",
+   "op": "box",
+   "label": "Top Plate",
+   "part": "Centre stack",
+   "material": "carbon_fibre",
+   "params": {
+    "size": [
+     80,
+     3,
+     80
+    ],
+    "translate": [
+     0,
+     21.5,
+     0
+    ]
+   }
+  },
+  {
+   "id": "center_stack",
+   "op": "group",
+   "label": "Centre Stack",
+   "part": "Centre stack",
+   "material": "carbon_fibre",
+   "inputs": [
+    "stack_bottom_plate",
+    "stack_top_plate"
+   ]
+  },
+  {
+   "id": "esc_board",
+   "op": "box",
+   "label": "ESC Board",
+   "part": "Flight-controller stack",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     36,
+     2,
+     36
+    ],
+    "translate": [
+     0,
+     6,
+     0
+    ]
+   }
+  },
+  {
+   "id": "fc_board",
+   "op": "box",
+   "label": "Flight Controller",
+   "part": "Flight-controller stack",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     36,
+     1.6,
+     36
+    ],
+    "translate": [
+     0,
+     18.2,
+     0
+    ]
+   }
+  },
+  {
+   "id": "electronics",
+   "op": "group",
+   "label": "Flight-Controller Stack",
+   "part": "Flight-controller stack",
+   "material": "dark_ceramic",
+   "inputs": [
+    "esc_board",
+    "fc_board"
+   ]
+  },
+  {
+   "id": "motor_stator",
+   "op": "cylinder",
+   "label": "Front-Right Stator",
+   "part": "Front-right motor",
+   "material": "aluminium",
+   "params": {
+    "height": 12,
+    "radius": 12,
+    "translate": [
+     81,
+     31.5,
+     81
+    ]
+   }
+  },
+  {
+   "id": "motor_bell",
+   "op": "cylinder",
+   "label": "Front-Right Bell",
+   "part": "Front-right motor",
+   "material": "aluminium",
+   "params": {
+    "height": 16,
+    "radius": 14,
+    "translate": [
+     81,
+     45.5,
+     81
+    ]
+   }
+  },
+  {
+   "id": "motor_shaft",
+   "op": "cylinder",
+   "label": "Front-Right Shaft",
+   "part": "Front-right motor",
+   "material": "aluminium",
+   "params": {
+    "height": 4,
+    "radius": 1.5,
+    "translate": [
+     81,
+     55.5,
+     81
+    ]
+   }
+  },
+  {
+   "id": "motor",
+   "op": "boolean",
+   "label": "Front-Right Motor",
+   "part": "Front-right motor",
+   "material": "aluminium",
+   "params": {
+    "mode": "union"
+   },
+   "inputs": [
+    "motor_stator",
+    "motor_bell",
+    "motor_shaft"
+   ]
+  },
+  {
+   "id": "motors",
+   "op": "array",
+   "label": "Brushless Motors",
+   "part": "Motors",
+   "material": "aluminium",
+   "params": {
+    "count": 4,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "motor"
+  },
+  {
+   "id": "propeller",
+   "op": "rotor",
+   "label": "Front-Right Propeller",
+   "part": "Front-right propeller",
+   "material": "matte_polymer",
+   "params": {
+    "chord": 38,
+    "hub_radius": 6,
+    "tip_radius": 63.5,
+    "blades": 3,
+    "hub_length": 8,
+    "pitch": 18,
+    "thickness": 0.05,
+    "tip_chord": 26,
+    "twist": 12,
+    "translate": [
+     81,
+     60,
+     81
+    ]
+   }
+  },
+  {
+   "id": "propellers",
+   "op": "array",
+   "label": "Five-Inch Tri-Blade Props",
+   "part": "Propellers",
+   "material": "matte_polymer",
+   "params": {
+    "count": 4,
+    "mode": "radial",
+    "axis": "y",
+    "angle": 360
+   },
+   "input": "propeller"
+  },
+  {
+   "id": "battery",
+   "op": "box",
+   "label": "4S LiPo Battery",
+   "part": "Battery",
+   "material": "rubber",
+   "params": {
+    "size": [
+     75,
+     30,
+     35
+    ],
+    "translate": [
+     0,
+     40.5,
+     0
+    ]
+   }
+  },
+  {
+   "id": "battery_connector",
+   "op": "box",
+   "label": "Battery Connector",
+   "part": "Battery",
+   "material": "rubber",
+   "params": {
+    "size": [
+     10,
+     6,
+     6
+    ],
+    "translate": [
+     0,
+     39,
+     -18
+    ]
+   }
+  },
+  {
+   "id": "battery_pack",
+   "op": "group",
+   "label": "Battery Pack",
+   "part": "Battery",
+   "material": "rubber",
+   "inputs": [
+    "battery",
+    "battery_connector"
+   ]
+  },
+  {
+   "id": "cage_left",
+   "op": "box",
+   "label": "Camera Cage Left Wall",
+   "part": "FPV camera cage",
+   "material": "carbon_fibre",
+   "params": {
+    "size": [
+     2,
+     20,
+     18
+    ],
+    "translate": [
+     -13,
+     32,
+     92
+    ]
+   }
+  },
+  {
+   "id": "cage_right",
+   "op": "box",
+   "label": "Camera Cage Right Wall",
+   "part": "FPV camera cage",
+   "material": "carbon_fibre",
+   "params": {
+    "size": [
+     2,
+     20,
+     18
+    ],
+    "translate": [
+     13,
+     32,
+     92
+    ]
+   }
+  },
+  {
+   "id": "cage_top",
+   "op": "box",
+   "label": "Camera Cage Top Wall",
+   "part": "FPV camera cage",
+   "material": "carbon_fibre",
+   "params": {
+    "size": [
+     28,
+     2,
+     18
+    ],
+    "translate": [
+     0,
+     42,
+     92
+    ]
+   }
+  },
+  {
+   "id": "camera",
+   "op": "box",
+   "label": "FPV Camera",
+   "part": "FPV camera cage",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     12,
+     10,
+     12
+    ],
+    "translate": [
+     0,
+     31,
+     92
+    ]
+   }
+  },
+  {
+   "id": "camera_cage",
+   "op": "group",
+   "label": "FPV Camera Cage",
+   "part": "FPV camera cage",
+   "material": "carbon_fibre",
+   "inputs": [
+    "cage_left",
+    "cage_right",
+    "cage_top",
+    "camera"
+   ]
+  },
+  {
+   "id": "antenna_base",
+   "op": "cylinder",
+   "label": "Antenna Base",
+   "part": "Rear antenna",
+   "material": "matte_polymer",
+   "params": {
+    "height": 4,
+    "radius": 5,
+    "translate": [
+     0,
+     25,
+     -96
+    ]
+   }
+  },
+  {
+   "id": "antenna_whip",
+   "op": "cylinder",
+   "label": "Rear Whip Antenna",
+   "part": "Rear antenna",
+   "material": "matte_polymer",
+   "params": {
+    "height": 45,
+    "radius": 2,
+    "translate": [
+     0,
+     47.5,
+     -96
+    ]
+   }
+  },
+  {
+   "id": "antenna",
+   "op": "group",
+   "label": "Rear Antenna",
+   "part": "Rear antenna",
+   "material": "matte_polymer",
+   "inputs": [
+    "antenna_base",
+    "antenna_whip"
+   ]
+  }
+ ],
+ "blueprint": {
+  "title": "5-Inch FPV Freestyle Quad",
+  "summary": "A 230 mm carbon-fibre X quad built around a 2306 motor set, 5-inch tri-blade props, and a 30.5 mm flight-controller stack. The layout keeps the battery on the centre line above the stack, the FPV camera in a front cage, and a short whip antenna at the rear.",
+  "style": "sleek functional freestyle",
+  "dimensions": [
+   296,
+   72,
+   326
+  ],
+  "parts": [
+   {
+    "name": "Front-right arm",
+    "role": "Carries the front-right motor and propeller from the centre stack",
+    "shape": "Box arm with a circular motor boss at the outer end; build as a 112 x 26 x 3 mm box rotated 45 degrees about Y and add a 34 mm diameter boss cylinder 3 mm thick at the motor end",
+    "size": "112 x 26 x 3 mm, motor boss 34 mm diameter",
+    "position": "[40.6, 24.5, 40.6]",
+    "material": "carbon fibre",
+    "count": 1
+   },
+   {
+    "name": "Front-left arm",
+    "role": "Carries the front-left motor and propeller from the centre stack",
+    "shape": "Box arm with a circular motor boss at the outer end; build as a 112 x 26 x 3 mm box rotated -45 degrees about Y and add a 34 mm diameter boss cylinder 3 mm thick at the motor end",
+    "size": "112 x 26 x 3 mm, motor boss 34 mm diameter",
+    "position": "[-40.6, 24.5, 40.6]",
+    "material": "carbon fibre",
+    "count": 1
+   },
+   {
+    "name": "Rear-right arm",
+    "role": "Carries the rear-right motor and propeller from the centre stack",
+    "shape": "Box arm with a circular motor boss at the outer end; build as a 112 x 26 x 3 mm box rotated -45 degrees about Y and add a 34 mm diameter boss cylinder 3 mm thick at the motor end",
+    "size": "112 x 26 x 3 mm, motor boss 34 mm diameter",
+    "position": "[40.6, 24.5, -40.6]",
+    "material": "carbon fibre",
+    "count": 1
+   },
+   {
+    "name": "Rear-left arm",
+    "role": "Carries the rear-left motor and propeller from the centre stack",
+    "shape": "Box arm with a circular motor boss at the outer end; build as a 112 x 26 x 3 mm box rotated 45 degrees about Y and add a 34 mm diameter boss cylinder 3 mm thick at the motor end",
+    "size": "112 x 26 x 3 mm, motor boss 34 mm diameter",
+    "position": "[-40.6, 24.5, -40.6]",
+    "material": "carbon fibre",
+    "count": 1
+   },
+   {
+    "name": "Front-right motor",
+    "role": "Drives the front-right propeller; counter-clockwise rotation",
+    "shape": "Brushless motor as stacked cylinders: 24 mm diameter x 12 mm stator cylinder, 28 mm diameter x 16 mm bell above it, and a 3 mm diameter x 4 mm shaft stub on top",
+    "size": "28 mm diameter, 30 mm tall overall, 3 mm shaft",
+    "position": "[81, 41, 81]",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "Front-left motor",
+    "role": "Drives the front-left propeller; clockwise rotation",
+    "shape": "Brushless motor as stacked cylinders: 24 mm diameter x 12 mm stator cylinder, 28 mm diameter x 16 mm bell above it, and a 3 mm diameter x 4 mm shaft stub on top",
+    "size": "28 mm diameter, 30 mm tall overall, 3 mm shaft",
+    "position": "[-81, 41, 81]",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "Rear-right motor",
+    "role": "Drives the rear-right propeller; clockwise rotation",
+    "shape": "Brushless motor as stacked cylinders: 24 mm diameter x 12 mm stator cylinder, 28 mm diameter x 16 mm bell above it, and a 3 mm diameter x 4 mm shaft stub on top",
+    "size": "28 mm diameter, 30 mm tall overall, 3 mm shaft",
+    "position": "[81, 41, -81]",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "Rear-left motor",
+    "role": "Drives the rear-left propeller; counter-clockwise rotation",
+    "shape": "Brushless motor as stacked cylinders: 24 mm diameter x 12 mm stator cylinder, 28 mm diameter x 16 mm bell above it, and a 3 mm diameter x 4 mm shaft stub on top",
+    "size": "28 mm diameter, 30 mm tall overall, 3 mm shaft",
+    "position": "[-81, 41, -81]",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "Front-right propeller",
+    "role": "Produces thrust on the front-right motor; 5-inch three-blade prop",
+    "shape": "Propeller as a 12 mm diameter x 8 mm hub cylinder with three 63.5 mm long blade boxes, each 38 mm wide, 2 mm thick, and 18 degrees pitch, arrayed radially at 120 degrees around Y",
+    "size": "127 mm diameter, 8 mm hub height",
+    "position": "[81, 60, 81]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Front-left propeller",
+    "role": "Produces thrust on the front-left motor; 5-inch three-blade prop",
+    "shape": "Propeller as a 12 mm diameter x 8 mm hub cylinder with three 63.5 mm long blade boxes, each 38 mm wide, 2 mm thick, and 18 degrees pitch, arrayed radially at 120 degrees around Y",
+    "size": "127 mm diameter, 8 mm hub height",
+    "position": "[-81, 60, 81]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Rear-right propeller",
+    "role": "Produces thrust on the rear-right motor; 5-inch three-blade prop",
+    "shape": "Propeller as a 12 mm diameter x 8 mm hub cylinder with three 63.5 mm long blade boxes, each 38 mm wide, 2 mm thick, and 18 degrees pitch, arrayed radially at 120 degrees around Y",
+    "size": "127 mm diameter, 8 mm hub height",
+    "position": "[81, 60, -81]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Rear-left propeller",
+    "role": "Produces thrust on the rear-left motor; 5-inch three-blade prop",
+    "shape": "Propeller as a 12 mm diameter x 8 mm hub cylinder with three 63.5 mm long blade boxes, each 38 mm wide, 2 mm thick, and 18 degrees pitch, arrayed radially at 120 degrees around Y",
+    "size": "127 mm diameter, 8 mm hub height",
+    "position": "[-81, 60, -81]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Centre stack",
+    "role": "Main structural spine carrying arms, flight electronics, battery, camera, and antenna",
+    "shape": "Two parallel 80 x 3 x 80 mm plates 20 mm apart with four 6 mm diameter corner standoffs; top and bottom plates are boxes and standoffs are small cylinders",
+    "size": "80 x 23 x 80 mm overall",
+    "position": "[0, 11.5, 0]",
+    "material": "carbon fibre",
+    "count": 1
+   },
+   {
+    "name": "Flight-controller stack",
+    "role": "Flight controller and 4-in-1 ESC electronics on the 30.5 mm bolt pattern",
+    "shape": "Two thin boards: a 36 x 1.6 x 36 mm flight-controller box on the upper plate and a 36 x 2 x 36 mm ESC box below it, connected by four 6 mm diameter standoff cylinders",
+    "size": "36 x 10 x 36 mm overall",
+    "position": "[0, 16, 0]",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "Battery",
+    "role": "4S LiPo power pack strapped above the centre stack for centralised mass",
+    "shape": "Rounded battery brick as a 75 x 30 x 35 mm box with 6 mm corner fillets, plus a small 10 x 6 x 6 mm connector nub on the rear face",
+    "size": "75 x 30 x 35 mm",
+    "position": "[0, 38, 0]",
+    "material": "rubber",
+    "count": 1
+   },
+   {
+    "name": "FPV camera cage",
+    "role": "Front camera mount and protective cage at the nose",
+    "shape": "U-shaped front cage from three 2 mm thick boxes: two 18 mm long side walls and one 18 mm long top wall, with a 12 x 10 x 12 mm camera box mounted inside the opening",
+    "size": "28 x 22 x 18 mm overall",
+    "position": "[0, 31, 92]",
+    "material": "carbon fibre",
+    "count": 1
+   },
+   {
+    "name": "Rear antenna",
+    "role": "FPV video receiver/antenna at the back",
+    "shape": "Short whip antenna as a 4 mm diameter x 45 mm cylinder with a 10 mm diameter x 4 mm base cylinder, mounted on the rear centre line",
+    "size": "45 mm long, 4 mm diameter",
+    "position": "[0, 35, -96]",
+    "material": "matte polymer",
+    "count": 1
+   }
+  ],
+  "callouts": [
+   "Motor-to-motor diagonal is 230 mm; adjacent motor spacing is about 163 mm, giving 28% clearance over the 127 mm prop diameter.",
+   "Propellers are shown in a neutral horizontal plane; blade pitch is 18 degrees for a 5-inch freestyle setup.",
+   "Battery is positioned on the centre line above the stack so the centre of gravity stays near the motor square centre.",
+   "Front is +Z; propellers rotate about Y. Motor spin directions alternate around the X frame."
+  ]
+ },
+ "notes": "Specified by a local 27B model in 294 s (blueprint, program, critic round). Material colours corrected by hand to measured albedos (carbon fibre and black polymer reflect about 3 %)."
+}

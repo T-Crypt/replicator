@@ -14,7 +14,7 @@ direction, `docs/ROADMAP.md` for what is next and `docs/REQUIREMENTS-workbench.m
 pip install -e ".[all]"                                         # once, in a venv
 python -m pytest -q                                             # all tests, under 30 s; must stay green
 python -m tools.check path/to/program.json                      # validate, build, mass, critic; exit 1 on a FIX issue
-python -m replicator.app fixtures/rocket_engine.json --software \
+python -m replicator.app replicator/fixtures/rocket_engine.json --software \
     --shot out/x.png [--mode build|dissect|reverse|showcase|present] [--ui materials|commander|preferences]
 python -m tools.rocket_fixture                                  # regenerate the reference rocket engine
 replicator [program.json | model.glb | bundle.zip]              # the real window
@@ -45,9 +45,9 @@ takes one frame of the real window in a headless gamescope. Shots and recordings
 | `replicator/knowledge/*.md` | curated cards (real parts and proportions), picked by keyword into the specify prompts |
 | `replicator/llm/client.py`, `llm/prompts/*.md` | specify (`client.dream`: blueprint, program, repair, critique round), edit (optionally scoped), naming, explain; `engines()` = built-ins plus `endpoints` from services.json |
 | `replicator/qt/bridge.py` | the `studio` QObject: every property and slot QML uses |
-| `qml/Main.qml` | layout, workspace state and the `actions` registry (menus, shortcuts, right-click menus, Commander) |
-| `qml/panels/`, `qml/viewport/`, `qml/Replicator/UI/` | one file per panel; the 3D view; design tokens and controls |
-| `fixtures/` | example programs, each passes `tools.check` (the start screen lists them). `rocket_engine.json` is the accuracy reference; failing cases live in `tests/data/` (`turbofan_bad.json`) |
+| `replicator/qml/Main.qml` | layout, workspace state and the `actions` registry (menus, shortcuts, right-click menus, Commander) |
+| `replicator/qml/panels/`, `replicator/qml/viewport/`, `replicator/qml/Replicator/UI/` | one file per panel; the 3D view; design tokens and controls |
+| `replicator/fixtures/` | example programs, each passes `tools.check` (the start screen lists them). `rocket_engine.json` is the accuracy reference; failing cases live in `tests/data/` (`turbofan_bad.json`) |
 
 ## Invariants
 

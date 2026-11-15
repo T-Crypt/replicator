@@ -26,15 +26,15 @@ Three rules shape every decision:
 | 7 | Materials could only be typed as JSON | A material library (27 PBR presets) and a shelf that paints a part or a whole component as one undo step | Done |
 | 8 | Image to 3D had no visual link to its source pictures | Reference sheets stand around the model at its measured height, paper keyed out, visible only from the model's side | Done |
 | 9 | Reverse listed what a model is made of but never how it works | Explain: a bounded web research lane, a local model, and a checker that keeps a sentence only if it is cited, measured, or (for concepts) marked as concept; Present mode plays it | Backend done, UI in HANDOFF |
-| 10 | `qml/` was one flat folder and `bridge.py` one object | `Replicator/UI`, `panels/`, `viewport/`; new Python features live in their own modules. Splitting `bridge.py` itself is next | Partly done |
+| 10 | `replicator/qml/` was one flat folder and `bridge.py` one object | `Replicator/UI`, `panels/`, `viewport/`; new Python features live in their own modules. Splitting `bridge.py` itself is next | Partly done |
 
 ## Structure
 
 ```
-qml/Replicator/UI/   tokens, icons and controls (a QML module; no panel logic)
-qml/panels/          one file per dock or overlay; talks to `studio` only
-qml/viewport/        the 3D view, its materials and overlays
-qml/Main.qml         layout, workspace state, the action registry
+replicator/qml/Replicator/UI/   tokens, icons and controls (a QML module; no panel logic)
+replicator/qml/panels/          one file per dock or overlay; talks to `studio` only
+replicator/qml/viewport/        the 3D view, its materials and overlays
+replicator/qml/Main.qml         layout, workspace state, the action registry
 replicator/core/     program, kernel, assembly, reverse, explain, materials (no Qt)
 replicator/research/ the web lane (no Qt, no model)
 replicator/llm/      prompts and the local-model client

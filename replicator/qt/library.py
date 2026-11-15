@@ -7,8 +7,9 @@ import time
 from functools import lru_cache
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
-FIXTURES = ROOT / "fixtures"
+from .. import FIXTURES
+from ..image3d.pipeline import OUT as IMAGE3D_OUT
+
 RECENT_LIMIT = 8
 
 
@@ -38,7 +39,7 @@ def examples() -> list[dict]:
 def recents(out: Path) -> list[dict]:
     files: list[tuple[Path, str]] = [(p, "dream") for p in out.glob("*.json")]
     files += [(p, "reverse") for p in (out / "reverse").glob("*/program.json")]
-    files += [(p, "image") for p in (ROOT / "out" / "image3d").glob("*/program.json")]
+    files += [(p, "image") for p in IMAGE3D_OUT.glob("*/program.json")]
     files.sort(key=lambda t: -t[0].stat().st_mtime)
     rows, seen = [], set()
     for p, kind in files[:RECENT_LIMIT * 4]:        # repeated runs of one subject show once, newest first

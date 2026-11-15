@@ -7,12 +7,13 @@ from pathlib import Path
 
 import pytest
 
+from replicator import FIXTURES
 from replicator import config
 from replicator.core import export, fit, printers
 from replicator.core.evaluate import Evaluator
 from replicator.core.program import check
 
-FIX = Path(__file__).parent.parent / "fixtures"
+FIX = FIXTURES
 A1 = printers.CATALOG["bambu_a1"]          # 256 x 256 x 256 -> usable 252 x 252 x 254
 X1C = printers.CATALOG["bambu_x1c"]        # 256 x 256 x 256 -> usable 252 x 252 x 254
 A1_MINI = printers.CATALOG["bambu_a1_mini"]  # 180 x 180 x 180 -> usable 176 x 176 x 178
@@ -146,7 +147,7 @@ def test_a_scaled_replica_keeps_its_plan_in_step():
     from replicator.core import assembly, critique
     from replicator.core.evaluate import Evaluator
     from replicator.core.program import check, scale_program
-    fix = Path(__file__).parent.parent / "fixtures"
+    fix = FIXTURES
     prog = check(json.loads((fix / "rocket_engine.json").read_text()))
     small = scale_program(prog, 0.1)
     assert small["blueprint"]["dimensions"] == [v * 0.1 for v in prog["blueprint"]["dimensions"]]

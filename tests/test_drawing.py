@@ -3,10 +3,11 @@ import json
 import re
 from pathlib import Path
 
+from replicator import FIXTURES
 from replicator.core import assembly, drawing, physics
 from replicator.core.evaluate import Evaluator
 
-FIX = Path(__file__).parent.parent / "fixtures"
+FIX = FIXTURES
 
 
 def sheet(program):

@@ -255,12 +255,7 @@ def scale_for_printer(path: str, out: str, printer_id: str = "", preset: str = "
 def drawing_sheet(path: str, out_dir: str, style: str = "blueprint") -> dict:
     """Draw an A3 sheet: third-angle views, section or floor plan, measured dimensions, numbered parts list with
     computed masses. Writes SVG and PNG. style: blueprint or paper."""
-    try:
-        from tools.sheet import make
-    except ImportError:
-        import sys
-        sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-        from tools.sheet import make
+    from .qt.drawing_sheet import make
     try:
         svg, png, seconds = make(_path(path), _path(out_dir), style)
         return {"ok": True, "svg": str(svg), "png": str(png), "seconds": round(seconds, 2)}

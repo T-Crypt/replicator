@@ -54,18 +54,18 @@ git clone https://github.com/T-Crypt/replicator.git && cd replicator
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[all]"                 # the app, the MCP server, STEP/IGES import, MuJoCo and the tests
 pytest -q                               # about 200 tests, under 30 s
-replicator fixtures/rocket_engine.json  # open a program and watch it build
+replicator replicator/fixtures/rocket_engine.json  # open a program and watch it build
 ```
 
 ```sh
 replicator                              # an empty workshop
-replicator fixtures/house_two_bed.json  # a two-bedroom house with its floor plan
+replicator replicator/fixtures/house_two_bed.json  # a two-bedroom house with its floor plan
 replicator path/to/model.glb            # take a model apart in Reverse
 ```
 
 The extras install separately if you want less: `.[app]` for the window, `.[mcp]` for agents,
 `.[cad]` for STEP and IGES import, `.[sim]` for the MuJoCo check, `.[dev]` for the tests. The core alone (`pip install -e .`) builds,
-checks and exports programs with no window: `python -m tools.check fixtures/house_two_bed.json`.
+checks and exports programs with no window: `python -m tools.check replicator/fixtures/house_two_bed.json`.
 
 Optional: `blender` 4.x or 5.x on `PATH` for Cycles stills, the Blender round trip, and FBX, USD or
 .blend import.
@@ -275,15 +275,15 @@ applies last. Coordinates are Y-up and right-handed, in the program's `units`.
 ```
 
 A saved program lives in a `<name>.replicator/` folder: `program.json` plus `history/NNNN.json`, one
-file per version, so an edit can be undone across sessions. `fixtures/` holds examples: rocket
+file per version, so an edit can be undone across sessions. `replicator/fixtures/` holds examples: rocket
 engines, a turbofan, a liquid-cooled PC, a Raspberry Pi 5, a quadcopter and a house.
 
 **Headless frames.** `--shot` renders one frame of a hidden window to a PNG. It needs a display,
 because Qt's `offscreen` platform cannot run Qt Quick 3D.
 
 ```sh
-python -m replicator.app fixtures/turbofan.json --software --shot out/build.png
-python -m replicator.app fixtures/turbofan.json --software --shot out/x.png --mode dissect --explode 0.9
+python -m replicator.app replicator/fixtures/turbofan.json --software --shot out/build.png
+python -m replicator.app replicator/fixtures/turbofan.json --software --shot out/x.png --mode dissect --explode 0.9
 ```
 
 `--step N`, `--select ID`, `--ui preferences` and `--cue "QML expression"` set up the frame. A hidden
@@ -291,7 +291,7 @@ window lays out only while it is grabbed, so Dissect callouts and other window s
 For those, `tools/shot.sh` takes one frame of the real window inside a headless gamescope:
 
 ```sh
-tools/shot.sh fixtures/turbofan.json out/dissect.png 1280x760 'window.setMode("dissect")'
+tools/shot.sh replicator/fixtures/turbofan.json out/dissect.png 1280x760 'window.setMode("dissect")'
 ```
 
 Frames use an empty `services.json`, so they never show your endpoints or paths.
@@ -306,12 +306,12 @@ replicator/
   knowledge/      engineering cards picked into the prompts by keyword
   research/       optional web research (Wikipedia, your SearXNG)
   image3d/        picture or character sheet to mesh through ComfyUI
-  qt/             the QML bridge, mesh geometry, studio lighting
+  qt/             the QML bridge, mesh geometry, studio lighting, drawing sheets on disk
+  qml/  shaders/  the workspace and its shaders
+  fixtures/       example programs, shipped with the package
   mcp_server.py   the workshop as MCP tools
   gpu.py          which GPU the window draws on
-qml/  shaders/    the workspace and its shaders
-bench/  tools/    benchmark tasks, check, corpus, drawing sheets, preview stills and films
-fixtures/         sample programs
+bench/  tools/    benchmark tasks, check, corpus, preview stills and films
 ```
 
 ## Roadmap

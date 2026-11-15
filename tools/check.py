@@ -1,6 +1,6 @@
 """Check a BuildProgram the way the workshop does: validate, build, measure, critique.
 
-    .venv/bin/python -m tools.check fixtures/rocket_engine.json [more.json ...]
+    .venv/bin/python -m tools.check replicator/fixtures/rocket_engine.json [more.json ...]
 
 Prints size, parts, mass and every accuracy issue; exits 1 when any program is invalid or has a `fix` issue.
 """

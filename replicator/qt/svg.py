@@ -19,7 +19,12 @@ def _one_family(css: str) -> str:
         if n in have:
             return n
     mono = "monospace" in names and "sans-serif" not in names
-    return QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont if mono else QFontDatabase.SystemFont.GeneralFont).family()
+    system = QFontDatabase.systemFont(QFontDatabase.SystemFont.FixedFont if mono else QFontDatabase.SystemFont.GeneralFont).family()
+    if system in have:
+        return system
+    # fontconfig can name a system font that is not installed (an alias such as Noto Sans); take a real one
+    kind = "Mono" if mono else "Sans"
+    return next((f for f in sorted(have) if kind in f and (mono or "Mono" not in f)), min(have, default=system))
 
 
 def render_png(svg: str, png: Path, size_mm: tuple[float, float], dpi: int = 150) -> Path:

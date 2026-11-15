@@ -7,10 +7,11 @@ import pytest
 
 from replicator.core import assembly, critique
 from replicator.core.evaluate import Evaluator
+from replicator import FIXTURES
 from replicator.core.program import check
 
 ROOT = Path(__file__).parent.parent
-FIX = ROOT / "fixtures"
+FIX = FIXTURES
 DATA = Path(__file__).parent / "data"
 NEW_KINDS = ("off_axis", "alignment", "proportion")
 

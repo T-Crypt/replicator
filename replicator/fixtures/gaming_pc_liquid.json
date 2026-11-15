@@ -1,0 +1,2259 @@
+{
+ "version": 1,
+ "name": "Gaming PC, custom liquid loop",
+ "units": "mm",
+ "summary": "A glass-sided mid-tower with a hard-line custom loop: a D5 pump and reservoir push glowing cyan coolant through a full-cover GPU block, the CPU block and a 360 mm radiator under the roof.",
+ "components": [
+  {
+   "id": "case",
+   "label": "Case",
+   "role": "steel mid-tower on rubber feet"
+  },
+  {
+   "id": "glass",
+   "label": "Glass Side Panel",
+   "role": "tempered, smoked"
+  },
+  {
+   "id": "shroud",
+   "label": "PSU Shroud",
+   "role": "open-backed steel cover"
+  },
+  {
+   "id": "psu",
+   "label": "Power Supply",
+   "role": "1000 W ATX"
+  },
+  {
+   "id": "motherboard",
+   "label": "Motherboard",
+   "role": "ATX board, VRM and chipset heatsinks"
+  },
+  {
+   "id": "memory",
+   "label": "Memory",
+   "role": "4 x DDR5"
+  },
+  {
+   "id": "cpu_block",
+   "label": "CPU Water Block",
+   "role": "copper cold plate, acrylic top"
+  },
+  {
+   "id": "gpu",
+   "label": "GPU and Water Block",
+   "role": "full-cover block, backplate"
+  },
+  {
+   "id": "pump_res",
+   "label": "Pump and Reservoir",
+   "role": "D5 pump, 60 mm acrylic tube"
+  },
+  {
+   "id": "radiator",
+   "label": "360 mm Radiator",
+   "role": "under the top mesh"
+  },
+  {
+   "id": "fans",
+   "label": "Fans",
+   "role": "six 120 mm"
+  },
+  {
+   "id": "fittings",
+   "label": "Fittings",
+   "role": "chrome compression"
+  },
+  {
+   "id": "coolant_loop",
+   "label": "Coolant Loop",
+   "role": "14 mm hard line, cyan"
+  }
+ ],
+ "materials": {
+  "steel_black": {
+   "base_color": [
+    0.035,
+    0.037,
+    0.042
+   ],
+   "metalness": 0.6,
+   "roughness": 0.42
+  },
+  "glass_tempered": {
+   "base_color": [
+    0.02,
+    0.025,
+    0.03
+   ],
+   "metalness": 0.0,
+   "roughness": 0.06,
+   "opacity": 0.1
+  },
+  "rubber": {
+   "base_color": [
+    0.02,
+    0.02,
+    0.02
+   ],
+   "metalness": 0.0,
+   "roughness": 0.9
+  },
+  "brass": {
+   "base_color": [
+    0.78,
+    0.62,
+    0.3
+   ],
+   "metalness": 1.0,
+   "roughness": 0.3
+  },
+  "pcb_black": {
+   "base_color": [
+    0.025,
+    0.028,
+    0.03
+   ],
+   "metalness": 0.0,
+   "roughness": 0.5
+  },
+  "aluminium_dark": {
+   "base_color": [
+    0.13,
+    0.135,
+    0.145
+   ],
+   "metalness": 1.0,
+   "roughness": 0.35
+  },
+  "copper": {
+   "base_color": [
+    0.95,
+    0.55,
+    0.36
+   ],
+   "metalness": 1.0,
+   "roughness": 0.22
+  },
+  "acrylic_clear": {
+   "base_color": [
+    0.85,
+    0.92,
+    0.95
+   ],
+   "metalness": 0.0,
+   "roughness": 0.04,
+   "opacity": 0.28
+  },
+  "acetal_black": {
+   "base_color": [
+    0.025,
+    0.025,
+    0.028
+   ],
+   "metalness": 0.0,
+   "roughness": 0.35
+  },
+  "chrome": {
+   "base_color": [
+    0.86,
+    0.87,
+    0.89
+   ],
+   "metalness": 1.0,
+   "roughness": 0.08
+  },
+  "plastic_black": {
+   "base_color": [
+    0.03,
+    0.03,
+    0.035
+   ],
+   "metalness": 0.0,
+   "roughness": 0.55
+  },
+  "coolant_cyan": {
+   "base_color": [
+    0.05,
+    0.75,
+    0.95
+   ],
+   "metalness": 0.0,
+   "roughness": 0.08,
+   "emissive": [
+    0.05,
+    0.85,
+    1.0
+   ],
+   "emissive_strength": 1.6
+  }
+ },
+ "ops": [
+  {
+   "id": "foot0",
+   "op": "cylinder",
+   "label": "Rubber foot",
+   "component": "case",
+   "material": "rubber",
+   "params": {
+    "radius": 10,
+    "height": 12.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -95,
+     6.0,
+     -205
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "foot1",
+   "op": "cylinder",
+   "label": "Rubber foot",
+   "component": "case",
+   "material": "rubber",
+   "params": {
+    "radius": 10,
+    "height": 12.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     95,
+     6.0,
+     -205
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "foot2",
+   "op": "cylinder",
+   "label": "Rubber foot",
+   "component": "case",
+   "material": "rubber",
+   "params": {
+    "radius": 10,
+    "height": 12.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -95,
+     6.0,
+     205
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "foot3",
+   "op": "cylinder",
+   "label": "Rubber foot",
+   "component": "case",
+   "material": "rubber",
+   "params": {
+    "radius": 10,
+    "height": 12.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     95,
+     6.0,
+     205
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "feet",
+   "op": "boolean",
+   "label": "Four rubber feet",
+   "component": "case",
+   "inputs": [
+    "foot0",
+    "foot1",
+    "foot2",
+    "foot3"
+   ],
+   "params": {
+    "mode": "union"
+   }
+  },
+  {
+   "id": "floor",
+   "op": "box",
+   "label": "Bottom panel",
+   "component": "case",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     230.0,
+     1.5,
+     450.0
+    ],
+    "translate": [
+     0.0,
+     12.75,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "roof",
+   "op": "grille",
+   "label": "Top mesh panel",
+   "component": "case",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     230.0,
+     1.5,
+     450.0
+    ],
+    "hole_size": 5,
+    "pitch": 6.5,
+    "margin": 14,
+    "translate": [
+     0,
+     491.25,
+     0
+    ]
+   }
+  },
+  {
+   "id": "back",
+   "op": "box",
+   "label": "Rear panel",
+   "component": "case",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     230.0,
+     477.0,
+     1.5
+    ],
+    "translate": [
+     0.0,
+     252.0,
+     -224.25
+    ]
+   }
+  },
+  {
+   "id": "front",
+   "op": "grille",
+   "label": "Front mesh panel",
+   "component": "case",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     230.0,
+     1.5,
+     477.0
+    ],
+    "hole_size": 5,
+    "pitch": 6.5,
+    "margin": 14,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     252.0,
+     224.25
+    ]
+   }
+  },
+  {
+   "id": "right",
+   "op": "box",
+   "label": "Right side panel",
+   "component": "case",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     1.5,
+     477.0,
+     447.0
+    ],
+    "translate": [
+     -114.25,
+     252.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "glass",
+   "op": "box",
+   "label": "Tempered glass side panel",
+   "component": "glass",
+   "material": "glass_tempered",
+   "params": {
+    "size": [
+     4.0,
+     477.0,
+     447.0
+    ],
+    "translate": [
+     113.0,
+     252.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "shroud_o",
+   "op": "box",
+   "label": "PSU shroud",
+   "component": "shroud",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     224.5,
+     86.5,
+     447.0
+    ],
+    "translate": [
+     -1.25,
+     56.75,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "shroud_i",
+   "op": "box",
+   "label": "PSU shroud cavity",
+   "component": "shroud",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     221.5,
+     91.5,
+     452.0
+    ],
+    "translate": [
+     -1.25,
+     52.75,
+     -4.0
+    ]
+   }
+  },
+  {
+   "id": "shroud",
+   "op": "boolean",
+   "label": "PSU shroud",
+   "component": "shroud",
+   "inputs": [
+    "shroud_o",
+    "shroud_i"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "psu_o",
+   "op": "box",
+   "label": "Power supply",
+   "component": "psu",
+   "material": "steel_black",
+   "params": {
+    "size": [
+     150,
+     86.0,
+     160.0
+    ],
+    "translate": [
+     -25.0,
+     56.5,
+     -143.5
+    ]
+   }
+  },
+  {
+   "id": "psu",
+   "op": "shell",
+   "input": "psu_o",
+   "label": "1000 W power supply",
+   "component": "psu",
+   "material": "steel_black",
+   "params": {
+    "thickness": 1.0
+   }
+  },
+  {
+   "id": "mbso0",
+   "op": "cylinder",
+   "label": "Motherboard standoff",
+   "component": "motherboard",
+   "material": "brass",
+   "params": {
+    "radius": 3,
+    "height": 10.5,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -108.25,
+     165,
+     -203
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "mbso1",
+   "op": "cylinder",
+   "label": "Motherboard standoff",
+   "component": "motherboard",
+   "material": "brass",
+   "params": {
+    "radius": 3,
+    "height": 10.5,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -108.25,
+     165,
+     21
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "mbso2",
+   "op": "cylinder",
+   "label": "Motherboard standoff",
+   "component": "motherboard",
+   "material": "brass",
+   "params": {
+    "radius": 3,
+    "height": 10.5,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -108.25,
+     450,
+     -203
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "mbso3",
+   "op": "cylinder",
+   "label": "Motherboard standoff",
+   "component": "motherboard",
+   "material": "brass",
+   "params": {
+    "radius": 3,
+    "height": 10.5,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -108.25,
+     450,
+     21
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "mbso4",
+   "op": "cylinder",
+   "label": "Motherboard standoff",
+   "component": "motherboard",
+   "material": "brass",
+   "params": {
+    "radius": 3,
+    "height": 10.5,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -108.25,
+     305,
+     -203
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "mbso5",
+   "op": "cylinder",
+   "label": "Motherboard standoff",
+   "component": "motherboard",
+   "material": "brass",
+   "params": {
+    "radius": 3,
+    "height": 10.5,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -108.25,
+     305,
+     21
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "mb_standoffs",
+   "op": "boolean",
+   "label": "Motherboard standoffs",
+   "component": "motherboard",
+   "inputs": [
+    "mbso0",
+    "mbso1",
+    "mbso2",
+    "mbso3",
+    "mbso4",
+    "mbso5"
+   ],
+   "params": {
+    "mode": "union"
+   }
+  },
+  {
+   "id": "mobo",
+   "op": "box",
+   "label": "ATX motherboard",
+   "component": "motherboard",
+   "material": "pcb_black",
+   "params": {
+    "size": [
+     1.6,
+     305.0,
+     244.0
+    ],
+    "translate": [
+     -102.2,
+     307.5,
+     -91.0
+    ]
+   }
+  },
+  {
+   "id": "vrm_top",
+   "op": "box",
+   "label": "VRM heatsink (top)",
+   "component": "motherboard",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     15.0,
+     18,
+     70
+    ],
+    "translate": [
+     -93.9,
+     441.0,
+     -130.0
+    ]
+   }
+  },
+  {
+   "id": "vrm_left",
+   "op": "box",
+   "label": "VRM heatsink (rear)",
+   "component": "motherboard",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     15.0,
+     78,
+     25
+    ],
+    "translate": [
+     -93.9,
+     389.0,
+     -172.5
+    ]
+   }
+  },
+  {
+   "id": "io_shroud",
+   "op": "box",
+   "label": "Rear I/O shroud",
+   "component": "motherboard",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     25.0,
+     65,
+     23
+    ],
+    "translate": [
+     -88.9,
+     422.5,
+     -201.5
+    ]
+   }
+  },
+  {
+   "id": "chipset",
+   "op": "box",
+   "label": "Chipset heatsink",
+   "component": "motherboard",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     10.0,
+     50,
+     60
+    ],
+    "translate": [
+     -96.4,
+     205.0,
+     -30.0
+    ]
+   }
+  },
+  {
+   "id": "m2",
+   "op": "box",
+   "label": "M.2 SSD heatsink",
+   "component": "motherboard",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     7.0,
+     22,
+     110
+    ],
+    "translate": [
+     -97.9,
+     251.0,
+     -95.0
+    ]
+   }
+  },
+  {
+   "id": "ram0",
+   "op": "box",
+   "label": "DDR5 DIMM with heat spreader",
+   "component": "memory",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     31.0,
+     133.0,
+     6.5
+    ],
+    "translate": [
+     -85.9,
+     395.0,
+     -80.0
+    ]
+   }
+  },
+  {
+   "id": "ram1",
+   "op": "box",
+   "label": "DDR5 DIMM with heat spreader",
+   "component": "memory",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     31.0,
+     133.0,
+     6.5
+    ],
+    "translate": [
+     -85.9,
+     395.0,
+     -72.5
+    ]
+   }
+  },
+  {
+   "id": "ram2",
+   "op": "box",
+   "label": "DDR5 DIMM with heat spreader",
+   "component": "memory",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     31.0,
+     133.0,
+     6.5
+    ],
+    "translate": [
+     -85.9,
+     395.0,
+     -65.0
+    ]
+   }
+  },
+  {
+   "id": "ram3",
+   "op": "box",
+   "label": "DDR5 DIMM with heat spreader",
+   "component": "memory",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     31.0,
+     133.0,
+     6.5
+    ],
+    "translate": [
+     -85.9,
+     395.0,
+     -57.5
+    ]
+   }
+  },
+  {
+   "id": "ram",
+   "op": "boolean",
+   "label": "4 x DDR5 DIMMs",
+   "component": "memory",
+   "inputs": [
+    "ram0",
+    "ram1",
+    "ram2",
+    "ram3"
+   ],
+   "params": {
+    "mode": "union"
+   }
+  },
+  {
+   "id": "cpu_plate",
+   "op": "box",
+   "label": "Copper cold plate",
+   "component": "cpu_block",
+   "material": "copper",
+   "params": {
+    "size": [
+     6.0,
+     60.0,
+     60.0
+    ],
+    "translate": [
+     -98.4,
+     395.0,
+     -120.0
+    ]
+   }
+  },
+  {
+   "id": "cpu_top_o",
+   "op": "box",
+   "label": "Acrylic top",
+   "component": "cpu_block",
+   "material": "acrylic_clear",
+   "params": {
+    "size": [
+     14.0,
+     60.0,
+     60.0
+    ],
+    "translate": [
+     -88.4,
+     395.0,
+     -120.0
+    ]
+   }
+  },
+  {
+   "id": "cpu_cav",
+   "op": "box",
+   "label": "Coolant chamber",
+   "component": "cpu_block",
+   "material": "coolant_cyan",
+   "params": {
+    "size": [
+     9.0,
+     44.0,
+     44.0
+    ],
+    "translate": [
+     -88.9,
+     395.0,
+     -120.0
+    ]
+   }
+  },
+  {
+   "id": "cpu_top",
+   "op": "boolean",
+   "label": "Acrylic block top",
+   "component": "cpu_block",
+   "inputs": [
+    "cpu_top_o",
+    "cpu_cav"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "cpu_coolant",
+   "op": "box",
+   "label": "Coolant in the CPU block",
+   "component": "cpu_block",
+   "material": "coolant_cyan",
+   "params": {
+    "size": [
+     9.0,
+     44.0,
+     44.0
+    ],
+    "translate": [
+     -88.9,
+     395.0,
+     -120.0
+    ]
+   }
+  },
+  {
+   "id": "gpu_back",
+   "op": "box",
+   "label": "GPU backplate",
+   "component": "gpu",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     120.0,
+     3,
+     280.0
+    ],
+    "translate": [
+     -41.4,
+     298.5,
+     -73.0
+    ]
+   }
+  },
+  {
+   "id": "gpu_pcb",
+   "op": "box",
+   "label": "Graphics card PCB",
+   "component": "gpu",
+   "material": "pcb_black",
+   "params": {
+    "size": [
+     120.0,
+     3,
+     280.0
+    ],
+    "translate": [
+     -41.4,
+     295.5,
+     -73.0
+    ]
+   }
+  },
+  {
+   "id": "gpu_block_o",
+   "op": "box",
+   "label": "Full-cover water block",
+   "component": "gpu",
+   "material": "acetal_black",
+   "params": {
+    "size": [
+     120.0,
+     22,
+     280.0
+    ],
+    "translate": [
+     -41.4,
+     283.0,
+     -73.0
+    ]
+   }
+  },
+  {
+   "id": "gpu_chan",
+   "op": "box",
+   "label": "Coolant channel",
+   "component": "gpu",
+   "material": "coolant_cyan",
+   "params": {
+    "size": [
+     99.6,
+     10,
+     240
+    ],
+    "translate": [
+     -30.2,
+     283.0,
+     -70.0
+    ]
+   }
+  },
+  {
+   "id": "gpu_block",
+   "op": "boolean",
+   "label": "Full-cover GPU water block",
+   "component": "gpu",
+   "inputs": [
+    "gpu_block_o",
+    "gpu_chan"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "gpu_coolant",
+   "op": "box",
+   "label": "Coolant in the GPU block",
+   "component": "gpu",
+   "material": "coolant_cyan",
+   "params": {
+    "size": [
+     98.6,
+     10,
+     240
+    ],
+    "translate": [
+     -30.7,
+     283.0,
+     -70.0
+    ]
+   }
+  },
+  {
+   "id": "pump",
+   "op": "box",
+   "label": "D5 pump housing",
+   "component": "pump_res",
+   "material": "acetal_black",
+   "params": {
+    "size": [
+     64.0,
+     40.0,
+     64.0
+    ],
+    "translate": [
+     40.0,
+     120.0,
+     150.0
+    ]
+   }
+  },
+  {
+   "id": "res_tube",
+   "op": "tube",
+   "label": "Acrylic reservoir tube",
+   "component": "pump_res",
+   "material": "acrylic_clear",
+   "params": {
+    "height": 200,
+    "radius": 30,
+    "wall": 3,
+    "segments": 96,
+    "translate": [
+     40.0,
+     240.0,
+     150.0
+    ]
+   }
+  },
+  {
+   "id": "res_coolant",
+   "op": "cylinder",
+   "label": "Coolant in the reservoir",
+   "component": "pump_res",
+   "material": "coolant_cyan",
+   "params": {
+    "radius": 27,
+    "height": 200,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     40.0,
+     240.0,
+     150.0
+    ],
+    "segments": 96
+   }
+  },
+  {
+   "id": "res_cap",
+   "op": "cylinder",
+   "label": "Reservoir top cap",
+   "component": "pump_res",
+   "material": "aluminium_dark",
+   "params": {
+    "radius": 32,
+    "height": 12,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     40.0,
+     346.0,
+     150.0
+    ],
+    "segments": 96
+   }
+  },
+  {
+   "id": "radiator",
+   "op": "grille",
+   "label": "360 mm radiator",
+   "component": "radiator",
+   "material": "aluminium_dark",
+   "params": {
+    "size": [
+     124,
+     27,
+     416.0
+    ],
+    "hole_size": 2.2,
+    "pitch": 3.2,
+    "hole": "slot",
+    "margin": 8,
+    "translate": [
+     0,
+     477.0,
+     13.0
+    ]
+   }
+  },
+  {
+   "id": "topfan0_f",
+   "op": "box",
+   "label": "Fan frame",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     120,
+     25.0,
+     120
+    ],
+    "translate": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan0_b",
+   "op": "cylinder",
+   "label": "Fan bore",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "radius": 58,
+    "height": 29.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "topfan0_ring",
+   "op": "boolean",
+   "label": "Fan frame",
+   "component": "fans",
+   "inputs": [
+    "topfan0_f",
+    "topfan0_b"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "topfan0_s1",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     118,
+     3.0,
+     6
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan0_s2",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     6,
+     3.0,
+     118
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan0_r",
+   "op": "rotor",
+   "label": "Fan rotor",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 20,
+    "tip_radius": 55,
+    "chord": 26,
+    "blades": 9,
+    "pitch": 32,
+    "twist": 18,
+    "hub_length": 19
+   }
+  },
+  {
+   "id": "topfan0",
+   "op": "boolean",
+   "label": "120 mm radiator fan",
+   "component": "fans",
+   "material": "plastic_black",
+   "inputs": [
+    "topfan0_ring",
+    "topfan0_s1",
+    "topfan0_s2",
+    "topfan0_r"
+   ],
+   "params": {
+    "mode": "union",
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     451.0,
+     -135.0
+    ]
+   }
+  },
+  {
+   "id": "topfan1_f",
+   "op": "box",
+   "label": "Fan frame",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     120,
+     25.0,
+     120
+    ],
+    "translate": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan1_b",
+   "op": "cylinder",
+   "label": "Fan bore",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "radius": 58,
+    "height": 29.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "topfan1_ring",
+   "op": "boolean",
+   "label": "Fan frame",
+   "component": "fans",
+   "inputs": [
+    "topfan1_f",
+    "topfan1_b"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "topfan1_s1",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     118,
+     3.0,
+     6
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan1_s2",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     6,
+     3.0,
+     118
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan1_r",
+   "op": "rotor",
+   "label": "Fan rotor",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 20,
+    "tip_radius": 55,
+    "chord": 26,
+    "blades": 9,
+    "pitch": 32,
+    "twist": 18,
+    "hub_length": 19
+   }
+  },
+  {
+   "id": "topfan1",
+   "op": "boolean",
+   "label": "120 mm radiator fan",
+   "component": "fans",
+   "material": "plastic_black",
+   "inputs": [
+    "topfan1_ring",
+    "topfan1_s1",
+    "topfan1_s2",
+    "topfan1_r"
+   ],
+   "params": {
+    "mode": "union",
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     451.0,
+     -5.0
+    ]
+   }
+  },
+  {
+   "id": "topfan2_f",
+   "op": "box",
+   "label": "Fan frame",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     120,
+     25.0,
+     120
+    ],
+    "translate": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan2_b",
+   "op": "cylinder",
+   "label": "Fan bore",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "radius": 58,
+    "height": 29.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "topfan2_ring",
+   "op": "boolean",
+   "label": "Fan frame",
+   "component": "fans",
+   "inputs": [
+    "topfan2_f",
+    "topfan2_b"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "topfan2_s1",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     118,
+     3.0,
+     6
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan2_s2",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     6,
+     3.0,
+     118
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "topfan2_r",
+   "op": "rotor",
+   "label": "Fan rotor",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 20,
+    "tip_radius": 55,
+    "chord": 26,
+    "blades": 9,
+    "pitch": 32,
+    "twist": 18,
+    "hub_length": 19
+   }
+  },
+  {
+   "id": "topfan2",
+   "op": "boolean",
+   "label": "120 mm radiator fan",
+   "component": "fans",
+   "material": "plastic_black",
+   "inputs": [
+    "topfan2_ring",
+    "topfan2_s1",
+    "topfan2_s2",
+    "topfan2_r"
+   ],
+   "params": {
+    "mode": "union",
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     451.0,
+     125.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan0_f",
+   "op": "box",
+   "label": "Fan frame",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     120,
+     25.0,
+     120
+    ],
+    "translate": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan0_b",
+   "op": "cylinder",
+   "label": "Fan bore",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "radius": 58,
+    "height": 29.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "frontfan0_ring",
+   "op": "boolean",
+   "label": "Fan frame",
+   "component": "fans",
+   "inputs": [
+    "frontfan0_f",
+    "frontfan0_b"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "frontfan0_s1",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     118,
+     3.0,
+     6
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan0_s2",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     6,
+     3.0,
+     118
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan0_r",
+   "op": "rotor",
+   "label": "Fan rotor",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 20,
+    "tip_radius": 55,
+    "chord": 26,
+    "blades": 9,
+    "pitch": 32,
+    "twist": 18,
+    "hub_length": 19
+   }
+  },
+  {
+   "id": "frontfan0",
+   "op": "boolean",
+   "label": "120 mm intake fan",
+   "component": "fans",
+   "material": "plastic_black",
+   "inputs": [
+    "frontfan0_ring",
+    "frontfan0_s1",
+    "frontfan0_s2",
+    "frontfan0_r"
+   ],
+   "params": {
+    "mode": "union",
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     170.0,
+     211.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan1_f",
+   "op": "box",
+   "label": "Fan frame",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     120,
+     25.0,
+     120
+    ],
+    "translate": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan1_b",
+   "op": "cylinder",
+   "label": "Fan bore",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "radius": 58,
+    "height": 29.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "frontfan1_ring",
+   "op": "boolean",
+   "label": "Fan frame",
+   "component": "fans",
+   "inputs": [
+    "frontfan1_f",
+    "frontfan1_b"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "frontfan1_s1",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     118,
+     3.0,
+     6
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan1_s2",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     6,
+     3.0,
+     118
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "frontfan1_r",
+   "op": "rotor",
+   "label": "Fan rotor",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 20,
+    "tip_radius": 55,
+    "chord": 26,
+    "blades": 9,
+    "pitch": 32,
+    "twist": 18,
+    "hub_length": 19
+   }
+  },
+  {
+   "id": "frontfan1",
+   "op": "boolean",
+   "label": "120 mm intake fan",
+   "component": "fans",
+   "material": "plastic_black",
+   "inputs": [
+    "frontfan1_ring",
+    "frontfan1_s1",
+    "frontfan1_s2",
+    "frontfan1_r"
+   ],
+   "params": {
+    "mode": "union",
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     300.0,
+     211.0
+    ]
+   }
+  },
+  {
+   "id": "rearfan_f",
+   "op": "box",
+   "label": "Fan frame",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     120,
+     25.0,
+     120
+    ],
+    "translate": [
+     0.0,
+     0.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "rearfan_b",
+   "op": "cylinder",
+   "label": "Fan bore",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "radius": 58,
+    "height": 29.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     0,
+     0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "rearfan_ring",
+   "op": "boolean",
+   "label": "Fan frame",
+   "component": "fans",
+   "inputs": [
+    "rearfan_f",
+    "rearfan_b"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "rearfan_s1",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     118,
+     3.0,
+     6
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "rearfan_s2",
+   "op": "box",
+   "label": "Strut",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     6,
+     3.0,
+     118
+    ],
+    "translate": [
+     0.0,
+     -11.0,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "rearfan_r",
+   "op": "rotor",
+   "label": "Fan rotor",
+   "component": "fans",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 20,
+    "tip_radius": 55,
+    "chord": 26,
+    "blades": 9,
+    "pitch": 32,
+    "twist": 18,
+    "hub_length": 19
+   }
+  },
+  {
+   "id": "rearfan",
+   "op": "boolean",
+   "label": "120 mm exhaust fan",
+   "component": "fans",
+   "material": "plastic_black",
+   "inputs": [
+    "rearfan_ring",
+    "rearfan_s1",
+    "rearfan_s2",
+    "rearfan_r"
+   ],
+   "params": {
+    "mode": "union",
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     395,
+     -211.0
+    ]
+   }
+  },
+  {
+   "id": "fit_pump",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     3.0,
+     120,
+     150.0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_gpu_in",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     90,
+     0,
+     0
+    ],
+    "translate": [
+     -30,
+     283,
+     72.0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_gpu_out",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -91.4,
+     305.0,
+     -120
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_cpu_in",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -91.4,
+     360.0,
+     -120
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_cpu_out",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     -76.4,
+     410,
+     -120
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_rad_in",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -30,
+     458.5,
+     211
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_rad_out",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     40,
+     458.5,
+     211
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fit_res_in",
+   "op": "cylinder",
+   "label": "Compression fitting",
+   "component": "fittings",
+   "material": "chrome",
+   "params": {
+    "radius": 9.5,
+    "height": 10.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     40.0,
+     357.0,
+     150.0
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "run_a",
+   "op": "pipe",
+   "label": "Pump to GPU (hard line)",
+   "component": "coolant_loop",
+   "material": "coolant_cyan",
+   "params": {
+    "path": [
+     [
+      -9.0,
+      120.0,
+      150.0
+     ],
+     [
+      -30.0,
+      120.0,
+      150.0
+     ],
+     [
+      -30.0,
+      283.0,
+      150.0
+     ],
+     [
+      -30.0,
+      283.0,
+      84.0
+     ]
+    ],
+    "radius": 7.0,
+    "segments": 32
+   }
+  },
+  {
+   "id": "run_b",
+   "op": "pipe",
+   "label": "GPU to CPU (hard line)",
+   "component": "coolant_loop",
+   "material": "coolant_cyan",
+   "params": {
+    "path": [
+     [
+      -91.4,
+      317.0,
+      -120.0
+     ],
+     [
+      -91.4,
+      348.0,
+      -120.0
+     ]
+    ],
+    "radius": 7.0,
+    "segments": 32
+   }
+  },
+  {
+   "id": "run_c",
+   "op": "pipe",
+   "label": "CPU to radiator (hard line)",
+   "component": "coolant_loop",
+   "material": "coolant_cyan",
+   "params": {
+    "path": [
+     [
+      -64.4,
+      410.0,
+      -120.0
+     ],
+     [
+      -30.0,
+      410.0,
+      -120.0
+     ],
+     [
+      -30.0,
+      410.0,
+      211.0
+     ],
+     [
+      -30.0,
+      446.5,
+      211.0
+     ]
+    ],
+    "radius": 7.0,
+    "segments": 32
+   }
+  },
+  {
+   "id": "run_d",
+   "op": "pipe",
+   "label": "Radiator to reservoir (hard line)",
+   "component": "coolant_loop",
+   "material": "coolant_cyan",
+   "params": {
+    "path": [
+     [
+      40.0,
+      446.5,
+      211.0
+     ],
+     [
+      40.0,
+      385.0,
+      211.0
+     ],
+     [
+      40.0,
+      385.0,
+      150.0
+     ],
+     [
+      40.0,
+      369.0,
+      150.0
+     ]
+    ],
+    "radius": 7.0,
+    "segments": 32
+   }
+  }
+ ]
+}

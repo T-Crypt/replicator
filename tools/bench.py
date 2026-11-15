@@ -2,7 +2,7 @@
 collect one JSON line per trial; report reads the collected lines back as markdown tables.
 
     .venv/bin/python -m tools.bench run --engine local --task all --seed 13 --trials 3
-    .venv/bin/python -m tools.bench score fixtures/house_two_bed.json --task house --seed 13
+    .venv/bin/python -m tools.bench score replicator/fixtures/house_two_bed.json --task house --seed 13
     .venv/bin/python -m tools.bench prompt --task flange --seed 13
     .venv/bin/python -m tools.bench report --out bench/results
 

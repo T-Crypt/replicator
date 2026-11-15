@@ -10,10 +10,11 @@ import pytest
 import tools.bench
 from bench.score import score
 from bench.tasks import TASKS, flange, house, lamp
+from replicator import FIXTURES
 from replicator.llm import client
 
 ROOT = Path(__file__).parent.parent
-HOUSE = ROOT / "fixtures" / "house_two_bed.json"
+HOUSE = FIXTURES / "house_two_bed.json"
 LAMP = ROOT / "tests" / "data" / "desk_lamp_flat.json"
 
 

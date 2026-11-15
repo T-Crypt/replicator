@@ -19,7 +19,7 @@ The suite runs in under 30 seconds and must stay green.
 1. Keep each commit to one tested change.
 2. For a change to a program or an op, run `python -m tools.check path/to/program.json` and fix every `FIX` line.
 3. For a change to the interface, take a shot and look at it:
-   `python -m replicator.app fixtures/rocket_engine.json --software --shot out/x.png`.
+   `python -m replicator.app replicator/fixtures/rocket_engine.json --software --shot out/x.png`.
    For overlays and narrow windows, use `tools/shot.sh` instead (it needs gamescope).
 4. Open a pull request that says what changed for the person using Replicator and how you checked it.
 

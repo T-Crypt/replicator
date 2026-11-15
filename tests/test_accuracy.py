@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+from replicator import FIXTURES
 from replicator import knowledge
 from replicator.core import assembly, critique
 from replicator.core.evaluate import EvalError, Evaluator
@@ -11,7 +12,7 @@ from replicator.core.ops_engineering import nozzle_contour
 from replicator.core.program import ProgramError, delete_component, duplicate_component
 from replicator.llm.client import _outside_scope
 
-FIX = Path(__file__).parent.parent / "fixtures"
+FIX = FIXTURES
 
 
 def prog(*ops):

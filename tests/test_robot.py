@@ -4,11 +4,12 @@ from pathlib import Path
 
 import pytest
 
+from replicator import FIXTURES
 from replicator.core import physics, robot
 from replicator.core.evaluate import Evaluator
 from replicator.core.program import check
 
-FIX = Path(__file__).parent.parent / "fixtures"
+FIX = FIXTURES
 BOX = {"version": 1, "name": "Steel block", "units": "mm",
        "materials": {"steel": {"base_color": [0.6, 0.6, 0.6]}, "glow": {"base_color": [0.2, 0.8, 1.0]}},
        "components": [{"id": "block", "label": "Block"}, {"id": "lamp", "label": "Lamp"}],

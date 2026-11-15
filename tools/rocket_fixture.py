@@ -1,4 +1,4 @@
-"""Writes fixtures/rocket_engine.json: a gas-generator rocket engine laid out from the nozzle's real contour.
+"""Writes replicator/fixtures/rocket_engine.json: a gas-generator rocket engine laid out from the nozzle's real contour.
 
 Every position is derived from the thrust chamber (throat radius 100 mm, expansion ratio 16, contraction ratio 4), so
 the turbopump, manifold, lines and frame land where they would on a real engine. Run it, then check the result with
@@ -12,12 +12,13 @@ from pathlib import Path
 
 import numpy as np
 
+from replicator import FIXTURES
 from replicator.core import assembly, critique, materials
 from replicator.core.evaluate import Evaluator
 from replicator.core.ops_engineering import nozzle_contour
 
 RT, EPS, CR, WALL = 100.0, 16.0, 4.0, 6.0
-OUT = Path(__file__).resolve().parent.parent / "fixtures" / "rocket_engine.json"
+OUT = FIXTURES / "rocket_engine.json"
 
 inner = nozzle_contour(RT, EPS, CR, None, 0.8)
 x_top, x_exit = inner[0, 0] - WALL, inner[-1, 0]

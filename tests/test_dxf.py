@@ -3,11 +3,12 @@ from pathlib import Path
 
 import pytest
 
+from replicator import FIXTURES
 from replicator.core import dxf
 from replicator.core.evaluate import Evaluator
 from replicator.core.program import check
 
-FIX = Path(__file__).parent.parent / "fixtures"
+FIX = FIXTURES
 PLATE = {"version": 1, "name": "Plate", "units": "mm", "materials": {},
          "ops": [{"id": "p", "op": "box", "params": {"size": [120, 8, 60], "translate": [0, 4, 0]}},
                  {"id": "h", "op": "cylinder", "params": {"radius": 10, "height": 20, "translate": [0, 4, 0]}},
