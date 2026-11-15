@@ -1,0 +1,347 @@
+{
+ "version": 1,
+ "name": "Flat Round Pipe Flange",
+ "units": "mm",
+ "materials": {
+  "safety_yellow": {
+   "base_color": [
+    0.92,
+    0.72,
+    0.02
+   ],
+   "metalness": 0.05,
+   "roughness": 0.6,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "matte_polymer": {
+   "base_color": [
+    0.18,
+    0.18,
+    0.18
+   ],
+   "metalness": 0.0,
+   "roughness": 0.95,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "ops": [
+  {
+   "id": "flange_blank",
+   "op": "cylinder",
+   "label": "Flange Blank",
+   "part": "Flange blank",
+   "material": "safety_yellow",
+   "params": {
+    "height": 20,
+    "radius": 55,
+    "center": false,
+    "segments": 96
+   }
+  },
+  {
+   "id": "central_bore_cutter",
+   "op": "cylinder",
+   "label": "Central Bore Cutter",
+   "part": "Central bore cutter",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 20,
+    "center": true,
+    "segments": 64,
+    "translate": [
+     0,
+     10,
+     0
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_1",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 1",
+   "part": "Bolt hole cutter 1",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     37.5,
+     10,
+     0
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_2",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 2",
+   "part": "Bolt hole cutter 2",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     26.517,
+     10,
+     26.517
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_3",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 3",
+   "part": "Bolt hole cutter 3",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     0,
+     10,
+     37.5
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_4",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 4",
+   "part": "Bolt hole cutter 4",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     -26.517,
+     10,
+     26.517
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_5",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 5",
+   "part": "Bolt hole cutter 5",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     -37.5,
+     10,
+     0
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_6",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 6",
+   "part": "Bolt hole cutter 6",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     -26.517,
+     10,
+     -26.517
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_7",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 7",
+   "part": "Bolt hole cutter 7",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     0,
+     10,
+     -37.5
+    ]
+   }
+  },
+  {
+   "id": "bolt_hole_cutter_8",
+   "op": "cylinder",
+   "label": "Bolt Hole Cutter 8",
+   "part": "Bolt hole cutter 8",
+   "material": "matte_polymer",
+   "params": {
+    "height": 24,
+    "radius": 4,
+    "center": true,
+    "segments": 32,
+    "translate": [
+     26.517,
+     10,
+     -26.517
+    ]
+   }
+  },
+  {
+   "id": "flange_final",
+   "op": "boolean",
+   "label": "Flat Round Pipe Flange",
+   "part": "Flat Round Pipe Flange",
+   "material": "safety_yellow",
+   "params": {
+    "mode": "difference"
+   },
+   "inputs": [
+    "flange_blank",
+    "central_bore_cutter",
+    "bolt_hole_cutter_1",
+    "bolt_hole_cutter_2",
+    "bolt_hole_cutter_3",
+    "bolt_hole_cutter_4",
+    "bolt_hole_cutter_5",
+    "bolt_hole_cutter_6",
+    "bolt_hole_cutter_7",
+    "bolt_hole_cutter_8"
+   ]
+  }
+ ],
+ "blueprint": {
+  "title": "Flat Round Pipe Flange",
+  "summary": "A single flat annular flange plate lies with its faces horizontal and its axis vertical. It has a 40 mm central through bore and eight 8 mm bolt holes equally spaced on a 75 mm bolt circle.",
+  "style": "industrial, precise, minimal",
+  "dimensions": [
+   110,
+   20,
+   110
+  ],
+  "parts": [
+   {
+    "name": "Flange blank",
+    "role": "main plate body carrying the bore and bolt holes",
+    "shape": "solid cylinder, axis vertical, later boolean-subtracted by the bore and bolt-hole cutters",
+    "size": "diameter 110 mm, height 20 mm",
+    "position": "center at [0, 10, 0], bottom face at y=0",
+    "material": "painted (safety yellow)",
+    "count": 1
+   },
+   {
+    "name": "Central bore cutter",
+    "role": "creates the 40 mm central through bore",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 40 mm, height 24 mm",
+    "position": "center at [0, 10, 0]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 1",
+    "role": "creates the first 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [37.5, 10, 0]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 2",
+    "role": "creates the second 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [26.517, 10, 26.517]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 3",
+    "role": "creates the third 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [0, 10, 37.5]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 4",
+    "role": "creates the fourth 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [-26.517, 10, 26.517]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 5",
+    "role": "creates the fifth 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [-37.5, 10, 0]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 6",
+    "role": "creates the sixth 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [-26.517, 10, -26.517]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 7",
+    "role": "creates the seventh 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [0, 10, -37.5]",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bolt hole cutter 8",
+    "role": "creates the eighth 8 mm through bolt hole",
+    "shape": "subtractive cylinder, axis vertical, boolean difference from flange blank",
+    "size": "diameter 8 mm, height 24 mm",
+    "position": "center at [26.517, 10, -26.517]",
+    "material": "matte polymer",
+    "count": 1
+   }
+  ],
+  "callouts": [
+   "Flange faces are horizontal; thickness is along Y from y=0 to y=20.",
+   "Outer diameter is 110 mm; central bore diameter is 40 mm.",
+   "Eight bolt holes are 8 mm diameter and equally spaced on a 75 mm pitch circle.",
+   "Bolt-hole cutters are 24 mm long to ensure clean through-booleans."
+  ]
+ },
+ "source": {
+  "prompt": "A flat round pipe flange lying flat (its faces horizontal): outer diameter 110 mm, thickness 20 mm, a central through bore of 40 mm, and 8 through bolt holes of 8 mm diameter equally spaced on a 75 mm pitch circle. Nothing else.",
+  "engine": "agent",
+  "date": "2026-11-15"
+ }
+}

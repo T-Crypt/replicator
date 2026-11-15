@@ -19,6 +19,7 @@ Shipped the same day, after this teardown was written (commit after `2346b94`):
 | P0 model endpoints | done | `endpoints` in `services.json`, key from an env var; live call through a configured endpoint to Strata |
 | P0 STEP export | done | `core/step.py`; all 11 fixtures read back by OCCT `STEPControl_Reader` as valid solids (BRepCheck), volume within 4e-7 |
 | P1 corpus export | done | `tools/corpus.py export/verify`; one row per program (prompt, program, geometry digest, mass, verdict, kernel); two exports of the fixtures are byte-identical and all 11 rows re-verify; a tampered row is caught. `client.dream` now stamps `source` (prompt, engine, date) |
+| P1 benchmark v0 | done | `bench/` + `tools/bench.py`: four seeded tasks (flange, board, house, lamp; machine, electronics, building, everyday), registry of measured assertions, gate then 0.7 assertions + 0.3 checks; scoring is pure and re-scores identically; first live row: the local `agent` engine scored 1.000 on flange seed 13. Leaderboard publishing is next |
 
 So the scorecard rows "MCP server", "STEP export" and "Runs your own model endpoint" now read **Y** for
 Replicator. The remaining table stakes are the print answer, an install for a normal person, and

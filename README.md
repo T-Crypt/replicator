@@ -153,6 +153,21 @@ step.
 This repo's `.mcp.json` registers it for Claude Code; for another client, run
 `.venv/bin/python -m replicator.mcp_server` over stdio.
 
+## Benchmark and corpus
+
+`bench/` scores any engine on construction, not prose: four seeded tasks (a flange, a circuit board,
+a house, a desk lamp) whose dimensions move with the seed, scored by measuring the built solid
+(extents, through-holes, volume, named parts, floor area) and by the checks. The same program and
+seed always score the same. See [bench/README.md](bench/README.md).
+
+```sh
+.venv/bin/python -m tools.bench run --engine dirk --task all --seed 13 --trials 3
+.venv/bin/python -m tools.bench report
+```
+
+`tools/corpus.py export` turns a folder of programs into JSONL rows (prompt, program, geometry digest,
+mass, verdict) for training or evaluation, and `verify` rebuilds every row to prove it still holds.
+
 ## Quick start
 
 Replicator is built for one workstation (Arch Linux, Hyprland, an Intel iGPU beside an RTX card)
@@ -258,7 +273,7 @@ tools/readme_art.py     draws the README artwork
 - [ ] M3: image to 3D (TRELLIS.2 or Hunyuan3D under a Berth lease), then a Holodeck character sheet straight into the workshop
 - [x] Blueprint sheets: a technical drawing with callouts, dimensions and a parts list from the program
 - [x] STEP export, an MCP server for agents, endpoints you configure
-- [ ] Benchmark: tasks scored by the checks, any endpoint, results that reproduce to the digit
+- [x] Benchmark v0 and corpus export: seeded tasks scored by measuring the solid, any endpoint, deterministic scoring
 - [ ] Reverse to program: imported pieces become real ops, each tied to its ledger entry
 - [ ] Joints and mates as program data; URDF and MJCF with inertias from the exact solid
 - [ ] M2: a floor plan becomes rooms (a Sims-style build mode)

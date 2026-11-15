@@ -8,6 +8,7 @@ stored in a file.
 """
 from __future__ import annotations
 
+import contextvars
 import json
 import re
 import urllib.request
@@ -28,6 +29,8 @@ ENGINES = {
 }
 REPAIR_ROUNDS = 2
 CRITIQUE_ROUNDS = 1
+# When set (the benchmark sets the trial seed), "seed" goes into the request body.
+SEED: contextvars.ContextVar[int | None] = contextvars.ContextVar("replicator_llm_seed", default=None)
 
 
 def _chat_url(url: str) -> str:
@@ -53,6 +56,8 @@ def chat(messages: list[dict], engine: str = "dirk", max_tokens: int = 14000, ti
                          "~/.config/Replicator/services.json)")
     url, model, kwargs, key_env = known[engine]
     body = {"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.6}
+    if SEED.get() is not None:
+        body["seed"] = SEED.get()
     if kwargs:
         body["chat_template_kwargs"] = kwargs
     headers = {"Content-Type": "application/json"}
