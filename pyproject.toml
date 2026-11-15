@@ -10,6 +10,17 @@ readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE", "vendor/mcp-for-blender/LICENSE"]
 requires-python = ">=3.11"
+keywords = ["cad", "3d", "solid-modelling", "manifold", "llm", "mcp", "engineering", "3d-printing"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Manufacturing",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Multimedia :: Graphics :: 3D Modeling",
+    "Topic :: Scientific/Engineering",
+]
 dependencies = [
     "manifold3d>=3.1",
     "numpy>=1.26",
@@ -37,6 +48,7 @@ replicator-mcp = "replicator.mcp_server:main"
 [project.urls]
 Source = "https://github.com/T-Crypt/replicator"
 Issues = "https://github.com/T-Crypt/replicator/issues"
+Roadmap = "https://github.com/T-Crypt/replicator/blob/main/docs/ROADMAP.md"
 
 [tool.setuptools.packages.find]
 include = ["replicator*"]
