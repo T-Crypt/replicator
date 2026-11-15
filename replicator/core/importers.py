@@ -78,7 +78,9 @@ bpy.ops.export_scene.gltf(filepath=a["dst"], export_format="GLB", use_selection=
 
 def _blender(src: Path, dst: Path) -> Path:
     env = dict(os.environ, CUDA_VISIBLE_DEVICES="", BLENDERMCP_NO_UPDATE_CHECK="1")
-    cmd = ["blender", "-b"] + ([str(src)] if src.suffix.lower() == ".blend" else ["--factory-startup"])
+    # factory settings and no auto-run: a .blend from anywhere must never run its embedded Python, even when the
+    # user's own Blender preferences allow it (both flags must come before the file)
+    cmd = ["blender", "-b", "--factory-startup", "--disable-autoexec"] + ([str(src)] if src.suffix.lower() == ".blend" else [])
     cmd += ["--python-expr", BLENDER_EXPORT, "--", json.dumps({"src": str(src), "dst": str(dst)})]
     r = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=600)
     if not dst.exists():
