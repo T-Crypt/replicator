@@ -1,0 +1,650 @@
+{
+ "version": 1,
+ "name": "Balanced-Arm Desk Lamp",
+ "units": "mm",
+ "materials": {
+  "steel": {
+   "base_color": [
+    0.68,
+    0.7,
+    0.73
+   ],
+   "metalness": 0.92,
+   "roughness": 0.28,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "aluminium": {
+   "base_color": [
+    0.82,
+    0.84,
+    0.86
+   ],
+   "metalness": 0.8,
+   "roughness": 0.34,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "titanium": {
+   "base_color": [
+    0.55,
+    0.57,
+    0.6
+   ],
+   "metalness": 0.88,
+   "roughness": 0.3,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "shade_paint": {
+   "base_color": [
+    0.94,
+    0.92,
+    0.87
+   ],
+   "metalness": 0.05,
+   "roughness": 0.55,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "led_glow": {
+   "base_color": [
+    1.0,
+    0.95,
+    0.82
+   ],
+   "metalness": 0.0,
+   "roughness": 0.25,
+   "emissive": [
+    1.0,
+    0.88,
+    0.62
+   ]
+  }
+ },
+ "ops": [
+  {
+   "id": "base_body",
+   "op": "cylinder",
+   "label": "Weighted Steel Base",
+   "part": "BASE-01",
+   "material": "steel",
+   "params": {
+    "height": 25,
+    "radius": 150,
+    "center": false,
+    "translate": [
+     0,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "base_recess_cut",
+   "op": "cylinder",
+   "label": "Base Pivot Recess",
+   "part": "BASE-01",
+   "material": "steel",
+   "params": {
+    "height": 9,
+    "radius": 10,
+    "center": false,
+    "translate": [
+     0,
+     16,
+     0
+    ]
+   }
+  },
+  {
+   "id": "base",
+   "op": "boolean",
+   "label": "Weighted Steel Base",
+   "part": "BASE-01",
+   "material": "steel",
+   "params": {
+    "mode": "difference"
+   },
+   "inputs": [
+    "base_body",
+    "base_recess_cut"
+   ]
+  },
+  {
+   "id": "pivot_body",
+   "op": "cylinder",
+   "label": "Pivot Boss",
+   "part": "PIVOT-02",
+   "material": "titanium",
+   "params": {
+    "height": 45,
+    "radius": 18,
+    "center": false,
+    "translate": [
+     0,
+     25,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pivot_lug_left",
+   "op": "box",
+   "label": "Pivot Clevis Lug Left",
+   "part": "PIVOT-02",
+   "material": "titanium",
+   "params": {
+    "size": [
+     10,
+     28,
+     28
+    ],
+    "translate": [
+     -17.5,
+     56,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pivot_lug_right",
+   "op": "box",
+   "label": "Pivot Clevis Lug Right",
+   "part": "PIVOT-02",
+   "material": "titanium",
+   "params": {
+    "size": [
+     10,
+     28,
+     28
+    ],
+    "translate": [
+     17.5,
+     56,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pivot_union",
+   "op": "boolean",
+   "label": "Pivot Clevis Body",
+   "part": "PIVOT-02",
+   "material": "titanium",
+   "params": {
+    "mode": "union"
+   },
+   "inputs": [
+    "pivot_body",
+    "pivot_lug_left",
+    "pivot_lug_right"
+   ]
+  },
+  {
+   "id": "pivot_pin_bore",
+   "op": "cylinder",
+   "label": "Pivot Pin Bore",
+   "part": "PIVOT-02",
+   "material": "titanium",
+   "params": {
+    "height": 56,
+    "radius": 5,
+    "center": true,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     0,
+     66,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pivot",
+   "op": "boolean",
+   "label": "Central Pivot",
+   "part": "PIVOT-02",
+   "material": "titanium",
+   "params": {
+    "mode": "difference"
+   },
+   "inputs": [
+    "pivot_union",
+    "pivot_pin_bore"
+   ]
+  },
+  {
+   "id": "lower_arm",
+   "op": "extrude",
+   "label": "Lower Aluminium Arm",
+   "part": "LOWER-ARM-03",
+   "material": "aluminium",
+   "params": {
+    "height": 380,
+    "axis": "z",
+    "points": [
+     [
+      -12.5,
+      -17.5
+     ],
+     [
+      12.5,
+      -17.5
+     ],
+     [
+      12.5,
+      17.5
+     ],
+     [
+      -12.5,
+      17.5
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -9.5,
+       -14.5
+      ],
+      [
+       9.5,
+       -14.5
+      ],
+      [
+       9.5,
+       14.5
+      ],
+      [
+       -9.5,
+       14.5
+      ]
+     ]
+    ],
+    "rotate": [
+     -25,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     150.5,
+     172
+    ]
+   }
+  },
+  {
+   "id": "lower_spring",
+   "op": "helix",
+   "label": "Lower Arm Spring",
+   "part": "LOWER-SPRING-04",
+   "material": "steel",
+   "params": {
+    "pitch": 4,
+    "radius": 8,
+    "turns": 70,
+    "wire_radius": 1.75,
+    "rotate": [
+     -25,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     186,
+     172
+    ]
+   }
+  },
+  {
+   "id": "elbow_body",
+   "op": "cylinder",
+   "label": "Elbow Joint",
+   "part": "ELBOW-05",
+   "material": "titanium",
+   "params": {
+    "height": 45,
+    "radius": 25,
+    "center": true,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     0,
+     231,
+     344
+    ]
+   }
+  },
+  {
+   "id": "elbow_bore",
+   "op": "cylinder",
+   "label": "Elbow Pin Bore",
+   "part": "ELBOW-05",
+   "material": "titanium",
+   "params": {
+    "height": 50,
+    "radius": 5,
+    "center": true,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     0,
+     231,
+     344
+    ]
+   }
+  },
+  {
+   "id": "elbow",
+   "op": "boolean",
+   "label": "Elbow Joint",
+   "part": "ELBOW-05",
+   "material": "titanium",
+   "params": {
+    "mode": "difference"
+   },
+   "inputs": [
+    "elbow_body",
+    "elbow_bore"
+   ]
+  },
+  {
+   "id": "upper_arm",
+   "op": "extrude",
+   "label": "Upper Aluminium Arm",
+   "part": "UPPER-ARM-06",
+   "material": "aluminium",
+   "params": {
+    "height": 300,
+    "axis": "z",
+    "points": [
+     [
+      -12.5,
+      -17.5
+     ],
+     [
+      12.5,
+      -17.5
+     ],
+     [
+      12.5,
+      17.5
+     ],
+     [
+      -12.5,
+      17.5
+     ]
+    ],
+    "holes": [
+     [
+      [
+       -9.5,
+       -14.5
+      ],
+      [
+       9.5,
+       -14.5
+      ],
+      [
+       9.5,
+       14.5
+      ],
+      [
+       -9.5,
+       14.5
+      ]
+     ]
+    ],
+    "rotate": [
+     12,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     200,
+     490.5
+    ]
+   }
+  },
+  {
+   "id": "upper_spring",
+   "op": "helix",
+   "label": "Upper Arm Spring",
+   "part": "UPPER-SPRING-07",
+   "material": "steel",
+   "params": {
+    "pitch": 4,
+    "radius": 7,
+    "turns": 60,
+    "wire_radius": 1.5,
+    "rotate": [
+     12,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     236,
+     490.5
+    ]
+   }
+  },
+  {
+   "id": "shade_yoke",
+   "op": "cylinder",
+   "label": "Shade Yoke",
+   "part": "SHADE-YOKE-08",
+   "material": "aluminium",
+   "params": {
+    "height": 40,
+    "radius": 15,
+    "center": true,
+    "rotate": [
+     0,
+     0,
+     90
+    ],
+    "translate": [
+     0,
+     169,
+     637
+    ]
+   }
+  },
+  {
+   "id": "shade",
+   "op": "revolve",
+   "label": "Conical Lamp Shade",
+   "part": "SHADE-09",
+   "material": "shade_paint",
+   "params": {
+    "points": [
+     [
+      30,
+      0
+     ],
+     [
+      95,
+      140
+     ],
+     [
+      93,
+      140
+     ],
+     [
+      28,
+      1
+     ],
+     [
+      28,
+      0
+     ]
+    ],
+    "segments": 48,
+    "rotate": [
+     125,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     169,
+     637
+    ]
+   }
+  },
+  {
+   "id": "led_disc",
+   "op": "cylinder",
+   "label": "LED Light Disc",
+   "part": "LED-DISC-10",
+   "material": "led_glow",
+   "params": {
+    "height": 8,
+    "radius": 25,
+    "center": true,
+    "rotate": [
+     125,
+     0,
+     0
+    ],
+    "translate": [
+     0,
+     162,
+     647
+    ]
+   }
+  }
+ ],
+ "blueprint": {
+  "title": "Balanced-Arm Desk Lamp",
+  "summary": "A real-scale balanced-arm desk lamp with a heavy steel base, two aluminium arms, twin arm springs, an elbow pivot, and a conical shade containing an LED disc. The geometry is proportioned for stable desk use with the shade angled down toward the work surface.",
+  "style": "sleek industrial",
+  "dimensions": [
+   180,
+   235,
+   770
+  ],
+  "parts": [
+   {
+    "name": "BASE-01",
+    "role": "Weighted round steel base providing stability and anchoring the lamp to the desk",
+    "shape": "Cylinder with shallow top recess and bottom chamfer; central bore for pivot boss",
+    "size": "180 mm diameter, 25 mm high, 20 mm central recess diameter, 8 mm deep",
+    "position": "center at (0, 12.5, 0), bottom face at y = 0",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "PIVOT-02",
+    "role": "Central vertical pivot boss carrying the lower arm and permitting side-to-side rotation",
+    "shape": "Cylinder with two side clevis lugs cut from box shapes; pin bore through both lugs",
+    "size": "36 mm diameter, 45 mm high, lugs 10 mm thick, pin bore 10 mm diameter",
+    "position": "center at (0, 47.5, 0), seated in base recess",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "LOWER-ARM-03",
+    "role": "First straight aluminium arm segment transferring load from pivot to elbow joint",
+    "shape": "Rectangular aluminium tube extruded along inclined axis; boolean end clevis holes and two lightening slots",
+    "size": "380 mm long, 25 mm wide, 35 mm tall, 3 mm wall",
+    "position": "centerline from (0, 70, 0) to (0, 231, 344); part center at (0, 150.5, 172)",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "LOWER-SPRING-04",
+    "role": "Compression spring along the lower arm to assist balanced-arm motion",
+    "shape": "Linear array of tori around a thin core cylinder, trimmed at ends to form a coil spring",
+    "size": "280 mm long, 16 mm coil diameter, 3.5 mm wire diameter, 4 mm pitch",
+    "position": "mounted above lower arm, center at (0, 175, 172), aligned with lower-arm axis",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "ELBOW-05",
+    "role": "Elbow joint connecting lower and upper arms and allowing the lamp to fold",
+    "shape": "Cylinder with axis along X, two end caps, and central bore for upper-arm pin",
+    "size": "50 mm diameter, 45 mm wide, 10 mm pin bore",
+    "position": "center at (0, 231, 344)",
+    "material": "titanium",
+    "count": 1
+   },
+   {
+    "name": "UPPER-ARM-06",
+    "role": "Second straight aluminium arm segment carrying the shade toward the work surface",
+    "shape": "Rectangular aluminium tube extruded along slightly downward axis; boolean end clevis and cable clearance hole",
+    "size": "300 mm long, 25 mm wide, 35 mm tall, 3 mm wall",
+    "position": "centerline from (0, 231, 344) to (0, 169, 637); part center at (0, 200, 490.5)",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "UPPER-SPRING-07",
+    "role": "Compression spring along the upper arm balancing the shade weight",
+    "shape": "Linear array of tori around a thin core cylinder, trimmed at ends to form a coil spring",
+    "size": "240 mm long, 14 mm coil diameter, 3 mm wire diameter, 4 mm pitch",
+    "position": "mounted above upper arm, center at (0, 225, 490.5), aligned with upper-arm axis",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "SHADE-YOKE-08",
+    "role": "Mounting clevis at the upper-arm end that carries the shade and allows tilt",
+    "shape": "Small cylinder with two side fork lugs; pin bore and shade-thread boss",
+    "size": "30 mm diameter, 40 mm wide, 8 mm pin bore, M20 shade boss",
+    "position": "center at (0, 169, 637), attached to upper-arm end",
+    "material": "aluminium",
+    "count": 1
+   },
+   {
+    "name": "SHADE-09",
+    "role": "Conical shade directing LED light downward and shielding the light source",
+    "shape": "Revolved conical frustum profile with inner cone boolean cut, rear mounting neck, and central LED aperture",
+    "size": "140 mm long, 60 mm rear diameter, 190 mm mouth diameter, 2 mm wall",
+    "position": "rear center at (0, 169, 637), frustum center at (0, 129, 694), axis tilted 35 degrees downward from +Z",
+    "material": "painted (warm white)",
+    "count": 1
+   },
+   {
+    "name": "LED-DISC-10",
+    "role": "Circular LED light source seated inside the shade",
+    "shape": "Thin cylinder with chamfered edge and central mounting boss",
+    "size": "50 mm diameter, 8 mm thick, 10 mm mounting boss",
+    "position": "center at (0, 162, 647), axis aligned with shade axis",
+    "material": "emissive glow (warm white)",
+    "count": 1
+   }
+  ],
+  "callouts": [
+   "Lower arm rises 25 degrees above horizontal; upper arm drops about 12 degrees toward the shade.",
+   "Spring coils are shown simplified as torus arrays for modeling; real springs would be helical wire.",
+   "Shade axis is tilted 35 degrees downward from the horizontal forward direction.",
+   "LED disc sits 10 mm inside the shade rear opening to reduce glare.",
+   "Base mass should be sufficient to resist tipping when the shade is fully extended forward."
+  ]
+ }
+}

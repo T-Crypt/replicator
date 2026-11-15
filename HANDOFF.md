@@ -14,8 +14,13 @@ household objects, machines and concepts. Never describe it as only a CAD tool.
 - Checks: new `roof` (buildings) and tiered `size` (warn >15%, fix >40%) in `core/critique.py`, tests in
   `tests/test_roof_and_size.py`. They caught the README turbofan's fan, reverse vanes and turbine arrayed around
   the wrong axis; `fixtures/dirk_engine_v2.json` corrected and the README previews regenerated.
-- Open: `off_axis` does not inspect radial arrays (that is how the turbofan's rings got through); the lamp's flat
-  arms are not flagged; `assets/range.jpg` and the film show the house before its ridge moved to the long side. STEP is faceted (planes
+- More checks: `array_axis` (a full-circle radial array must spin about the round body holding its source),
+  `alignment` (a part the plan says runs "along" another must point the same way) and `card_rules` (a knowledge
+  card's `rise:` line bounds a part's elevation; `knowledge/desk_lamp.md` says a lamp arm rises 35 to 80 degrees).
+  `array_copies` used to skip every program with named materials; fixed, and it found the turbofan's fan blades
+  lying flat and fused (58%); blades now taper and pitch 60 degrees. Failing cases live in `tests/data/`.
+- Open: `array_axis` misses a ring whose source sits in no visible round body (the broken turbofan's turbine
+  vanes); `assets/range.jpg` and the film show the house before its ridge moved to the long side. STEP is faceted (planes
   only); analytic surfaces need the OCCT layer (P2). `cadquery-ocp` and `mcp` are now in the venv.
 
 # Session 4 (2026-11-14): accuracy workshop, on branch `accuracy-workshop`

@@ -12,9 +12,10 @@ from dataclasses import asdict, dataclass
 import numpy as np
 
 from .assembly import Component
-from .evaluate import Evaluator, RawMesh, Shape
+from .evaluate import Evaluator, RawMesh, Shape, _axis_index
 from .program import op_inputs
 from .physics import properties
+from .. import knowledge
 
 AXISYM = {"cylinder", "tube", "torus", "revolve", "nozzle", "rotor", "capsule", "gear", "helix"}
 CLIP_SHARE = 0.25        # overlap, as a share of the smaller part, that reads as parts passing through each other
@@ -206,8 +207,8 @@ def array_copies(b: Build) -> list[Issue]:
         if n < 2:
             continue
         try:
-            src = Evaluator().step({"version": 1, "units": b.program.get("units", "mm"),
-                                    "ops": _closure(ops, op_inputs(op)[0])})
+            src = Evaluator().step({**{k: b.program[k] for k in ("units", "materials") if k in b.program},
+                                    "version": 1, "ops": _closure(ops, op_inputs(op)[0])})
         except Exception:  # noqa: BLE001 - a broken source is reported by the build, not here
             continue
         if not src or not _solid(src[-1]):
@@ -235,13 +236,20 @@ def thin_wall(b: Build) -> list[Issue]:
     return out
 
 
-def _axis(op: dict) -> np.ndarray:
-    rx, ry, rz = np.radians(op.get("params", {}).get("rotate", [0, 0, 0]))
+def _rot_matrix(op: dict) -> np.ndarray:
+    rot = op.get("params", {}).get("rotate", [0, 0, 0])
+    if isinstance(rot, (int, float)):
+        rot = [rot] * 3
+    rx, ry, rz = np.radians(rot)
     cx, sx, cy, sy, cz, sz = np.cos(rx), np.sin(rx), np.cos(ry), np.sin(ry), np.cos(rz), np.sin(rz)
     Rx = np.array([[1, 0, 0], [0, cx, -sx], [0, sx, cx]])
     Ry = np.array([[cy, 0, sy], [0, 1, 0], [-sy, 0, cy]])
     Rz = np.array([[cz, -sz, 0], [sz, cz, 0], [0, 0, 1]])
-    return Rz @ Ry @ Rx @ np.array([0.0, 1.0, 0.0])
+    return Rz @ Ry @ Rx
+
+
+def _axis(op: dict) -> np.ndarray:
+    return _rot_matrix(op) @ np.array([0.0, 1.0, 0.0])
 
 
 def off_axis(b: Build) -> list[Issue]:
@@ -266,6 +274,159 @@ def off_axis(b: Build) -> list[Issue]:
             name = "XYZ"[int(np.argmax(np.abs(axis)))]
             out.append(Issue("off_axis", "fix", s.component, f"{s.label} sits on the centre line of {body.label} but "
                              f"spins around a different axis; {body.label} runs along {name}. Rotate it to match."))
+    return out
+
+
+def array_axis(b: Build) -> list[Issue]:
+    """A full-circle radial array is a ring: it must spin about the axis of the body it wraps, and about that
+    body's centre line. A ring spun about a sideways axis scatters its copies off the body (the turbofan whose
+    blades turned around world Y while the engine ran along Z)."""
+    ops = {o["id"]: o for o in b.program["ops"]}
+    out = []
+    for o in b.program["ops"]:
+        p = o.get("params", {})
+        if o.get("op") != "array" or p.get("mode") != "radial" or float(p.get("angle", 360.0)) < 360:
+            continue
+        ins = op_inputs(o)
+        if len(ins) != 1:
+            continue
+        top = {k: b.program[k] for k in ("units", "materials") if k in b.program}
+        try:
+            src = Evaluator().step({**top, "version": 1, "ops": _closure(ops, ins[0])})
+        except Exception:  # noqa: BLE001 - a broken source is reported by the build, not here
+            continue
+        if not src or not _solid(src[-1]):
+            continue
+        bb = np.array(src[-1].manifold.bounding_box())
+        centre = (bb[:3] + bb[3:]) / 2
+        bodies = []
+        for s in b.shapes:
+            if s.id == o["id"] or not _solid(s) or ops.get(s.id, {}).get("op") not in AXISYM:
+                continue
+            lo, hi = _box(s)
+            m = 0.05 * float(np.max(np.maximum(hi - lo, 1e-9)))
+            if np.all(centre >= lo - m) and np.all(centre <= hi + m):
+                bodies.append(s)
+        if not bodies:
+            continue
+        body = max(bodies, key=lambda s: s.manifold.volume())
+        axis = _axis(ops[body.id])
+        unit = np.zeros(3)
+        unit[_axis_index(p.get("axis", "y"))] = 1.0
+        spin = _rot_matrix(o) @ unit
+        if abs(float(np.dot(spin, axis))) < 0.94:
+            label, subject = o.get("label") or o["id"], o.get("component") or o.get("part") or o["id"]
+            out.append(Issue("off_axis", "fix", subject, f"{label} spins around "
+                         f"{'XYZ'[int(np.argmax(np.abs(spin)))]} but {body.label} runs along "
+                         f"{'XYZ'[int(np.argmax(np.abs(axis)))]}; array it about "
+                         f"{'XYZ'[int(np.argmax(np.abs(axis)))]} and move the array onto the body's centre line."))
+            continue
+        if "translate" not in p:
+            continue                                   # no placement: the ring spins about the world axis, already tested
+        blo, bhi = _box(body)
+        centre_b, reach = (blo + bhi) / 2, 0.5 * float(np.max(bhi - blo))
+        d = np.asarray(p["translate"], dtype=float) - centre_b
+        off = float(np.linalg.norm(d - np.dot(d, axis) * axis))
+        if off > 0.1 * reach:
+            label, subject = o.get("label") or o["id"], o.get("component") or o.get("part") or o["id"]
+            out.append(Issue("off_axis", "fix", subject,
+                             f"{label} spins around a line {off:.0f} {b.program.get('units', 'mm')} off "
+                             f"{body.label}'s centre line. Move the array's pivot onto the body's centre line."))
+    return out
+
+
+ALIGNED = re.compile(r"\b(?:along|aligned with|parallel to|parallel with)\s+(?:the\s+|each\s+)?")
+
+
+def _name_tokens(s: str) -> list[str]:
+    return [w for w in re.sub(r"[^a-z]+", " ", s.lower()).split() if len(w) > 1 and not w.isdigit()]
+
+
+def _principal(s: Shape) -> tuple[np.ndarray, float] | None:
+    """The shape's principal direction (first SVD vector of its centred vertices) and its elevation in degrees.
+    None when the shape is stocky (elongation under 2), for which no direction is meaningful."""
+    pts = np.asarray(s.arrays()[0], dtype=np.float64)
+    if len(pts) < 3:
+        return None
+    c = pts - pts.mean(0)
+    _, sv, vt = np.linalg.svd(c, full_matrices=False)
+    if sv[1] <= 0 or sv[0] / sv[1] < 2.0:
+        return None
+    d = vt[0]
+    return d, float(np.degrees(np.arcsin(min(1.0, abs(float(d[1]))))))
+
+
+def alignment(b: Build) -> list[Issue]:
+    """Parts the plan says run along another part (a spring along its arm) must actually point the same way."""
+    parts = [p for p in (b.program.get("blueprint") or {}).get("parts") or []
+             if isinstance(p, dict) and str(p.get("name", ""))]
+    names: dict[tuple[str, ...], str] = {}
+    for p in parts:
+        toks = _name_tokens(str(p["name"]))
+        if toks and tuple(toks) not in names:
+            names[tuple(toks)] = str(p["name"])
+    out = []
+    seen = set()
+    for p in parts:
+        subject = str(p["name"])
+        text = " ".join(str(p.get(k) or "") for k in ("role", "position")).lower()
+        for m in ALIGNED.finditer(text):
+            words = _name_tokens(text[m.end():])
+            target = None
+            for n in range(min(4, len(words)), 0, -1):
+                target = names.get(tuple(words[:n]))
+                if target:
+                    break
+            if not target or target == subject or (subject, target) in seen:
+                continue
+            seen.add((subject, target))
+            sub = [s for s in b.shapes if _solid(s) and s.part == subject]
+            tgt = [s for s in b.shapes if _solid(s) and s.part == target]
+            su = next((d for d in (_principal(s) for s in sub) if d), None)
+            tu = next((d for d in (_principal(s) for s in tgt) if d), None)
+            if not su or not tu:
+                continue
+            off = float(np.degrees(np.arccos(min(1.0, abs(float(np.dot(su[0], tu[0])))))))
+            if off > 20:
+                s_label = next((s.label for s in sub if s.label), subject)
+                t_label = next((s.label for s in tgt if s.label), target)
+                out.append(Issue("alignment", "fix", next((s.component for s in sub if s.component), ""),
+                                 f"{s_label} should run along {t_label} (the plan says so) "
+                                 f"but sits {off:.0f} degrees off it."))
+    return out
+
+
+_HEAD_NOUN_DROP = {"left", "right", "front", "rear", "upper", "lower", "inner", "outer", "a", "b", "source"}
+
+
+def _head_noun(label: str) -> str:
+    words = [w for w in ("".join(ch for ch in t.lower() if ch.isalpha()) for t in label.split()) if w]
+    for w in reversed(words):
+        if w not in _HEAD_NOUN_DROP:
+            return w
+    return ""
+
+
+def card_rules(b: Build) -> list[Issue]:
+    """Knowledge cards state how a kind of object is really proportioned (a balanced lamp's arm rises steeply);
+    every built shape named for one of the card's parts must sit inside the card's stated range."""
+    bp = b.program.get("blueprint") or {}
+    text = " ".join(str(bp.get(k) or "") for k in ("title", "summary")) + " " + str(b.program.get("name") or "")
+    out = []
+    for card in knowledge.pick(text):
+        for rise in card.rises:
+            for s in b.shapes:
+                if not _solid(s) or _head_noun(s.label) != rise.word:
+                    continue
+                r = _principal(s)
+                if r is None:
+                    continue
+                elev = r[1]
+                if not rise.lo <= elev <= rise.hi:
+                    out.append(Issue("proportion", "fix", s.component,
+                                     f"{s.label} rises {elev:.0f} degrees; a {card.title.lower()}'s {rise.word} "
+                                     f"rises {rise.lo:.0f} to {rise.hi:.0f} degrees (knowledge card). "
+                                     + ("Tilt it up." if elev < rise.lo else "Tilt it down.")))
     return out
 
 
@@ -418,7 +579,8 @@ def stability(b: Build) -> list[Issue]:
     return []
 
 
-CHECKS = (floating, cavity_floating, overlaps, array_copies, thin_wall, off_axis, size, missing, stability, roof)
+CHECKS = (floating, cavity_floating, overlaps, array_copies, thin_wall, off_axis, array_axis, alignment,
+          card_rules, size, missing, stability, roof)
 
 
 def critique(program: dict, shapes: list[Shape], comps: list[Component]) -> list[Issue]:

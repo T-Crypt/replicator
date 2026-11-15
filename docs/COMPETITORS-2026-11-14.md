@@ -51,9 +51,12 @@ is not a V where a pitch is planned, does not cut into the rooms, matches a stat
 `size` check (warn past 15%, sent back to the model past 40%). The original roof is now blocked; the
 desk lamp from the same run (twice its planned size) is blocked too. The tighter size check also
 caught a defect that had shipped in the README turbofan since session 1: its fan, reverse vanes and
-turbine were arrayed around the wrong axis (54% too wide); corrected, with fresh previews. Still
-open: `off_axis` inspects round parts but not radial arrays, which is how those three rings got
-through, and the lamp's flat arms are not flagged. Breadth is real only when the checks hold for
+turbine were arrayed around the wrong axis (54% too wide); corrected, with fresh previews. Then
+three more checks: radial arrays must spin about the round body they wrap (catches three of the
+four broken turbofan rings), a part the plan puts "along" another must point the same way (the
+lamp's springs), and knowledge cards can bound a part's elevation (the lamp's arms, which follow a
+flat plan and so pass every build-against-plan check). Fixing a silent skip in `array_copies` then
+caught the turbofan's fan blades fused into a flat disc. Breadth is real only when the checks hold for
 every kind of thing.
 
 ---

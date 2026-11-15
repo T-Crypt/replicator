@@ -13,18 +13,34 @@ DIR = Path(__file__).parent
 
 
 @dataclass(frozen=True)
+class Rise:
+    word: str
+    lo: float
+    hi: float
+
+
+@dataclass(frozen=True)
 class Card:
     name: str
     title: str
     keywords: tuple[str, ...]
     body: str
+    rises: tuple[Rise, ...] = ()
+
+
+_RISE = re.compile(r"\b(\w+)\s+(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\b")
 
 
 def _parse(path: Path) -> Card:
     head, body = path.read_text().split("\n---\n", 1)
     meta = dict(line.split(":", 1) for line in head.strip("-\n").splitlines() if ":" in line)
     kws = tuple(k.strip().lower() for k in meta["keywords"].split(",") if k.strip())
-    return Card(path.stem, meta["title"].strip(), kws, body.strip())
+    rises = []
+    for entry in meta.get("rise", "").split(";"):
+        m = _RISE.fullmatch(entry.strip())
+        if m:
+            rises.append(Rise(m.group(1), float(m.group(2)), float(m.group(3))))
+    return Card(path.stem, meta["title"].strip(), kws, body.strip(), tuple(rises))
 
 
 CARDS = [_parse(p) for p in sorted(DIR.glob("*.md"))]
