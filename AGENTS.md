@@ -21,6 +21,10 @@ replicator [program.json | model.glb | bundle.zip]              # the real windo
 ```
 
 `--shot` needs a display (a Wayland or X11 session): Qt's `offscreen` platform cannot run Quick3D. Look at every shot you take; a shot is the only proof a QML change works.
+`--shot` grabs a hidden window, which lays out only during the grab, so overlays projected from the 3D view (Dissect
+callouts) and narrow-window layouts can come out wrong. For those, `tools/shot.sh program.json out.png [WxH] [cue ...]`
+takes one frame of the real window in a headless gamescope. Shots and recordings use an empty services.json unless
+`REPLICATOR_SERVICES` is set, so a frame never shows the operator's endpoints or paths.
 
 ## Where things live
 

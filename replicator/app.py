@@ -39,6 +39,11 @@ def main(argv=None) -> int:
     ap.add_argument("--ui", default="", help="open an overlay for --shot: commander | preferences | materials | console | context | sheet")
     a = ap.parse_args(argv)
 
+    if (a.shot or a.record) and "REPLICATOR_SERVICES" not in os.environ:
+        # a frame that may end up in a README never shows the operator's endpoints, LAN addresses or paths;
+        # set REPLICATOR_SERVICES to film with a real configuration
+        import tempfile
+        os.environ["REPLICATOR_SERVICES"] = str(Path(tempfile.mkdtemp(prefix="replicator-shot-")) / "services.json")
     pinned = gpu.apply(software=a.software)
 
     from PySide6.QtCore import QTimer

@@ -449,7 +449,12 @@ ApplicationWindow {
                     blueprint: window.blueprint
                     explode: window.explode
                     explodeGoal: window.explodeTarget
-                    avoid: window.empty || dream.hideT > 0.5 ? Qt.rect(0, 0, 0, 0) : Qt.rect(dream.x, dream.y, dream.width, dream.height)
+                    avoid: {   // the specify capsule, and the explode bar above it when shown
+                        if (window.empty || dream.hideT > 0.5) return Qt.rect(0, 0, 0, 0)
+                        if (!showcaseBar.visible) return Qt.rect(dream.x, dream.y, dream.width, dream.height)
+                        const x0 = Math.min(dream.x, showcaseBar.x), x1 = Math.max(dream.x + dream.width, showcaseBar.x + showcaseBar.width)
+                        return Qt.rect(x0, showcaseBar.y, x1 - x0, dream.y + dream.height - showcaseBar.y)
+                    }
                     hidden: window.hidden
                     isolate: window.isolate
                     showcase: window.showcase
