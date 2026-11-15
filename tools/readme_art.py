@@ -159,8 +159,8 @@ def banner() -> str:
                       f'<rect x="{mx - 4 - 6.6 * len(name) / 2:.0f}" y="{ty - 12:.0f}" width="{8 + 6.6 * len(name):.0f}" height="19" rx="4" fill="#0b1420" stroke="{col}" stroke-opacity=".8"/>'
                       f'<text x="{mx:.0f}" y="{ty + 1:.0f}" text-anchor="middle" class="m" font-size="11" fill="{INK}">{name}</text>')
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="t d">
-<title id="t">Replicator: you dream it, you build it</title>
-<desc id="d">A night workshop floor. On the left, the Replicator title, the tagline, a dream prompt being typed and the pipeline blueprint, program, manifold3d, build. On the right a turbofan engine floats in an exploded view while a scan plane sweeps across it, turning the cyan blueprint wireframe into solid coloured parts: intake cowl, compressor, turbine stage and nozzle.</desc>
+<title id="t">Replicator: you specify it, you build it</title>
+<desc id="d">A night workshop floor. On the left, the Replicator title, the tagline, a specify prompt being typed and the pipeline blueprint, program, manifold3d, build. On the right a turbofan engine floats in an exploded view while a scan plane sweeps across it, turning the cyan blueprint wireframe into solid coloured parts: intake cowl, compressor, turbine stage and nozzle.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05090f"/><stop offset=".62" stop-color="#0a1421"/><stop offset="1" stop-color="#0d1c2e"/></linearGradient>
 <radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="{CY}" stop-opacity=".22"/><stop offset="1" stop-color="{CY}" stop-opacity="0"/></radialGradient>
@@ -186,18 +186,18 @@ def banner() -> str:
 <rect x="{scan_from - 60 + (scan_to - scan_from) * .55:.0f}" y="70" width="60" height="252" fill="url(#scan)">
   <animate attributeName="x" values="{scan_from - 60};{scan_to - 60};{scan_to - 60};{scan_from - 60}" keyTimes="0;.45;.85;1" dur="9s" repeatCount="indefinite"/></rect>
 </g>
-<text x="64" y="74" class="m" font-size="13" letter-spacing="3.2" fill="{AM}">LOCAL TEXT-TO-3D WORKSHOP</text>
+<text x="64" y="74" class="m" font-size="13" letter-spacing="3.2" fill="{AM}">ENGINEERING AND RESEARCH WORKSHOP</text>
 <text x="62" y="138" class="s" font-size="62" font-weight="700" letter-spacing="1" fill="{INK}">Replicator</text>
-<text x="64" y="178" class="s" font-size="22" fill="#c9d6e3">You dream it, you build it.</text>
+<text x="64" y="178" class="s" font-size="22" fill="#c9d6e3">You specify it, you build it.</text>
 <rect x="64" y="212" width="560" height="48" rx="24" fill="#0f1a28" stroke="#2a4e68" stroke-width="1.5"/>
 <rect x="72" y="220" width="70" height="32" rx="16" fill="{CY}" fill-opacity=".14"/>
-<text x="107" y="241" text-anchor="middle" class="m" font-size="12.5" font-weight="700" letter-spacing="2" fill="{CY}">DREAM</text>
+<text x="107" y="241" text-anchor="middle" class="m" font-size="12.5" font-weight="700" letter-spacing="2" fill="{CY}">SPECIFY</text>
 <text x="156" y="241.5" class="s" font-size="15.5" fill="#d7e2ec">"a turbofan with reverse thrust doors"</text>
 <rect x="433" y="227" width="2" height="19" fill="{CY}" class="blink"/>
 <rect x="520" y="219" width="96" height="34" rx="17" fill="{BL}"/>
 <text x="568" y="241" text-anchor="middle" class="s" font-size="14" font-weight="600" fill="#fff">Replicate</text>
 {"".join(chip_svg)}
-<text x="64" y="356" class="m" font-size="12" fill="{DIM}">local models · editable at every step · GLB / STL / Blender · no cloud</text>
+<text x="64" y="356" class="m" font-size="12" fill="{DIM}">your models · editable at every step · STEP / STL / 3MF / GLB · agents over MCP</text>
 </svg>
 """
 
@@ -231,7 +231,7 @@ def how() -> str:
     # ---- row 1: the pipeline
     o.append(f'<text x="40" y="132" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">THE PIPELINE</text>')
     stages = [
-        ("chat", CY, "1 · Dream", ["A sentence, a sketch", "of an idea, or an edit"], '"a turbofan with', 'reverse doors"'),
+        ("chat", CY, "1 · Specify", ["A sentence, a sketch", "of an idea, or an edit"], '"a turbofan with', 'reverse doors"'),
         ("sheet", "#9aa8ff", "2 · Blueprint", ["Dirk-27B plans parts,", "sizes, materials"], "parts: 14", "units: mm"),
         ("code", "#c4a1ff", "3 · BuildProgram", ["Ordered ops, each tagged", "with its component"], "revolve · array", "boolean · loft"),
         ("cube", "#7ee8ac", "4 · Kernel", ["manifold3d evaluates", "every step, cached"], "10-60 ms", "watertight"),
@@ -318,12 +318,12 @@ def how() -> str:
     o.append(f'<text x="84" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">Pinned at start; the app quits if it lands on the RTX card.</text>')
     o.append(f'<rect x="596" y="{y3 + 24}" width="540" height="80" rx="9" fill="#0b1420" stroke="{AM}" stroke-opacity=".6"/>')
     o.append(f'<text x="616" y="{y3 + 52}" class="m" font-size="14" font-weight="700" fill="{AM}">RTX card</text>')
-    o.append(f'<text x="616" y="{y3 + 74}" class="s" font-size="13.5" fill="#c9d6e3">The model that dreams (llama-swap) and image-to-3D (Berth).</text>')
-    o.append(f'<text x="616" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">Always under a lease, so a dream never fights a chat for memory.</text>')
+    o.append(f'<text x="616" y="{y3 + 74}" class="s" font-size="13.5" fill="#c9d6e3">The model that specifies (llama-swap) and image-to-3D (Berth).</text>')
+    o.append(f'<text x="616" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">Always under a lease, so a build never fights a chat for memory.</text>')
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="t d">
 <title id="t">How Replicator works</title>
-<desc id="d">Five stages: a dream sentence, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and GLB or STL export go out. The workshop draws on the Intel iGPU, and the models run on the RTX card under llama-swap and Berth.</desc>
+<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. The workshop draws on the Intel iGPU, and the models run on the RTX card under llama-swap and Berth.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1420"/><stop offset="1" stop-color="#070c13"/></linearGradient>
 <style>{STYLE}</style>

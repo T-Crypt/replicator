@@ -1,7 +1,10 @@
-"""Dream -> blueprint -> BuildProgram, on local models only (llama-swap :9090 or Strata :8080).
+"""Specify -> blueprint -> BuildProgram, on any OpenAI-compatible chat endpoint.
 
-Engines: "dirk" (Dirk-27B, default, reasoning xhigh), "coder"/"agent" (NInfer roles), "strata" (Strata :8080,
-only while it is the resident engine). Nothing here talks to a cloud model.
+Built-in engines are local: "dirk" (Dirk-27B, default, reasoning xhigh), "coder"/"agent" (NInfer roles) on llama-swap
+:9090, "strata" (Strata :8080, only while it is the resident engine). More come from the `endpoints` list in
+~/.config/Replicator/services.json: a lab's served checkpoint, vLLM, Ollama, or a hosted API. Nothing talks to a
+model the operator has not named there; an API key is read from the environment variable the entry names, never
+stored in a file.
 """
 from __future__ import annotations
 
@@ -26,12 +29,39 @@ REPAIR_ROUNDS = 2
 CRITIQUE_ROUNDS = 1
 
 
+def _chat_url(url: str) -> str:
+    url = url.rstrip("/")
+    return url if url.endswith("/chat/completions") else url + ("/chat/completions" if url.endswith("/v1")
+                                                                 else "/v1/chat/completions")
+
+
+def engines() -> dict[str, tuple[str, str, dict | None, str]]:
+    """name -> (chat URL, model, chat_template_kwargs, key env var): the built-ins plus the operator's endpoints."""
+    from .. import config
+    out = {k: (*v, "") for k, v in ENGINES.items()}
+    for e in config.load().get("endpoints", []):
+        if isinstance(e, dict) and e.get("name") and e.get("url") and e.get("model"):
+            out[str(e["name"])] = (_chat_url(str(e["url"])), str(e["model"]), None, str(e.get("key_env", "")))
+    return out
+
+
 def chat(messages: list[dict], engine: str = "dirk", max_tokens: int = 14000, timeout: int = 900) -> str:
-    url, model, kwargs = ENGINES[engine]
+    known = engines()
+    if engine not in known:
+        raise ValueError(f"unknown engine {engine!r}; known: {', '.join(known)} (add more under endpoints in "
+                         "~/.config/Replicator/services.json)")
+    url, model, kwargs, key_env = known[engine]
     body = {"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.6}
     if kwargs:
         body["chat_template_kwargs"] = kwargs
-    req = urllib.request.Request(url, json.dumps(body).encode(), {"Content-Type": "application/json"})
+    headers = {"Content-Type": "application/json"}
+    if key_env:
+        import os
+        key = os.environ.get(key_env, "")
+        if not key:
+            raise ValueError(f"engine {engine!r} needs an API key in ${key_env}, which is not set")
+        headers["Authorization"] = f"Bearer {key}"
+    req = urllib.request.Request(url, json.dumps(body).encode(), headers)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         data = json.load(r)
     return data["choices"][0]["message"]["content"] or ""

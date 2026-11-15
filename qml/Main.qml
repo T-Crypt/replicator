@@ -134,6 +134,7 @@ ApplicationWindow {
         { id: "exportGlb", group: "File", title: "Export GLB", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("glb") },
         { id: "exportStl", group: "File", title: "Export STL for 3D printing", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("stl") },
         { id: "export3mf", group: "File", title: "Export 3MF for printing", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("3mf") },
+        { id: "exportStep", group: "File", title: "Export STEP for CAD (faceted solids)", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("step") },
         { id: "exportObj", group: "File", title: "Export OBJ", icon: "exportOut", enabled: () => !window.empty, run: () => studio.exportAs("obj") },
         { id: "close", group: "File", title: "Close the build (start screen)", keys: "Ctrl+W", icon: "close", enabled: () => !window.empty, run: () => { timeline.stop(); window.setMode("build"); studio.closeProgram() } },
         // edit
@@ -216,7 +217,7 @@ ApplicationWindow {
     readonly property var byId: { const m = {}; for (const a of actions) m[a.id] = a; return m }
     function pick(ids) { return ids.map(i => i === "-" ? "-" : byId[i]) }
     readonly property var menus: [
-        { title: "File", items: ["open", "import", "image3d", "-", "exportGlb", "exportStl", "export3mf", "exportObj", "-", "close"] },
+        { title: "File", items: ["open", "import", "image3d", "-", "exportGlb", "exportStl", "export3mf", "exportStep", "exportObj", "-", "close"] },
         { title: "Edit", items: ["undo", "redo", "-", "deselect", "showAll", "-", "fixIssues", "-", "commander", "preferences"] },
         { title: "Create", items: ["add.box", "add.cylinder", "add.sphere", "add.torus", "add.capsule", "-", "add.gear", "add.helix", "add.pipe", "add.loft",
                                    "-", "add.tube", "add.nozzle", "add.rotor", "add.grille"] },

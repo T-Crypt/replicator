@@ -119,3 +119,25 @@ def test_voice_commands_fill_placeholders_per_argument_without_a_shell():
     assert cmd == ["tts.py", "a; rm -rf ~ $(x)", "-o", "/t/o.wav", "--voice", "af_heart"]
     assert voice._runnable("python3 -c pass") and not voice._runnable("no-such-binary-xyz {wav}")
     assert voice.status({"tts_cmd": "no-such-binary-xyz {text}"})["tts"] != "local command"
+
+
+def test_configured_endpoints_join_the_engines_and_keys_stay_in_the_environment(tmp_path, monkeypatch):
+    import json as _json
+    from replicator import config
+    from replicator.llm import client
+    f = tmp_path / "services.json"
+    f.write_text(_json.dumps({"endpoints": [
+        {"name": "lab-ft", "url": "http://192.168.1.40:8000/v1", "model": "cad-ft-7b"},
+        {"name": "hosted", "url": "https://api.example.com", "model": "big", "key_env": "EXAMPLE_KEY"},
+        {"name": "broken"}]}))
+    monkeypatch.setattr(config, "PATH", f)
+    e = client.engines()
+    assert {"dirk", "strata", "lab-ft", "hosted"} <= set(e) and "broken" not in e
+    assert e["lab-ft"][0] == "http://192.168.1.40:8000/v1/chat/completions"
+    assert e["hosted"][0] == "https://api.example.com/v1/chat/completions"
+    monkeypatch.delenv("EXAMPLE_KEY", raising=False)
+    import pytest as _pytest
+    with _pytest.raises(ValueError, match="EXAMPLE_KEY"):
+        client.chat([{"role": "user", "content": "hi"}], "hosted")
+    with _pytest.raises(ValueError, match="unknown engine"):
+        client.chat([{"role": "user", "content": "hi"}], "nope")

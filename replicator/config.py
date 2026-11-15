@@ -9,6 +9,10 @@ Everything here is off until the operator turns it on in Preferences:
   tts_cmd      str    or a local command; {text}, {wav} and {voice} are filled in (no shell), e.g. Kokoro's tts.py on CPU
   stt_url      str    an OpenAI-compatible transcription server (faster-whisper-server, whisper.cpp server)
   stt_cmd      str    or a local command, "{wav}" is replaced by the recording (for example: whisper-cli -m model.bin -f {wav} -nt)
+  endpoints    list   more model engines, each {"name", "url", "model", "key_env"}: any OpenAI-compatible server
+                      (a lab's checkpoint on vLLM, Ollama, a hosted API). key_env names the environment variable that
+                      holds the API key; the key itself never goes in this file. Example:
+                      {"name": "lab-ft", "url": "http://192.168.1.40:8000/v1", "model": "cad-ft-7b", "key_env": ""}
 """
 from __future__ import annotations
 
@@ -18,7 +22,7 @@ from pathlib import Path
 
 PATH = Path(os.environ.get("REPLICATOR_SERVICES", Path.home() / ".config" / "Replicator" / "services.json"))
 DEFAULTS = {"research": False, "search_url": "", "speak": False, "tts_url": "", "tts_voice": "af_heart",
-            "tts_cmd": "", "stt_url": "", "stt_cmd": ""}
+            "tts_cmd": "", "stt_url": "", "stt_cmd": "", "endpoints": []}
 
 
 def load() -> dict:

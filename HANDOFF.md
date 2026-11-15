@@ -1,3 +1,20 @@
+# Session 5 (2026-11-14 evening): specify, STEP, MCP, endpoints, preview film
+
+Read `AGENTS.md`, then `docs/COMPETITORS-2026-11-14.md` (the strategy; its top section is the current status).
+Scope (operator): an engineering and research workshop for nearly anything, from houses and floor plans to boards,
+household objects, machines and concepts. Never describe it as only a CAD tool.
+
+- "Dream" is "specify" in every visible string; internal names (`studio.dream`, `client.dream`) are unchanged.
+- STEP export (`core/step.py`): OCCT reads all 11 fixtures back as valid solids with the same volume. Sliver
+  triangles join their neighbour (the rocket engine's actuators used to read back as open shells).
+- MCP server (`replicator/mcp_server.py`, `.mcp.json`); an open window reloads agent edits as one undo step.
+- `endpoints` in services.json add any OpenAI-compatible engine; keys stay in env vars.
+- Preview film: `brag-output/brag.mp4` (56 s, scored, poster in frame 0), scripts in `tools/film/`, take via
+  `tools/record.sh` (headless gamescope on the iGPU; `--shot` needs `WAYLAND_DISPLAY=wayland-1` from a plain shell).
+- Open: the checks passed a V-shaped house roof (fixed by hand through MCP, see `fixtures/house_two_bed.json` notes)
+  and missed a lamp with flat arms; add a building roof/pitch check and tighten `size`. STEP is faceted (planes
+  only); analytic surfaces need the OCCT layer (P2). `cadquery-ocp` and `mcp` are now in the venv.
+
 # Session 4 (2026-11-14): accuracy workshop, on branch `accuracy-workshop`
 
 Read `AGENTS.md` first; it is the current map. Committed in small units (`git log main..accuracy-workshop`).

@@ -33,8 +33,11 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
 | `replicator/core/importers.py` | `ROUTES`: every importable extension and how it becomes a Y-up GLB |
 | `replicator/core/reverse.py`, `assembly.py`, `explain.py` | mesh decomposition and ledger, components and explode, checked explanations |
 | `replicator/core/blender_link.py`, `render.py` | Blender MCP round trip, Cycles stills (CPU) |
-| `replicator/knowledge/*.md` | curated cards (real parts and proportions), picked by keyword into the dream prompts |
-| `replicator/llm/client.py`, `llm/prompts/*.md` | dream (blueprint, program, repair, critique round), edit (optionally scoped), naming, explain |
+| `replicator/core/step.py`, `export.py` | STEP (faceted B-rep, one solid per lump, cavities as voids), STL, 3MF, GLB, OBJ |
+| `replicator/core/drawing.py` | A3 sheets: third-angle views, section or floor plan (buildings), dimensions, parts list |
+| `replicator/mcp_server.py` | the workshop as MCP tools; every write validated and built first; `.mcp.json` registers it |
+| `replicator/knowledge/*.md` | curated cards (real parts and proportions), picked by keyword into the specify prompts |
+| `replicator/llm/client.py`, `llm/prompts/*.md` | specify (`client.dream`: blueprint, program, repair, critique round), edit (optionally scoped), naming, explain; `engines()` = built-ins plus `endpoints` from services.json |
 | `replicator/qt/bridge.py` | the `studio` QObject: every property and slot QML uses |
 | `qml/Main.qml` | layout, workspace state and the `actions` registry (menus, shortcuts, right-click menus, Commander) |
 | `qml/panels/`, `qml/viewport/`, `qml/Replicator/UI/` | one file per panel; the 3D view; design tokens and controls |

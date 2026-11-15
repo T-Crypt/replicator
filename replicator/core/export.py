@@ -1,4 +1,4 @@
-"""Export a build to GLB, OBJ, STL or 3MF with trimesh. STL and 3MF are for printers: they refuse anything that is not
+"""Export a build to GLB, OBJ, STL, 3MF (trimesh) or STEP (faceted B-rep, core/step.py). STL and 3MF are for printers: they refuse anything that is not
 watertight (prints must not fail) and are written Z-up, the printer convention, so importing them back is lossless."""
 from __future__ import annotations
 
@@ -9,7 +9,8 @@ import trimesh
 from .evaluate import Shape
 
 PRINT_FORMATS = ("stl", "3mf")
-FORMATS = ("glb", "gltf", "obj", *PRINT_FORMATS)
+CAD_FORMATS = ("step", "stp")
+FORMATS = ("glb", "gltf", "obj", *PRINT_FORMATS, *CAD_FORMATS)
 Y_TO_Z_UP = trimesh.transformations.rotation_matrix(1.5707963267948966, [1, 0, 0])
 
 
@@ -57,14 +58,17 @@ def _print_file(shapes: list[Shape], materials: dict, fmt: str, path: Path) -> N
     merged.export(path)
 
 
-def export(shapes: list[Shape], materials: dict, path: str | Path) -> Path:
+def export(shapes: list[Shape], materials: dict, path: str | Path, name: str = "", units: str = "mm") -> Path:
     path = Path(path)
     fmt = path.suffix.lower().lstrip(".")
     if fmt not in FORMATS:
         raise ValueError(f"unsupported format {fmt or path.name}; use one of {', '.join(FORMATS)}")
     if not shapes:
         raise ValueError("nothing to export: the build has no visible parts")
-    if fmt in PRINT_FORMATS:
+    if fmt in CAD_FORMATS:
+        from . import step
+        step.write(shapes, path, name=name or path.stem, units=units)
+    elif fmt in PRINT_FORMATS:
         _print_file(shapes, materials, fmt, path)
     elif fmt == "obj":
         to_scene(shapes, materials).export(path, mtl_name=f"{path.stem}.mtl")

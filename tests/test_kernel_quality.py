@@ -199,7 +199,7 @@ def test_stl_accepts_separate_bodies_and_hollow_parts_and_refuses_open_surfaces_
 def test_export_refuses_unknown_formats_and_empty_builds(tmp_path):
     shapes, mats = shapes_and_materials()
     with pytest.raises(ValueError, match="3mf"):
-        export(shapes, mats, tmp_path / "x.step")
+        export(shapes, mats, tmp_path / "x.dwg")
     with pytest.raises(ValueError, match="no visible parts"):
         export([], mats, tmp_path / "x.glb")
 

@@ -1,39 +1,56 @@
-<p align="center"><img src="assets/banner.svg" alt="Replicator: a turbofan engine floats in an exploded view over a night workshop floor while a scan plane turns its cyan blueprint wireframe into solid coloured parts. On the left, a dream prompt and the pipeline blueprint, program, manifold3d, build." width="100%"></p>
+<p align="center"><img src="assets/banner.svg" alt="Replicator: a turbofan engine floats in an exploded view over a night workshop floor while a scan plane turns its cyan blueprint wireframe into solid coloured parts. On the left, a specify prompt and the pipeline blueprint, program, manifold3d, build." width="100%"></p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/python-3.14-7ad4f2?labelColor=0a1017" alt="Python 3.14">
   <img src="https://img.shields.io/badge/qt-6.12%20%C2%B7%20Quick%203D-7ad4f2?labelColor=0a1017" alt="Qt 6.12, Qt Quick 3D">
   <img src="https://img.shields.io/badge/kernel-manifold3d-7ee8ac?labelColor=0a1017" alt="manifold3d kernel">
-  <img src="https://img.shields.io/badge/models-local%20only-e8b56f?labelColor=0a1017" alt="Local models only">
+  <img src="https://img.shields.io/badge/models-local%20or%20your%20endpoint-e8b56f?labelColor=0a1017" alt="Local models or any endpoint you name">
+  <img src="https://img.shields.io/badge/agents-MCP-e8b56f?labelColor=0a1017" alt="Agents over MCP">
   <img src="https://img.shields.io/badge/runs%20on-arch%20linux%20%C2%B7%20hyprland-c4a1ff?labelColor=0a1017" alt="Arch Linux, Hyprland">
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick start</a> &nbsp;·&nbsp; <a href="#how-it-works">How it works</a> &nbsp;·&nbsp; <a href="#the-buildprogram">BuildProgram</a> &nbsp;·&nbsp; <a href="#modes">Modes</a> &nbsp;·&nbsp; <a href="#image-to-3d">Image to 3D</a> &nbsp;·&nbsp; <a href="#blender">Blender</a> &nbsp;·&nbsp; <a href="#roadmap">Roadmap</a>
+  <a href="#quick-start">Quick start</a> &nbsp;·&nbsp; <a href="#how-it-works">How it works</a> &nbsp;·&nbsp; <a href="#the-buildprogram">BuildProgram</a> &nbsp;·&nbsp; <a href="#modes">Modes</a> &nbsp;·&nbsp; <a href="#agents-mcp">Agents</a> &nbsp;·&nbsp; <a href="#image-to-3d">Image to 3D</a> &nbsp;·&nbsp; <a href="#blender">Blender</a> &nbsp;·&nbsp; <a href="#roadmap">Roadmap</a>
 </p>
 
 # Replicator
 
-You dream it, you build it. Describe an object in a sentence. A local model plans it and writes a
-build program, and the object assembles on a 3D workshop floor one step at a time. You can stop it
-at any step and change it.
+You specify it, you build it. Describe a thing in a sentence: a house with a floor plan, a circuit
+board, a desk lamp, a rocket engine, a liquid-cooled PC, a concept nobody has built yet. A model
+plans it from engineering knowledge, writes a build program, and a real solid-modelling kernel
+builds it one step at a time. You can stop at any step, change it, take it apart, check it, draw it
+and hand it to CAD, a printer or a renderer.
 
-Replicator is the Holodeck's sibling: the Holodeck dreams the image and the Replicator builds the
-object. Everything runs on your machine. The model runs on llama-swap, the geometry comes from
-manifold3d, and the workshop window draws on the integrated GPU. Nothing goes to a cloud service.
+Replicator is an engineer's workshop first and a research tool second. The design is a validated
+program, not a picture or generated code, so every part has a size, a material and a mass; nine
+automatic checks catch parts that float, clip, stand unstably or miss their planned size; and
+Reverse mode takes an existing model apart into pieces with an evidence ledger saying what was
+measured, what was inferred and what nobody can tell.
+
+<p align="center"><img src="assets/range.jpg" alt="Six things Replicator built: a liquid-cooled PC with glowing coolant in a glass case, a Raspberry Pi 5 at real scale, a gas-generator rocket engine with a bell nozzle, the PC exploded in Dissect mode with labelled callouts, a two-bedroom house with a gable roof, and that house's drawing sheet with a floor plan and two elevations." width="100%"></p>
+
+<p align="center"><img src="assets/build-timeline.gif" alt="The liquid-cooled PC assembling in the workshop one build step at a time along the timeline, then sliding apart in Dissect mode with callouts on every component." width="900"></p>
+
+Models are yours to choose: local ones on llama-swap or Strata by default, or any OpenAI-compatible
+endpoint you name (a lab's own checkpoint, vLLM, Ollama, a hosted API). Agents such as Claude Code
+or Codex can drive the same workshop over MCP. The window draws on the integrated GPU; the geometry
+comes from manifold3d on the CPU.
 
 ```sh
 ./launch.sh                                   # an empty workshop
-./launch.sh fixtures/dirk_engine_v2.json      # open a program and watch it build
-./launch.sh ~/Downloads/robot.glb             # take a mesh apart in Reverse
+./launch.sh fixtures/house_two_bed.json       # open a program and watch it build
+./launch.sh ~/Downloads/robot.glb             # take a model apart in Reverse
 ```
 
 ## How it works
 
-<p align="center"><img src="assets/how-it-works.svg" alt="How Replicator works. Five stages: a dream sentence, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and GLB or STL export go out. The workshop draws on the Intel iGPU; the models run on the RTX card under llama-swap and Berth." width="100%"></p>
+<p align="center"><img src="assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. The workshop draws on the Intel iGPU; the models run on the RTX card under llama-swap and Berth." width="100%"></p>
 
-1. **Dream.** You type what you want: *"a turbofan with reverse thrust doors"*.
-2. **Blueprint.** Dirk-27B plans the object first: its parts, their sizes in millimetres, the
+1. **Specify.** You type what you want: *"a two-bedroom house with a gable roof"* or *"a turbofan with
+   reverse thrust doors"*. With research on, the model looks up real proportions first (only search
+   words leave the machine), and curated knowledge cards for houses, electronics boards, desktop PCs,
+   drones, light aircraft, rocket engines, turbofans, exoskeletons and car wheel corners feed the plan.
+2. **Blueprint.** The model plans the object first: its parts, their sizes in millimetres, the
    materials and how the parts fit together. The plan comes before any geometry, so the model never
    has to invent coordinates on the fly.
 3. **BuildProgram.** A second pass turns the blueprint into an ordered list of operations
@@ -47,6 +64,7 @@ manifold3d, and the workshop window draws on the integrated GPU. Nothing goes to
 
 Build step *k* is ops 0 to *k*. An op that a later op consumes disappears at that step, so every
 step shows the object as it stood at that moment, like the construction history in a CAD package.
+Buildings get a floor plan instead of a section on their drawing sheet.
 
 Edits work the same way. Type *"make the reverser doors wider"* and the model answers with a JSON
 Patch against the program, not a new program. Each save is a version you can step back to.
@@ -54,7 +72,7 @@ Patch against the program, not a new program. Each save is a version you can ste
 ## What Replicator does
 
 **Builds from a sentence**
-- **Two-stage dreaming.** A blueprint pass plans the object, then a program pass writes the ops. The
+- **Two-stage specifying.** A blueprint pass plans the object, then a program pass writes the ops. The
   prompts carry the rules that make engineered shapes look right: hollow bodies get a real wall,
   radial rings follow the body axis, and every op carries a label and a component.
 - **Repairs itself.** Validation and kernel errors go back to the model with the failing op, for up
@@ -62,17 +80,27 @@ Patch against the program, not a new program. Each save is a version you can ste
   models tend to add.
 - **Edits by patch.** An edit is a JSON Patch: applied, validated, then saved as a version. A bad
   patch never replaces a good program.
-- **Your choice of local model.** `dirk` (Dirk-27B, the default, reasoning at xhigh), the `coder` and
-  `agent` roles on llama-swap, or `strata` when that engine is up.
+- **Your choice of model.** `dirk` (Dirk-27B, the default, reasoning at xhigh), the `coder` and
+  `agent` roles on llama-swap, `strata` when that engine is up, or any endpoint you add (below).
+- **Checks the result.** Nine engineering checks run on every build: floating parts, parts loose in a
+  cavity, clipping, array copies, thin walls, off-axis rings, size against the blueprint, planned
+  parts that are missing, and whether it stands. Mass, centre of gravity and principal inertia come
+  from the material table and the exact solid. A failing check goes back to the model as an edit.
 
 **A real modelling kernel**
 - **manifold3d.** Watertight solids, exact booleans and convex hulls. A program can't produce a mesh
   with holes in it.
-- **19 operations.** Primitives (`box`, `cylinder`, `sphere`, `torus`, `capsule`, `extrude`,
-  `revolve`), builders (`loft`, `pipe`, `helix`, `gear` with involute teeth), modifiers
-  (`transform`, `array` linear/radial/mirror, `smooth`, `round`, `shell`, `deform` taper/twist/bend),
-  combiners (`boolean`, `hull`, `group`) and `mesh` for imported geometry.
-- **Exports.** GLB with materials for engines and the web, STL for the printer.
+- **25 operations.** Primitives (`box`, `cylinder`, `sphere`, `torus`, `capsule`, `extrude`,
+  `revolve`), builders (`loft`, `pipe`, `helix`, `gear` with involute teeth), engineering ops
+  (`tube`, `nozzle` with a Rao bell from throat radius and expansion ratio, `rotor`, `grille`, `wing`
+  with NACA sections), modifiers (`transform`, `array` linear/radial/mirror, `smooth`, `round`,
+  `shell`, `deform` taper/twist/bend), combiners (`boolean`, `hull`, `group`) and `mesh` for
+  imported geometry.
+- **Drawing sheets.** An A3 sheet straight from the program: third-angle views, a section (or a floor
+  plan for buildings), measured dimensions, numbered callouts and a parts list with computed masses.
+- **Exports.** STEP for CAD (exact faceted solids, one per connected lump, cavities kept as voids;
+  OpenCASCADE reads every fixture back as valid solids with the same volume), STL and 3MF for
+  printers, GLB with materials for engines and the web, OBJ.
 
 **A Cinema 4D-style workspace**
 - **Viewport.** A damped orbit camera with zoom to cursor and adaptive clip planes, a perspective
@@ -90,18 +118,40 @@ Patch against the program, not a new program. Each save is a version you can ste
 |---|---|---|
 | `1` | **Build** | Watch the build, pick any step, change its parameters or placement, rebuild. |
 | `2` | **Dissect** | An exploded view: every part slides out along its own axis, and callouts with leader lines follow the parts. |
-| `3` | **Reverse** | Import a mesh (`Ctrl+I`: GLB, glTF, OBJ, STL, PLY, OFF) and take it apart into pieces, repeated patterns, contacts and a likely assembly order. Every finding sits in an evidence ledger marked *observed*, *inferred* or *unknown*, and *Name parts* asks the model to label the pieces. |
+| `3` | **Reverse** | Import a model (`Ctrl+I`: 24 formats, including STEP and IGES through OpenCASCADE and FBX, USD and .blend through Blender) and take it apart into pieces, repeated patterns, contacts and a likely assembly order. Every finding sits in an evidence ledger marked *observed*, *inferred* or *unknown*, and *Name parts* asks the model to label the pieces. |
 | `4` | **Showcase** | A product stage with soft shadows, ambient occlusion, depth of field and a turntable. *Render* writes a Cycles still on the CPU in about 7 s. |
 
 ## Preview
 
-<p align="center"><img src="assets/preview-build.jpg" alt="Build mode: a Dirk-dreamed turbofan on the workshop grid, the Object Manager listing fourteen components, and the timeline with all 22 build steps as coloured blocks." width="900"></p>
+<p align="center"><img src="assets/preview-build.jpg" alt="Build mode: a turbofan specified by Dirk-27B on the workshop grid, the Object Manager listing fourteen components, and the timeline with all 22 build steps as coloured blocks." width="900"></p>
 
 <p align="center"><img src="assets/preview-dissect.jpg" alt="Dissect mode: the same engine exploded along its axis with labelled callouts for each component, and the Assembled to Exploded slider." width="900"></p>
 
 <p align="center"><img src="assets/preview-reverse.jpg" alt="Reverse mode: the evidence ledger on the right lists observed facts about the engine, such as 22 build steps producing 15 visible parts and a radial array of 22 fan blades." width="900"></p>
 
 <p align="center"><img src="assets/preview-cycles.jpg" alt="A Showcase still rendered with Cycles on the CPU: the engine on a reflective studio floor with a cyan glow ring inside the intake." width="640"></p>
+
+## Agents (MCP)
+
+`replicator.mcp_server` exposes the workshop to any MCP client. The document is a program file on
+disk: every write is validated and built before it replaces the file (the previous version is kept
+as `<name>.prev.json`), so an agent can never leave a broken program behind. A Replicator window
+with the same file open reloads it on change, and the agent's edit lands on the timeline as one undo
+step.
+
+| Tool | What it does |
+|---|---|
+| `op_reference` | The op vocabulary, generated from the kernel's own table |
+| `read_program`, `write_program`, `patch_program` | Read, create, or change by RFC 6902 JSON Patch |
+| `build_report` | Size, mass, components and every check, for the whole build or ops 0 to *k* |
+| `export` | STEP, STL, 3MF, GLB or OBJ |
+| `drawing_sheet` | The A3 sheet as SVG and PNG |
+| `specify` | A new program from a sentence, on any configured engine |
+| `engines` | Which models `specify` can use |
+| `reverse` | Take an existing model apart into a program with its evidence ledger |
+
+This repo's `.mcp.json` registers it for Claude Code; for another client, run
+`.venv/bin/python -m replicator.mcp_server` over stdio.
 
 ## Quick start
 
@@ -111,14 +161,22 @@ and runs on any Linux machine with Qt 6.12.
 ```sh
 git clone git@github.com:T-Crypt/replicator.git && cd replicator
 python -m venv .venv --system-site-packages        # PySide6 6.12 comes from the system pyside6 package
-.venv/bin/pip install manifold3d trimesh numpy scipy networkx pillow jsonpatch cascadio pycollada
+.venv/bin/pip install manifold3d trimesh numpy scipy networkx pillow jsonpatch cascadio pycollada mcp
+.venv/bin/pip install cadquery-ocp                 # optional: OpenCASCADE checks in the STEP tests
 .venv/bin/python -m pytest -q tests                # kernel, schema and reverse tests
 ./launch.sh fixtures/vector_engine.json
 ```
 
-Dreaming needs an OpenAI-compatible endpoint. The defaults point at llama-swap on
-`127.0.0.1:9090`; edit `ENGINES` in [`replicator/llm/client.py`](replicator/llm/client.py) to use
-your own. The Showcase render and the Blender round trip need `blender` 5.x on `PATH`.
+Specifying needs an OpenAI-compatible endpoint. The built-ins point at llama-swap on
+`127.0.0.1:9090` and Strata on `:8080`. Add your own under `endpoints` in
+`~/.config/Replicator/services.json`; the API key stays in the environment variable the entry names:
+
+```json
+{"endpoints": [{"name": "lab-ft", "url": "http://192.168.1.40:8000/v1", "model": "cad-ft-7b"},
+               {"name": "hosted", "url": "https://api.example.com/v1", "model": "big", "key_env": "EXAMPLE_KEY"}]}
+```
+
+Added endpoints appear in the engine picker and in the MCP `specify` tool. The Showcase render and the Blender round trip need `blender` 5.x on `PATH`.
 
 ### Headless frames
 
@@ -178,12 +236,18 @@ replicator/
   core/assembly.py      components and exploded-view axes
   core/reverse.py       mesh analysis and the evidence ledger
   core/render.py        Cycles stills through blender --background
+  core/step.py          STEP export: faceted B-rep solids with voids
+  core/drawing.py       A3 drawing sheets: views, section or floor plan, dimensions, parts list
+  core/critique.py      the nine engineering checks
+  mcp_server.py         the workshop as MCP tools for agents
   core/blender_link.py  the mcp-for-blender round trip
-  llm/                  dream, repair, edit and name-parts prompts; local engines only
+  llm/                  specify, repair, edit, explain and name-parts prompts; built-in and configured engines
+  knowledge/            curated engineering cards picked into the prompts by keyword
   qt/                   QML bridge, mesh geometry, procedural studio HDRI
   gpu.py                pins the window to the integrated GPU
 qml/  shaders/          the workspace, the materialize and blueprint shaders
-fixtures/               sample programs, including two Dirk dreams
+fixtures/               sample programs: engines, a PC, a Pi 5, a drone, a house
+tools/                  check, sheet, showcase stills, record (preview films), readme_art
 tools/readme_art.py     draws the README artwork
 ```
 
@@ -192,13 +256,20 @@ tools/readme_art.py     draws the README artwork
 - [x] M1: text to blueprint to program, step-by-step build, edit by sentence
 - [x] Dissect, Reverse and Showcase modes; Blender round trip
 - [ ] M3: image to 3D (TRELLIS.2 or Hunyuan3D under a Berth lease), then a Holodeck character sheet straight into the workshop
-- [ ] Blueprint sheets: a technical drawing with callouts and dimensions from the program
+- [x] Blueprint sheets: a technical drawing with callouts, dimensions and a parts list from the program
+- [x] STEP export, an MCP server for agents, endpoints you configure
+- [ ] Benchmark: tasks scored by the checks, any endpoint, results that reproduce to the digit
+- [ ] Reverse to program: imported pieces become real ops, each tied to its ledger entry
+- [ ] Joints and mates as program data; URDF and MJCF with inertias from the exact solid
 - [ ] M2: a floor plan becomes rooms (a Sims-style build mode)
 - [ ] M4: sculpting and a node editor
 
+Where it stands against nurb, Chili3D, text-to-cad, CADAM, Multi-Agent-CAD and sand3d, read at source level, and the lanes it is built to own: [docs/COMPETITORS-2026-11-14.md](docs/COMPETITORS-2026-11-14.md).
+
 ## What Replicator never does
 
-- **Never calls a cloud model.** Every dream, repair, edit and label comes from a model on your machine.
+- **Never calls a model you did not name.** Out of the box every specify, repair, edit and label comes
+  from a model on your machine; a hosted endpoint is used only if you add it yourself.
 - **Never draws on the RTX card.** The window pins itself to the iGPU and quits if it lands on the
   discrete card, which belongs to the models.
 - **Never loads a GPU model without a lease.** Image to 3D asks Berth for the card first, so it

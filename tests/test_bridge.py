@@ -128,3 +128,23 @@ def test_each_step_gets_fresh_geometry_objects_over_cached_buffers(studio):
     for sid in shared:
         assert first[sid] is not second[sid]
         assert first[sid]._vbytes is second[sid]._vbytes
+
+
+def test_an_agent_edit_on_disk_shows_up_as_one_undo_step(tmp_path, monkeypatch):
+    QGuiApplication.instance() or QGuiApplication([])
+    monkeypatch.setattr(bridge, "OUT", tmp_path)
+    f = tmp_path / "prog.json"
+    prog = json.loads((FIX / "raspberry_pi_5.json").read_text())
+    f.write_text(json.dumps(prog))
+    s = bridge.Studio()
+    s.openFile(str(f))
+    prog["name"] = "Pi 5, edited by an agent"
+    f.write_text(json.dumps(prog))
+    s._reload_from_disk()
+    assert s._program["name"] == "Pi 5, edited by an agent"
+    assert s.step == s.stepCount - 1 and len(s._history) == 1
+    s._reload_from_disk()                       # same content again: nothing new on the undo stack
+    assert len(s._history) == 1
+    f.write_text("{ broken")
+    s._reload_from_disk()
+    assert s._program["name"] == "Pi 5, edited by an agent"

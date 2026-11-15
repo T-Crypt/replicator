@@ -8,6 +8,49 @@ layer, the intermediate representation and the verification code. Replicator cla
 this checkout at `8e9c575` plus the 18 modified and 7 untracked files in the working tree.
 Star counts and dates are from the GitHub API the same day. Where a claim is a guess, it says so.
 
+## Status, end of 2026-11-14
+
+Shipped the same day, after this teardown was written (commit after `2346b94`):
+
+| Roadmap line | State | Proof |
+|---|---|---|
+| P0 film and README art | done | `brag-output/brag.mp4` (50.5 s, scored), `assets/build-timeline.gif`, `assets/range.jpg` |
+| P0 MCP server | done | `replicator/mcp_server.py`, 10 tools; driven end to end over stdio by the SDK client; a rejected patch leaves the file byte-identical; an open window reloads agent edits as one undo step |
+| P0 model endpoints | done | `endpoints` in `services.json`, key from an env var; live call through a configured endpoint to Strata |
+| P0 STEP export | done | `core/step.py`; all 11 fixtures read back by OCCT `STEPControl_Reader` as valid solids (BRepCheck), volume within 4e-7 |
+
+So the scorecard rows "MCP server", "STEP export" and "Runs your own model endpoint" now read **Y** for
+Replicator. The remaining table stakes are the print answer, an install for a normal person, and
+assemblies as data.
+
+## Scope and positioning (operator, 2026-11-14)
+
+Replicator is not a CAD workshop and must not be described as one. It builds just about everything:
+house design and floor plans, technology and electronics, household and everyday items, advanced
+engineering, concepts, and research-grounded builds. It is an engineer's tool first and a research
+tool second, and it is multi-use. Each lane below has to be refined until it beats the nearest
+competitor on a stated bar, not merely exist. Every competitor in this document owns one slice
+(nurb: printable parts; Chili3D: feature-tree CAD; text-to-cad: agent plugins; CADAM: hobby
+OpenSCAD; MAC: assembly research; sand3d: compact programs). None spans buildings, boards, machines
+and concepts in one document with one set of checks.
+
+| Lane | Nearest rival | The bar Replicator has to clear |
+|---|---|---|
+| L1 program as data | sand3d (compact programs, HF datasets) | Every program re-verifies headlessly in about a second with no Blender; the corpus publishes prompt, program, verdict, mass and build hash, and every row re-verifies from its hash |
+| L2 open benchmark | nurb-benchmarks | Scores any endpoint (local, lab, hosted) on construction, repair and reverse, not just printability; same seed gives the same score to the digit; tasks span a house, a board, a machine and an everyday object |
+| L3 reverse with a ledger | nobody (MAC goes the other way) | An imported model becomes an editable program whose rebuild is within a stated tolerance, every op tied to its ledger entry, unknowns listed |
+| L4 construction as visual language | Chili3D (undo stack), nurb (live view) | Every README, film and benchmark row shows the build assembling and coming apart; Present narrates by component |
+| L5 program to simulator | MAC, sand3d (URDF) | URDF and MJCF with inertias measured from the exact solid, joints as program data, one published MuJoCo scene |
+| L6 breadth with one set of checks | none of the six | Houses, boards, household objects, machines and concepts all pass the same nine checks and produce the same sheet, STEP and report; buildings get floor plans, boards get real-scale parts, machines get formula-driven ops |
+
+L6 is new: it is the operator's scope, and no competitor attempts it. Its first evidence is
+`fixtures/house_two_bed.json`, specified by Strata from one sentence. Its first finding is a gap: the
+model rotated the roof the wrong way (a V instead of a gable, 5.9 m tall against a planned 4.6 m),
+and the checks passed it. The `size` check's tolerance and a roof/pitch sanity check for buildings
+are the next fixes, and a desk lamp from the same run failed for the same family of reason (arms
+lying flat, springs upright, not flagged). Breadth is real only when the checks hold for every
+kind of thing, and today they hold best for machines.
+
 ---
 
 ## 1. What Replicator is, verified
@@ -384,11 +427,13 @@ it. Ordered so the first month is defensible in public.
 
 ## 9. One paragraph to repeat
 
-Replicator is the only open AI CAD environment where the design is a **validated program instead of
-generated code**. That one fact buys three things none of the six have: construction you can watch,
+Replicator is an engineering and research workshop that builds almost anything, from a house with
+its floor plan to a circuit board, a household object, a rocket engine or a concept, and it is the
+only one of its kind where the design is a **validated program instead of generated code**. That one fact buys three things none of the six have: construction you can watch,
 stop and edit at any step; a reverse path that turns an unknown object into an editable program with
 a ledger saying what was measured and what was guessed; and a corpus of machine-verifiable build
 programs that any model endpoint can be scored on or fine-tuned from. Point it at a lab's served
 checkpoint, a local 27B on a 4090, or a hosted model, and the same document, timeline and checks
-work. The gap to close is not geometry: it is an MCP server, STEP export, a print answer, and an
-install a normal person can run.
+work. The MCP server, STEP export and configurable endpoints shipped the same day; the gap left is a
+print answer, an install a normal person can run, and checks that hold as well for a house or a lamp
+as they do for an engine.

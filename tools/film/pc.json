@@ -1,0 +1,7 @@
+[[0.0, "studio.setStep(0); timeline.speed = 8; timeline.play(1)"],
+ [14.0, "timeline.stop(); studio.setStep(studio.stepCount - 1); window.setMode('dissect')"],
+ [20.0, "window.setMode('build'); viewport.heroAngle(); viewport.frameAll(true); bpAnim.go(1)"],
+ [24.5, "bpAnim.go(0)"],
+ [26.5, "window.setMode('showcase')"],
+ [34.0, "window.setMode('build'); viewport.heroAngle(); viewport.frameAll(true); studio.makeSheet('blueprint')"],
+ ["end", 44.0]]

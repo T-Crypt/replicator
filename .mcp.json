@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "replicator": {
+      "command": ".venv/bin/python",
+      "args": ["-m", "replicator.mcp_server"],
+      "env": {"PYTHONPATH": ".", "CUDA_VISIBLE_DEVICES": ""}
+    }
+  }
+}

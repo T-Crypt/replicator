@@ -1,0 +1,979 @@
+{
+ "version": 1,
+ "name": "Single-Storey Two-Bedroom Gable House",
+ "units": "mm",
+ "materials": {
+  "brushed_steel": {
+   "base_color": [
+    0.72,
+    0.74,
+    0.76
+   ],
+   "metalness": 0.75,
+   "roughness": 0.32,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "dark_ceramic": {
+   "base_color": [
+    0.13,
+    0.14,
+    0.16
+   ],
+   "metalness": 0.05,
+   "roughness": 0.55,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "matte_polymer": {
+   "base_color": [
+    0.84,
+    0.81,
+    0.76
+   ],
+   "metalness": 0.0,
+   "roughness": 0.75,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "deep_charcoal": {
+   "base_color": [
+    0.18,
+    0.19,
+    0.2
+   ],
+   "metalness": 0.15,
+   "roughness": 0.45,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "glass": {
+   "base_color": [
+    0.62,
+    0.78,
+    0.86
+   ],
+   "metalness": 0.1,
+   "roughness": 0.08,
+   "emissive": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "ops": [
+  {
+   "id": "foundation_slab",
+   "op": "box",
+   "label": "Foundation Slab",
+   "part": "Foundation",
+   "material": "brushed_steel",
+   "params": {
+    "size": [
+     11400,
+     150,
+     8400
+    ],
+    "translate": [
+     0,
+     75,
+     0
+    ]
+   }
+  },
+  {
+   "id": "front_wall_base",
+   "op": "box",
+   "label": "Front Exterior Wall",
+   "part": "Front Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     11000,
+     2600,
+     200
+    ],
+    "translate": [
+     0,
+     1450,
+     3900
+    ]
+   }
+  },
+  {
+   "id": "front_wall_door_cutter",
+   "op": "box",
+   "label": "Front Door Opening",
+   "part": "Front Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     1000,
+     2100,
+     400
+    ],
+    "translate": [
+     0,
+     1200,
+     3900
+    ]
+   }
+  },
+  {
+   "id": "front_wall_window_cutter",
+   "op": "box",
+   "label": "Front Window Opening",
+   "part": "Front Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     1600,
+     1200,
+     400
+    ],
+    "translate": [
+     -3400,
+     1650,
+     3900
+    ]
+   }
+  },
+  {
+   "id": "front_wall_window_cutters",
+   "op": "array",
+   "label": "Front Window Openings",
+   "part": "Front Wall",
+   "material": "dark_ceramic",
+   "input": "front_wall_window_cutter",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     6800,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "front_wall",
+   "op": "boolean",
+   "label": "Front Exterior Wall With Openings",
+   "part": "Front Wall",
+   "material": "dark_ceramic",
+   "inputs": [
+    "front_wall_base",
+    "front_wall_door_cutter",
+    "front_wall_window_cutters"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "rear_wall_base",
+   "op": "box",
+   "label": "Rear Exterior Wall",
+   "part": "Rear Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     11000,
+     2600,
+     200
+    ],
+    "translate": [
+     0,
+     1450,
+     -3900
+    ]
+   }
+  },
+  {
+   "id": "rear_wall_window_cutter",
+   "op": "box",
+   "label": "Rear Window Opening",
+   "part": "Rear Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     1400,
+     1200,
+     400
+    ],
+    "translate": [
+     2000,
+     1650,
+     -3900
+    ]
+   }
+  },
+  {
+   "id": "rear_wall_window_cutters",
+   "op": "array",
+   "label": "Rear Bedroom Window Openings",
+   "part": "Rear Wall",
+   "material": "dark_ceramic",
+   "input": "rear_wall_window_cutter",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     2000,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "rear_wall",
+   "op": "boolean",
+   "label": "Rear Exterior Wall With Openings",
+   "part": "Rear Wall",
+   "material": "dark_ceramic",
+   "inputs": [
+    "rear_wall_base",
+    "rear_wall_window_cutters"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "left_wall_base",
+   "op": "box",
+   "label": "Left Exterior Wall",
+   "part": "Left Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     200,
+     2600,
+     8000
+    ],
+    "translate": [
+     -5400,
+     1450,
+     0
+    ]
+   }
+  },
+  {
+   "id": "left_wall_window_cutter",
+   "op": "box",
+   "label": "Left Side Window Opening",
+   "part": "Left Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     400,
+     1200,
+     1500
+    ],
+    "translate": [
+     -5400,
+     1650,
+     -1050
+    ]
+   }
+  },
+  {
+   "id": "left_wall_window_cutters",
+   "op": "array",
+   "label": "Left Side Window Openings",
+   "part": "Left Wall",
+   "material": "dark_ceramic",
+   "input": "left_wall_window_cutter",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     3100
+    ]
+   }
+  },
+  {
+   "id": "left_wall",
+   "op": "boolean",
+   "label": "Left Exterior Wall With Openings",
+   "part": "Left Wall",
+   "material": "dark_ceramic",
+   "inputs": [
+    "left_wall_base",
+    "left_wall_window_cutters"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "right_wall_base",
+   "op": "box",
+   "label": "Right Exterior Wall",
+   "part": "Right Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     200,
+     2600,
+     8000
+    ],
+    "translate": [
+     5400,
+     1450,
+     0
+    ]
+   }
+  },
+  {
+   "id": "right_wall_window_cutter",
+   "op": "box",
+   "label": "Right Side Window Opening",
+   "part": "Right Wall",
+   "material": "dark_ceramic",
+   "params": {
+    "size": [
+     400,
+     1200,
+     1400
+    ],
+    "translate": [
+     5400,
+     1650,
+     -1800
+    ]
+   }
+  },
+  {
+   "id": "right_wall_window_cutters",
+   "op": "array",
+   "label": "Right Bedroom Window Openings",
+   "part": "Right Wall",
+   "material": "dark_ceramic",
+   "input": "right_wall_window_cutter",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     3600
+    ]
+   }
+  },
+  {
+   "id": "right_wall",
+   "op": "boolean",
+   "label": "Right Exterior Wall With Openings",
+   "part": "Right Wall",
+   "material": "dark_ceramic",
+   "inputs": [
+    "right_wall_base",
+    "right_wall_window_cutters"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "hallway_west_partition_base",
+   "op": "box",
+   "label": "Hallway West Partition",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     100,
+     2600,
+     7600
+    ],
+    "translate": [
+     -600,
+     1450,
+     0
+    ]
+   }
+  },
+  {
+   "id": "hallway_west_door_cutter",
+   "op": "box",
+   "label": "Hallway West Door Opening",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     400,
+     2100,
+     850
+    ],
+    "translate": [
+     -600,
+     1200,
+     -2000
+    ]
+   }
+  },
+  {
+   "id": "hallway_west_door_cutters",
+   "op": "array",
+   "label": "Living And Bathroom Door Openings",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "input": "hallway_west_door_cutter",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     4000
+    ]
+   }
+  },
+  {
+   "id": "hallway_west_partition",
+   "op": "boolean",
+   "label": "Hallway West Partition With Doors",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "inputs": [
+    "hallway_west_partition_base",
+    "hallway_west_door_cutters"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "hallway_east_partition_base",
+   "op": "box",
+   "label": "Hallway East Partition",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     100,
+     2600,
+     7600
+    ],
+    "translate": [
+     600,
+     1450,
+     0
+    ]
+   }
+  },
+  {
+   "id": "hallway_east_door_cutter",
+   "op": "box",
+   "label": "Bedroom Door Opening",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     400,
+     2100,
+     850
+    ],
+    "translate": [
+     600,
+     1200,
+     -1800
+    ]
+   }
+  },
+  {
+   "id": "hallway_east_door_cutters",
+   "op": "array",
+   "label": "Bedroom Door Openings",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "input": "hallway_east_door_cutter",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     3600
+    ]
+   }
+  },
+  {
+   "id": "hallway_east_partition",
+   "op": "boolean",
+   "label": "Hallway East Partition With Doors",
+   "part": "Hallway",
+   "material": "matte_polymer",
+   "inputs": [
+    "hallway_east_partition_base",
+    "hallway_east_door_cutters"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "bedroom_divider",
+   "op": "box",
+   "label": "Bedroom Divider",
+   "part": "Bedrooms",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     4650,
+     2600,
+     100
+    ],
+    "translate": [
+     2975,
+     1450,
+     0
+    ]
+   }
+  },
+  {
+   "id": "bathroom_south_partition",
+   "op": "box",
+   "label": "Bathroom South Partition",
+   "part": "Bathroom",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     2400,
+     2600,
+     100
+    ],
+    "translate": [
+     -1750,
+     1450,
+     -1400
+    ]
+   }
+  },
+  {
+   "id": "bathroom_west_partition",
+   "op": "box",
+   "label": "Bathroom West Partition",
+   "part": "Bathroom",
+   "material": "matte_polymer",
+   "params": {
+    "size": [
+     100,
+     2600,
+     2450
+    ],
+    "translate": [
+     -2900,
+     1450,
+     -2575
+    ]
+   }
+  },
+  {
+   "id": "front_door",
+   "op": "box",
+   "label": "Front Door",
+   "part": "Entrance",
+   "material": "deep_charcoal",
+   "params": {
+    "size": [
+     1000,
+     2100,
+     60
+    ],
+    "translate": [
+     0,
+     1200,
+     3900
+    ]
+   }
+  },
+  {
+   "id": "front_window_glass",
+   "op": "box",
+   "label": "Front Glazing",
+   "part": "Windows",
+   "material": "glass",
+   "params": {
+    "size": [
+     1600,
+     1200,
+     40
+    ],
+    "translate": [
+     -3400,
+     1650,
+     3900
+    ]
+   }
+  },
+  {
+   "id": "front_windows",
+   "op": "array",
+   "label": "Front Glazed Windows",
+   "part": "Windows",
+   "material": "glass",
+   "input": "front_window_glass",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     6800,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "rear_window_glass",
+   "op": "box",
+   "label": "Rear Glazing",
+   "part": "Windows",
+   "material": "glass",
+   "params": {
+    "size": [
+     1400,
+     1200,
+     40
+    ],
+    "translate": [
+     2000,
+     1650,
+     -3900
+    ]
+   }
+  },
+  {
+   "id": "rear_windows",
+   "op": "array",
+   "label": "Rear Bedroom Windows",
+   "part": "Windows",
+   "material": "glass",
+   "input": "rear_window_glass",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     2000,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "left_window_glass",
+   "op": "box",
+   "label": "Left Side Glazing",
+   "part": "Windows",
+   "material": "glass",
+   "params": {
+    "size": [
+     40,
+     1200,
+     1500
+    ],
+    "translate": [
+     -5400,
+     1650,
+     -1050
+    ]
+   }
+  },
+  {
+   "id": "left_windows",
+   "op": "array",
+   "label": "Left Side Windows",
+   "part": "Windows",
+   "material": "glass",
+   "input": "left_window_glass",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     3100
+    ]
+   }
+  },
+  {
+   "id": "right_window_glass",
+   "op": "box",
+   "label": "Right Side Glazing",
+   "part": "Windows",
+   "material": "glass",
+   "params": {
+    "size": [
+     40,
+     1200,
+     1400
+    ],
+    "translate": [
+     5400,
+     1650,
+     -1800
+    ]
+   }
+  },
+  {
+   "id": "right_windows",
+   "op": "array",
+   "label": "Right Bedroom Windows",
+   "part": "Windows",
+   "material": "glass",
+   "input": "right_window_glass",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     3600
+    ]
+   }
+  },
+  {
+   "id": "roof_panel",
+   "op": "box",
+   "label": "Gable Roof Panel",
+   "part": "Roof",
+   "material": "brushed_steel",
+   "params": {
+    "size": [
+     6870,
+     60,
+     8900
+    ],
+    "rotate": [
+     0,
+     0,
+     30
+    ],
+    "translate": [
+     -2975,
+     4238,
+     0
+    ]
+   }
+  },
+  {
+   "id": "gable_roof",
+   "op": "array",
+   "label": "Pitched Gable Roof",
+   "part": "Roof",
+   "material": "brushed_steel",
+   "input": "roof_panel",
+   "params": {
+    "mode": "mirror",
+    "count": 2,
+    "plane": [
+     1,
+     0,
+     0
+    ]
+   }
+  }
+ ],
+ "blueprint": {
+  "title": "Single-Storey Two-Bedroom Gable House",
+  "summary": "A compact 11 m by 8 m single-storey house on a 150 mm concrete slab, with 200 mm exterior walls, 100 mm internal partitions, a central hallway, open-plan living/kitchen, two bedrooms, and a bathroom. A 30\u00b0 pitched gable roof with 450 mm overhangs covers the plan, with front door and window openings cut directly into the exterior walls.",
+  "style": "clean modern residential blueprint",
+  "dimensions": [
+   11000,
+   4600,
+   8000
+  ],
+  "parts": [
+   {
+    "name": "Foundation Slab",
+    "role": "Carries all walls and forms the finished floor level.",
+    "shape": "Box",
+    "size": "11400 x 150 x 8400 mm",
+    "position": "centered at x=0,z=0; top face at y=150",
+    "material": "brushed steel",
+    "count": 1
+   },
+   {
+    "name": "Front Exterior Wall",
+    "role": "Encloses the +Z front elevation and carries the front door and living room windows.",
+    "shape": "Box with boolean difference of one front-door opening and two window openings",
+    "size": "11000 x 2600 x 200 mm; door opening 1000 x 2100; window openings 1600 x 1200",
+    "position": "x=-5500 to 5500, z=3800 to 4000, y=150 to 2750",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "Rear Exterior Wall",
+    "role": "Encloses the -Z rear elevation and carries two bedroom windows.",
+    "shape": "Box with boolean difference of two window openings",
+    "size": "11000 x 2600 x 200 mm; window openings 1400 x 1200",
+    "position": "x=-5500 to 5500, z=-4000 to -3800, y=150 to 2750",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "Left Exterior Wall",
+    "role": "Encloses the -X side elevation and carries kitchen and living room windows.",
+    "shape": "Box with boolean difference of two window openings",
+    "size": "200 x 2600 x 8000 mm; window openings 1500 x 1200",
+    "position": "x=-5500 to -5300, z=-4000 to 4000, y=150 to 2750",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "Right Exterior Wall",
+    "role": "Encloses the +X side elevation and carries two bedroom windows.",
+    "shape": "Box with boolean difference of two window openings",
+    "size": "200 x 2600 x 8000 mm; window openings 1400 x 1200",
+    "position": "x=5300 to 5500, z=-4000 to 4000, y=150 to 2750",
+    "material": "dark ceramic",
+    "count": 1
+   },
+   {
+    "name": "Hallway West Partition",
+    "role": "Separates the hallway from the living room and kitchen and carries the living/kitchen door.",
+    "shape": "Box with boolean difference of one door opening",
+    "size": "100 x 2600 x 7600 mm; door opening 900 x 2100",
+    "position": "x=-650 to -550, z=-3800 to 3800, y=150 to 2750",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Hallway East Partition",
+    "role": "Separates the hallway from the bedrooms and bathroom and carries three door openings.",
+    "shape": "Box with boolean difference of three door openings",
+    "size": "100 x 2600 x 7600 mm; door openings 850 x 2100",
+    "position": "x=550 to 650, z=-3800 to 3800, y=150 to 2750",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bedroom Divider",
+    "role": "Divides the two bedrooms across the back half of the plan.",
+    "shape": "Box with no openings",
+    "size": "4650 x 2600 x 100 mm",
+    "position": "x=650 to 5300, z=-50 to 50, y=150 to 2750",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bathroom South Partition",
+    "role": "Separates the bathroom from the living/kitchen area on the -Z side.",
+    "shape": "Box with no openings",
+    "size": "2400 x 2600 x 100 mm",
+    "position": "x=-2950 to -550, z=-1450 to -1350, y=150 to 2750",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Bathroom West Partition",
+    "role": "Separates the bathroom from the kitchen side of the open living/kitchen area.",
+    "shape": "Box with no openings",
+    "size": "100 x 2600 x 2450 mm",
+    "position": "x=-2950 to -2850, z=-3800 to -1350, y=150 to 2750",
+    "material": "matte polymer",
+    "count": 1
+   },
+   {
+    "name": "Front Door",
+    "role": "Main entrance from the front elevation into the hallway.",
+    "shape": "Thin box set into the front wall opening",
+    "size": "1000 x 2100 x 60 mm",
+    "position": "x=-500 to 500, z=3870 to 3930, y=150 to 2250",
+    "material": "painted (deep charcoal)",
+    "count": 1
+   },
+   {
+    "name": "Living Room Window",
+    "role": "Glazed opening in the front wall serving the living room.",
+    "shape": "Thin glass pane with frame box, inset into front wall opening",
+    "size": "1600 x 1200 x 60 mm",
+    "position": "x=-4200 to -2600, z=3870 to 3930, y=1050 to 2250",
+    "material": "glass",
+    "count": 1
+   },
+   {
+    "name": "Kitchen Window",
+    "role": "Glazed opening in the front wall serving the kitchen.",
+    "shape": "Thin glass pane with frame box, inset into front wall opening",
+    "size": "1600 x 1200 x 60 mm",
+    "position": "x=2600 to 4200, z=3870 to 3930, y=1050 to 2250",
+    "material": "glass",
+    "count": 1
+   },
+   {
+    "name": "Left Kitchen Window",
+    "role": "Side window lighting the kitchen area.",
+    "shape": "Thin glass pane with frame box, inset into left wall opening",
+    "size": "1500 x 1200 x 60 mm",
+    "position": "x=-5430 to -5370, z=-1800 to -300, y=1050 to 2250",
+    "material": "glass",
+    "count": 1
+   },
+   {
+    "name": "Left Living Room Window",
+    "role": "Side window lighting the living room area.",
+    "shape": "Thin glass pane with frame box, inset into left wall opening",
+    "size": "1500 x 1200 x 60 mm",
+    "position": "x=-5430 to -5370, z=1300 to 2800, y=1050 to 2250",
+    "material": "glass",
+    "count": 1
+   },
+   {
+    "name": "Right Bedroom Window",
+    "role": "Side window serving the front bedroom.",
+    "shape": "Thin glass pane with frame box, inset into right wall opening",
+    "size": "1400 x 1200 x 60 mm",
+    "position": "x=5370 to 5430, z=1100 to 2500, y=1050 to 2250",
+    "material": "glass",
+    "count": 1
+   },
+   {
+    "name": "Rear Bedroom Window",
+    "role": "Rear window serving the back bedroom.",
+    "shape": "Thin glass pane with frame box, inset into rear wall opening",
+    "size": "1400 x 1200 x 60 mm",
+    "position": "x=2500 to 3900, z=-3930 to -3870, y=1050 to 2250",
+    "material": "glass",
+    "count": 1
+   },
+   {
+    "name": "Gable Roof Panels",
+    "role": "Two pitched roof surfaces forming a 30\u00b0 gable roof with overhangs.",
+    "shape": "Two thin boxes mirrored across the X centre plane and rotated about the Z axis",
+    "size": "each panel 6200 x 60 x 8900 mm, pitched 30\u00b0",
+    "position": "meeting at ridge y=4300 along x=0; eaves overhang 450 mm beyond wall faces",
+    "material": "brushed steel",
+    "count": 2
+   }
+  ],
+  "callouts": [
+   "Finished floor level at y=150 mm.",
+   "Exterior walls are 200 mm thick and 2600 mm high from slab top to wall head.",
+   "Internal partitions are 100 mm thick.",
+   "Hallway is 1100 mm wide and runs full depth from front to rear.",
+   "Living room and kitchen are one open-plan room on the -X side of the hallway.",
+   "Two bedrooms are on the +X side, separated by a central partition.",
+   "Bathroom is on the -X side of the hallway, reached through the hallway partition.",
+   "Roof pitch is 30\u00b0 with 450 mm eaves overhangs.",
+   "All openings are modelled as boolean cuts in their host walls."
+  ]
+ },
+ "notes": "Specified by Strata (Qwen3.8-Flash-Next) from one sentence on 2026-11-14; the roof came out as a V (panel rotated -30 deg) and was corrected with one JSON Patch through the MCP server (rotate +30, 6870 mm panel, ridge over the centre line). Gable-end infill walls are missing; roof material is a placeholder."
+}

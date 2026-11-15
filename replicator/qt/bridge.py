@@ -96,6 +96,13 @@ class Studio(QObject):
         if sheet.CHARACTERS.is_dir():
             self._holodeck_watcher.addPath(str(sheet.CHARACTERS))
             self._holodeck_watcher.directoryChanged.connect(self.holodeckChanged.emit)
+        self._file: Path | None = None           # the program file that is open; an agent (MCP) may edit it on disk
+        self._file_watcher = QFileSystemWatcher()
+        self._file_watcher.fileChanged.connect(lambda _: self._reload_timer.start())
+        self._reload_timer = QTimer(self)
+        self._reload_timer.setSingleShot(True)
+        self._reload_timer.setInterval(150)       # a writer replaces the file in two steps; settle first
+        self._reload_timer.timeout.connect(self._reload_from_disk)
         self._jobDone.connect(self._on_job)
         self._measured.connect(self._on_measured)
         self.selectionChanged.connect(self.factsChanged)
@@ -291,9 +298,9 @@ class Studio(QObject):
     def importPatterns(self):
         return importers.patterns()
 
-    @Property("QVariantList", constant=True)
+    @Property("QVariantList", notify=servicesChanged)    # endpoints added in services.json join the list
     def engines(self):
-        return list(client.ENGINES)
+        return list(client.engines())
 
     @Property("QVariantList", notify=reportChanged)
     def ledger(self):
@@ -464,6 +471,33 @@ class Studio(QObject):
             if op["id"] == oid:
                 return op
         return None
+
+    def _watch(self, path: Path | None):
+        if self._file_watcher.files():
+            self._file_watcher.removePaths(self._file_watcher.files())
+        self._file = path
+        if path is not None and path.exists():
+            self._file_watcher.addPath(str(path))
+
+    def _reload_from_disk(self):
+        """The open file changed under us (an agent patched it through the MCP server): show the new program at its
+        last step, as one undo step. Ignored while a job runs, or when the content is what we already show."""
+        p = self._file
+        if p is None:
+            return
+        if str(p) not in self._file_watcher.files() and p.exists():
+            self._file_watcher.addPath(str(p))    # an atomic replace drops the inotify watch; arm it again
+        if self._busy:
+            self._reload_timer.start()
+            return
+        try:
+            prog = json.loads(p.read_text())
+            if prog == self._program:
+                return
+            self._set_program(prog, f"{p.name} changed on disk; showing the new version (Ctrl+Z goes back)",
+                              keep_step=True)
+        except (OSError, json.JSONDecodeError, ProgramError, EvalError) as e:
+            self._say(f"{p.name} changed on disk but does not build: {e}")
 
     def _set_program(self, program: dict, note: str, keep_step: bool = False, push: bool = True):
         check(program)
@@ -676,11 +710,13 @@ class Studio(QObject):
             self._report = {}
             self._set_program(prog, f"opened {p.name}")
             self._load_explanation()
+            self._watch(p)
         except (OSError, json.JSONDecodeError, ProgramError, EvalError) as e:
             self._say(f"open failed: {e}")
 
     @Slot(str)
     def importModel(self, path: str):
+        self._watch(None)
         """Reverse engineering: any supported 3D file (mesh, CAD, Blender scene, gallery ZIP) into pieces and
         components, with an evidence ledger."""
         src = _local(path)
@@ -876,6 +912,7 @@ class Studio(QObject):
         self._epoch += 1
         self._program = None
         self._project = None
+        self._watch(None)
         self._history.clear()
         self._future.clear()
         self._geo_cache.clear()
@@ -1065,6 +1102,7 @@ class Studio(QObject):
             return
         if "project" in res:
             self._project = Path(res["project"])
+            self._watch(None)
             self._ev = Evaluator(self._project)
             self._history.clear()
             self._future.clear()
@@ -1096,7 +1134,7 @@ class Studio(QObject):
     # ------------------------------------------------------------------ export and render
     @Slot(str, result=str)
     def exportAs(self, fmt: str) -> str:
-        if not self._program or fmt not in ("glb", "stl", "obj", "3mf"):
+        if not self._program or fmt not in ("glb", "stl", "obj", "3mf", "step"):
             return ""
         name = "".join(c if c.isalnum() else "-" for c in self.title.lower()).strip("-") or "build"
         path, n = OUT / f"{name}.{fmt}", 2
@@ -1105,9 +1143,10 @@ class Studio(QObject):
         try:
             OUT.mkdir(parents=True, exist_ok=True)
             shapes = self._ev.step(self._program)
-            if fmt == "stl" and any(isinstance(s.manifold, RawMesh) for s in shapes):
-                raise ValueError("imported pieces that are not watertight cannot go to STL")
-            exporter.export(shapes, self._program.get("materials", {}), path)
+            if fmt in ("stl", "step") and any(isinstance(s.manifold, RawMesh) for s in shapes):
+                raise ValueError(f"imported pieces that are not watertight cannot go to {fmt.upper()}")
+            exporter.export(shapes, self._program.get("materials", {}), path, name=self.title,
+                            units=self._program.get("units", "mm"))
             self._say(f"exported {path}")
             return str(path)
         except (OSError, ValueError, EvalError, ImportError) as e:

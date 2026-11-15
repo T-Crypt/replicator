@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-labelledby="t d">
-<title id="t">Replicator: you dream it, you build it</title>
-<desc id="d">A night workshop floor. On the left, the Replicator title, the tagline, a dream prompt being typed and the pipeline blueprint, program, manifold3d, build. On the right a turbofan engine floats in an exploded view while a scan plane sweeps across it, turning the cyan blueprint wireframe into solid coloured parts: intake cowl, compressor, turbine stage and nozzle.</desc>
+<title id="t">Replicator: you specify it, you build it</title>
+<desc id="d">A night workshop floor. On the left, the Replicator title, the tagline, a specify prompt being typed and the pipeline blueprint, program, manifold3d, build. On the right a turbofan engine floats in an exploded view while a scan plane sweeps across it, turning the cyan blueprint wireframe into solid coloured parts: intake cowl, compressor, turbine stage and nozzle.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#05090f"/><stop offset=".62" stop-color="#0a1421"/><stop offset="1" stop-color="#0d1c2e"/></linearGradient>
 <radialGradient id="halo" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#7ad4f2" stop-opacity=".22"/><stop offset="1" stop-color="#7ad4f2" stop-opacity="0"/></radialGradient>
@@ -180,16 +180,16 @@
 <rect x="975" y="70" width="60" height="252" fill="url(#scan)">
   <animate attributeName="x" values="678;1218;1218;678" keyTimes="0;.45;.85;1" dur="9s" repeatCount="indefinite"/></rect>
 </g>
-<text x="64" y="74" class="m" font-size="13" letter-spacing="3.2" fill="#e8b56f">LOCAL TEXT-TO-3D WORKSHOP</text>
+<text x="64" y="74" class="m" font-size="13" letter-spacing="3.2" fill="#e8b56f">ENGINEERING AND RESEARCH WORKSHOP</text>
 <text x="62" y="138" class="s" font-size="62" font-weight="700" letter-spacing="1" fill="#f0f5fa">Replicator</text>
-<text x="64" y="178" class="s" font-size="22" fill="#c9d6e3">You dream it, you build it.</text>
+<text x="64" y="178" class="s" font-size="22" fill="#c9d6e3">You specify it, you build it.</text>
 <rect x="64" y="212" width="560" height="48" rx="24" fill="#0f1a28" stroke="#2a4e68" stroke-width="1.5"/>
 <rect x="72" y="220" width="70" height="32" rx="16" fill="#7ad4f2" fill-opacity=".14"/>
-<text x="107" y="241" text-anchor="middle" class="m" font-size="12.5" font-weight="700" letter-spacing="2" fill="#7ad4f2">DREAM</text>
+<text x="107" y="241" text-anchor="middle" class="m" font-size="12.5" font-weight="700" letter-spacing="2" fill="#7ad4f2">SPECIFY</text>
 <text x="156" y="241.5" class="s" font-size="15.5" fill="#d7e2ec">"a turbofan with reverse thrust doors"</text>
 <rect x="433" y="227" width="2" height="19" fill="#7ad4f2" class="blink"/>
 <rect x="520" y="219" width="96" height="34" rx="17" fill="#3a8ee6"/>
 <text x="568" y="241" text-anchor="middle" class="s" font-size="14" font-weight="600" fill="#fff">Replicate</text>
 <rect x="64" y="296" width="92" height="26" rx="13" fill="#7ad4f2" fill-opacity=".12" stroke="#7ad4f2" stroke-opacity=".6"/><text x="109.9" y="313.5" text-anchor="middle" class="m" font-size="12.5" fill="#7ad4f2">blueprint</text><path d="M160.8,309 h14 m-5,-4 l5,4 l-5,4" fill="none" stroke="#8ba0b8" stroke-width="1.4"/><rect x="179.8" y="296" width="75" height="26" rx="13" fill="#9aa8ff" fill-opacity=".12" stroke="#9aa8ff" stroke-opacity=".6"/><text x="217.5" y="313.5" text-anchor="middle" class="m" font-size="12.5" fill="#9aa8ff">program</text><path d="M260.2,309 h14 m-5,-4 l5,4 l-5,4" fill="none" stroke="#8ba0b8" stroke-width="1.4"/><rect x="279.2" y="296" width="100" height="26" rx="13" fill="#7ee8ac" fill-opacity=".12" stroke="#7ee8ac" stroke-opacity=".6"/><text x="329.2" y="313.5" text-anchor="middle" class="m" font-size="12.5" fill="#7ee8ac">manifold3d</text><path d="M384.2,309 h14 m-5,-4 l5,4 l-5,4" fill="none" stroke="#8ba0b8" stroke-width="1.4"/><rect x="403.2" y="296" width="59" height="26" rx="13" fill="#e8b56f" fill-opacity=".12" stroke="#e8b56f" stroke-opacity=".6"/><text x="432.7" y="313.5" text-anchor="middle" class="m" font-size="12.5" fill="#e8b56f">build</text>
-<text x="64" y="356" class="m" font-size="12" fill="#8ba0b8">local models · editable at every step · GLB / STL / Blender · no cloud</text>
+<text x="64" y="356" class="m" font-size="12" fill="#8ba0b8">your models · editable at every step · STEP / STL / 3MF / GLB · agents over MCP</text>
 </svg>
