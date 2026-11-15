@@ -27,7 +27,7 @@ app = ["PySide6>=6.9"]
 mcp = ["mcp>=2.0"]
 cad = ["cadquery-ocp>=7.7", "cascadio>=0.0.13"]
 sim = ["mujoco>=3.0"]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "ezdxf>=1.1"]
 all = ["replicator[app,mcp,cad,sim,dev]"]
 
 [project.scripts]

@@ -1164,7 +1164,7 @@ class Studio(QObject):
     # ------------------------------------------------------------------ export and render
     @Slot(str, result=str)
     def exportAs(self, fmt: str) -> str:
-        if not self._program or fmt not in ("glb", "stl", "obj", "3mf", "step", "sim"):
+        if not self._program or fmt not in ("glb", "stl", "obj", "3mf", "step", "sim", "dxf"):
             return ""
         name = "".join(c if c.isalnum() else "-" for c in self.title.lower()).strip("-") or "build"
         if fmt == "sim":
@@ -1177,6 +1177,11 @@ class Studio(QObject):
             shapes = self._ev.step(self._program)
             if fmt in ("stl", "step") and any(isinstance(s.manifold, RawMesh) for s in shapes):
                 raise ValueError(f"imported pieces that are not watertight cannot go to {fmt.upper()}")
+            if fmt == "dxf":
+                from ..core import dxf
+                dxf.write(shapes, path, self._program.get("units", "mm"))
+                self._say(f"exported {path} (views at full size, {self._program.get('units', 'mm')})")
+                return str(path)
             exporter.export(shapes, self._program.get("materials", {}), path, name=self.title,
                             units=self._program.get("units", "mm"), printer=printers.active(self._cfg))
             self._say(f"exported {path}")

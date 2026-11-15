@@ -120,7 +120,8 @@ accepted one is a version you can step back to.
   buildings), measured dimensions, numbered callouts and a parts list with masses.
 - **Exports.** STEP for CAD (faceted solids, one per connected lump, cavities kept as voids;
   OpenCASCADE reads every fixture back as valid solids with the same volume), GLB with materials, OBJ,
-  STL and 3MF.
+  STL, 3MF, and DXF: the drawing's views at full size in model units, on separate layers for outlines,
+  creases, section cuts and dimensions, for 2D CAD and laser cutting.
 - **Simulator export.** *File > Export for simulators* writes URDF and MJCF, one link per part, with
   mass, centre and inertia from the exact solid. MuJoCo loads the fixtures with the mass Replicator
   reports and they come to rest upright. Joints are not program data yet, so every link is fixed to
@@ -198,7 +199,7 @@ lands on the timeline as one undo step.
 | `op_reference` | The op vocabulary, generated from the kernel's own table |
 | `read_program`, `write_program`, `patch_program` | Read, create, or change by RFC 6902 JSON Patch |
 | `build_report` | Size, mass, components and every check, for the whole build or ops 0 to *k* |
-| `export` | STEP, STL, 3MF, GLB, OBJ, URDF or MJCF |
+| `export` | STEP, STL, 3MF, GLB, OBJ, DXF, URDF or MJCF |
 | `drawing_sheet` | The A3 sheet as SVG and PNG |
 | `specify`, `engines` | A new program from a sentence, and which engines can write it |
 | `reverse` | Take an existing model apart into a program with its evidence ledger |
@@ -309,9 +310,8 @@ fixtures/         sample programs
 - [x] Drawing sheets, STEP export, an MCP server, any OpenAI-compatible endpoint
 - [x] Benchmark and corpus export, scored by measuring the solid
 - [x] Printer profiles and fit; measure tool; one-button navigation
-- [x] URDF and MJCF out with inertias from the exact solid
+- [x] URDF and MJCF out with inertias from the exact solid; DXF of the drawing's views at 1:1
 - [ ] Joints and mates as program data
-- [ ] DXF from the drawing sheet
 - [ ] Scale-aware printability, slicing and send to printer
 - [ ] Reverse to program: imported pieces become real, editable ops
 - [ ] A packaged app with a first-run model picker

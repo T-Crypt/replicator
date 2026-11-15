@@ -16,13 +16,13 @@ shows what was verified, not only what was planned.
 | Installable by anyone: `pip install -e ".[all]"`, generic engines, GPU policy | A clean venv passes the suite; CI runs Python 3.11 and 3.13, full and core-only installs, and checks every fixture |
 | Measure tool (distance with X, Y, Z parts) | Two points across the house slab read 14160.5 mm, the computed diagonal |
 | Navigation with any mouse: Shift+drag pans, Ctrl+drag zooms | Orbit, pan and zoom with one button |
+| DXF out: the drawing's views at 1:1 in model units, on OUTLINE, EDGES, SECTION, DIMS and TEXT layers | ezdxf reads every fixture with no audit errors; the plate's section shows its 20 mm hole as a gap at 50 to 70 mm (`tests/test_dxf.py`) |
 | URDF and MJCF out, inertias from the exact solid (links fixed to a base until joints exist) | MuJoCo loads the MJCF with the mass Replicator reports and the model comes to rest upright (`tests/test_robot.py`, run in CI with the `sim` extra) |
 
 ## Next
 
 | Work | Why | Check |
 |---|---|---|
-| DXF out from the drawing sheet | Laser cutting and 2D CAD hand-off | The sheet opens in LibreCAD with its views and dimensions |
 | Scale-aware printability (FR-PR-15) | Most prints are replicas, and thin parts vanish at 1:50 | A 1:50 house lists the mullions that drop under 0.4 mm and the thicken edit makes them printable |
 | Slicing and send to printer, print queue (FR-PR-16 to 18) | Closes the print loop for those who print | A print starts after one confirm; the queue survives a restart |
 | Joints and mates as program data, with a mate check | Assemblies; feeds URDF | A drone fixture with named joints; a rotor through an arm fails the check |

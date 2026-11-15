@@ -192,11 +192,13 @@ def _scale_label(s: float) -> str:
     return f"{int(round(s))}:1" if s >= 1 else f"1:{int(round(1 / s))}"
 
 
-def sheet_svg(program: dict, shapes: list[Shape], comps: list[Component], style: str = "blueprint",
-              source: str = "Replicator") -> str:
-    st = STYLES.get(style, STYLES["blueprint"])
-    units = program.get("units", "mm")
+def views_of(shapes: list[Shape], units: str) -> tuple[dict[str, ViewArt], np.ndarray, bool]:
+    """The views a drawing shows, in model units: top, front and right, plus a section A-A through the middle for an
+    object, or a floor plan cut at PLAN_HEIGHT in place of the top view for a building. Returns (views, size, building).
+    The sheet and the DXF both draw from this, so they always show the same views."""
     solids = [s for s in shapes if not s.manifold.is_empty()]
+    if not solids:
+        raise ValueError("nothing to draw: the build has no visible parts")
     lo = np.min([s.manifold.bounding_box()[:3] for s in solids], axis=0)
     hi = np.max([s.manifold.bounding_box()[3:] for s in solids], axis=0)
     size = hi - lo
@@ -204,20 +206,24 @@ def sheet_svg(program: dict, shapes: list[Shape], comps: list[Component], style:
     parts = _parts(solids)
     if building:
         h = lo[1] + min(PLAN_HEIGHT / {"mm": 1.0, "cm": 10.0, "m": 1000.0}.get(units, 1.0), 0.5 * size[1])
-        sec = view_art(_parts(solids, ((0.0, -1.0, 0.0), -h)), "top", f"PLAN  (CUT AT {h - lo[1]:.0f} {units})")
-        views = {"top": sec, "front": view_art(parts, "front", "FRONT ELEVATION"),
+        plan = view_art(_parts(solids, ((0.0, -1.0, 0.0), -h)), "top", f"PLAN  (CUT AT {h - lo[1]:.0f} {units})")
+        views = {"top": plan, "front": view_art(parts, "front", "FRONT ELEVATION"),
                  "right": view_art(parts, "right", "RIGHT ELEVATION")}
-        section = None
     else:
         zc = (lo[2] + hi[2]) / 2
         views = {"top": view_art(parts, "top", "TOP"), "front": view_art(parts, "front", "FRONT"),
-                 "right": view_art(parts, "right", "RIGHT")}
-        section = view_art(_parts(solids, ((0.0, 0.0, -1.0), -zc)), "front", "SECTION A-A")
+                 "right": view_art(parts, "right", "RIGHT"),
+                 "section": view_art(_parts(solids, ((0.0, 0.0, -1.0), -zc)), "front", "SECTION A-A")}
+    return views, size, building
 
+
+def sheet_svg(program: dict, shapes: list[Shape], comps: list[Component], style: str = "blueprint",
+              source: str = "Replicator") -> str:
+    st = STYLES.get(style, STYLES["blueprint"])
+    units = program.get("units", "mm")
+    views, size, building = views_of(shapes, units)
     W, H, D = size[0], size[1], size[2]
-    s, slots = _layout(W, H, D, section is not None)
-    if section is not None:
-        views["section"] = section
+    s, slots = _layout(W, H, D, "section" in views)
 
     out = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{SHEET[0]}mm" height="{SHEET[1]}mm" '
            f'viewBox="0 0 {SHEET[0]} {SHEET[1]}" font-family="{FONT}">',
