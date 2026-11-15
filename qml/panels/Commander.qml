@@ -50,7 +50,7 @@ Popup {
             if (match("open " + f.kind + " " + f.name, words))
                 out.push({ group: f.kind === "example" ? "Example" : "Recent", title: f.name, icon: "folder", keys: f.steps + " steps", ok: true, run: () => cmd.openFile(f.path) })
         if (q.length > 3) {
-            out.push({ group: "Dream", title: "Dream it: “" + q + "”", icon: "sparkle", keys: studio.busy === "" ? "" : "busy", ok: studio.busy === "", run: () => studio.dream(q) })
+            out.push({ group: "Specify", title: "Specify it: “" + q + "”", icon: "sparkle", keys: studio.busy === "" ? "" : "busy", ok: studio.busy === "", run: () => studio.dream(q) })
             if (studio.stepCount > 0)
                 out.push({ group: "Edit", title: "Change this build: “" + q + "”", icon: "pencil", keys: "", ok: studio.busy === "", run: () => studio.edit(q) })
         }
@@ -74,7 +74,7 @@ Popup {
                 background: null
                 color: Theme.text; font.pixelSize: 16; font.family: Theme.sans
                 selectionColor: Theme.accent; selectedTextColor: Theme.onAccent
-                placeholderText: "Search actions, builds, materials, themes — or describe something to dream"
+                placeholderText: "Search actions, builds, materials, themes — or describe something to build"
                 placeholderTextColor: Theme.faint
                 verticalAlignment: TextInput.AlignVCenter
                 onTextChanged: list.currentIndex = 0

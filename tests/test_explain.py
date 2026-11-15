@@ -103,3 +103,19 @@ def test_rest_pose_stands_a_box_and_floats_a_ball():
     u, v = np.meshgrid(np.linspace(0, np.pi, 40), np.linspace(0, 2 * np.pi, 40))
     ball = np.c_[(np.sin(u) * np.cos(v)).ravel(), np.cos(u).ravel(), (np.sin(u) * np.sin(v)).ravel()]
     assert explain.rest_pose([_Shape(ball)]) == "levitate"
+
+
+def test_searxng_takes_an_instance_or_a_browser_style_template():
+    from replicator.research import lane
+    t = "http://192.168.1.50:8888/search?q=%7Bquery%7D&format=json&categories=general"
+    assert lane.searxng_url(t, "rao bell") == "http://192.168.1.50:8888/search?q=rao+bell&format=json&categories=general"
+    assert lane.searxng_url("http://h:8888/", "a b") == "http://h:8888/search?q=a+b&format=json"
+    assert lane.searxng_url("http://h:8888/search", "a") == "http://h:8888/search?q=a&format=json"
+
+
+def test_voice_commands_fill_placeholders_per_argument_without_a_shell():
+    from replicator import voice
+    cmd = voice._fill("tts.py {text} -o {wav} --voice {voice}", text="a; rm -rf ~ $(x)", wav="/t/o.wav", voice="af_heart")
+    assert cmd == ["tts.py", "a; rm -rf ~ $(x)", "-o", "/t/o.wav", "--voice", "af_heart"]
+    assert voice._runnable("python3 -c pass") and not voice._runnable("no-such-binary-xyz {wav}")
+    assert voice.status({"tts_cmd": "no-such-binary-xyz {text}"})["tts"] != "local command"

@@ -200,7 +200,7 @@ class Studio(QObject):
 
     @Property(str, notify=logChanged)
     def lastLog(self):
-        return self._log[-1] if self._log else "Ready. Dream something, or import a model to take apart."
+        return self._log[-1] if self._log else "Ready. Specify something, or import a model to take apart."
 
     @Property(str, notify=busyChanged)
     def busy(self):
@@ -564,17 +564,20 @@ class Studio(QObject):
         prev_hashes = {s.hash for s in prev}
         first = not prev
 
+        used: set[str] = set()
+
         def geo(s, phase):
             key = s.hash + "|" + json.dumps(mats.get(s.material), sort_keys=True)
             c = cinfo.get(s.component)
             key += "|" + s.id + "|" + (c.color if c else "") + "|" + (c.label if c else "")
+            used.add(key)
             g = self._geo_cache.get(key)
             if g is None:
                 g = MeshGeometry(s, mats.get(s.material), phase, c.color if c else "#8a8f98",
                                  c.label if c else s.component)
                 g.materialName = s.material or ""
                 self._geo_cache[key] = g
-            g.with_phase(phase)
+            g = g.for_step(phase)
             g.set_offset(offsets.get(s.id, [0, 0, 0]))
             return g
         out = [geo(s, 1 if (first and self._step == 0) or (not first and s.hash not in prev_hashes) else 0)
@@ -583,8 +586,7 @@ class Studio(QObject):
         self._prev_shapes = shapes
         self._shapes = out
         if len(self._geo_cache) > GEO_CACHE_LIMIT:      # scrubbing a parameter leaves a trail of old meshes
-            keep = {id(g) for g in out}
-            self._geo_cache = {k: g for k, g in self._geo_cache.items() if id(g) in keep}
+            self._geo_cache = {k: g for k, g in self._geo_cache.items() if k in used}
             self._ev.trim(EVAL_CACHE_LIMIT)
         self._ops_rows = self._comp_rows = None
         live = [g for g, s in zip(out, shapes)]
@@ -912,7 +914,7 @@ class Studio(QObject):
                 qs = client.research_queries(text, [], engine, log=log)
                 sources = lane.gather(qs, [text], cfg["search_url"], log=log) or None
             return {"program": client.dream(text, engine, log=log, sources=sources)}
-        self._run_job("Dreaming", job)
+        self._run_job("Specifying", job)
 
     @Slot(str)
     def edit(self, text: str):

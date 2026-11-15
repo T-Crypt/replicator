@@ -14,6 +14,9 @@ CustomMaterial {
     property real blueprint: 0.0
     property real selected: 0.0
     property real xray: 0.0
+    property real alpha: 1.0          // glass and clear plastics: blended with SrcAlpha so reflections fade with it too
+    sourceBlend: alpha < 0.999 ? CustomMaterial.SrcAlpha : CustomMaterial.NoBlend
+    destinationBlend: alpha < 0.999 ? CustomMaterial.OneMinusSrcAlpha : CustomMaterial.NoBlend
     shadingMode: CustomMaterial.Shaded
     cullMode: Material.NoCulling
     fragmentShader: "../../shaders/holo.frag"

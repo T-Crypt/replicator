@@ -203,8 +203,18 @@ def wikipedia(query: str, limit: int = 3) -> list[tuple[str, str, list[str]]]:
     return out
 
 
+def searxng_url(base: str, query: str) -> str:
+    """`base` is an instance (http://host:8888) or a full template with {query} (as browsers store search engines)."""
+    base = base.replace("%7Bquery%7D", "{query}").replace("%7bquery%7d", "{query}")
+    if "{query}" in base:
+        return base.replace("{query}", urllib.parse.quote_plus(query))
+    return base.rstrip("/").removesuffix("/search") + "/search?" + urllib.parse.urlencode({"q": query, "format": "json"})
+
+
 def searxng(base: str, query: str, limit: int = 5) -> list[tuple[str, str]]:
-    data = json.loads(_get(base.rstrip("/") + "/search?" + urllib.parse.urlencode({"q": query, "format": "json"})))
+    data = json.loads(_get(searxng_url(base, query)))
+    if not data.get("results") and data.get("unresponsive_engines"):
+        raise RuntimeError("no results; engines down: " + ", ".join(e[0] for e in data["unresponsive_engines"]))
     return [(r.get("title", ""), r["url"]) for r in data.get("results", [])[:limit] if r.get("url")]
 
 

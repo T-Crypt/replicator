@@ -19,7 +19,8 @@ DENSITY = (                               # kg/m^3; first match in the material 
     ("titanium", 4430), ("ceramic", 3900), ("alumin", 2700), ("anodis", 2700), ("clay", 1800), ("glass", 2500), ("concrete", 2400), ("stone", 2600),
     ("tps", 150), ("carbon", 1600), ("composite", 1800), ("kevlar", 1440), ("peek", 1300), ("rubber", 1150), ("tyre", 1150), ("tire", 1150), ("polymer", 1200),
     ("plastic", 1200), ("abs", 1050), ("pla", 1240), ("nylon", 1150), ("wood", 600), ("foam", 50),
-    ("led", 1200),
+    ("acetal", 1410), ("acrylic", 1180), ("pmma", 1180), ("petg", 1270), ("pcb", 1850), ("fr4", 1850), ("silicon", 2330),
+    ("coolant", 1050), ("led", 1200),
 )
 FALLBACK = ("aluminium (assumed)", 2700)
 EFFECTS = ("glow", "emissive", "holo")    # display light, not a substance, unless the name also names one

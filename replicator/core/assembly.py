@@ -41,6 +41,14 @@ def _bbox(s: Shape) -> tuple[np.ndarray, np.ndarray]:
     return np.array(b[:3]), np.array(b[3:])
 
 
+ACRONYMS = {"cpu", "gpu", "psu", "pcb", "ram", "ssd", "usb", "hdmi", "io", "led", "fpv", "rf", "ac", "dc", "esc", "lox",
+            "rcs", "imu", "gps", "mcu", "soc", "vrm", "fpc", "pcie", "mipi", "sd"}
+
+
+def _title(cid: str) -> str:
+    """A component id as a label: words capitalised, acronyms kept upright ("cpu_block" -> "CPU Block")."""
+    return " ".join(w.upper() if w.lower() in ACRONYMS else w.capitalize() for w in cid.replace("_", " ").split())
+
 def components(program: dict, shapes: list[Shape]) -> list[Component]:
     meta = {c["id"]: c for c in program.get("components", []) if isinstance(c, dict)}
     first_step = {}
@@ -54,7 +62,7 @@ def components(program: dict, shapes: list[Shape]) -> list[Component]:
         lo, hi = _bbox(s)
         if c is None:
             m = meta.get(s.component, {})
-            c = out[s.component] = Component(s.component, m.get("label") or s.component.replace("_", " ").title(),
+            c = out[s.component] = Component(s.component, m.get("label") or _title(s.component),
                                              m.get("role", ""), shapes=[], order=first_step.get(s.component, 10 ** 6),
                                              lo=lo, hi=hi)
         else:

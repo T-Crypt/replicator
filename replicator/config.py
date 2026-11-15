@@ -5,7 +5,8 @@ Everything here is off until the operator turns it on in Preferences:
   search_url   str    a SearXNG instance for the wider web; empty = Wikipedia only
   speak        bool   read explanations aloud
   tts_url      str    an OpenAI-compatible speech server (Kokoro-FastAPI: http://host:8880); empty = espeak-ng
-  tts_voice    str    voice name for that server
+  tts_voice    str    voice name for that server or command
+  tts_cmd      str    or a local command; {text}, {wav} and {voice} are filled in (no shell), e.g. Kokoro's tts.py on CPU
   stt_url      str    an OpenAI-compatible transcription server (faster-whisper-server, whisper.cpp server)
   stt_cmd      str    or a local command, "{wav}" is replaced by the recording (for example: whisper-cli -m model.bin -f {wav} -nt)
 """
@@ -17,7 +18,7 @@ from pathlib import Path
 
 PATH = Path(os.environ.get("REPLICATOR_SERVICES", Path.home() / ".config" / "Replicator" / "services.json"))
 DEFAULTS = {"research": False, "search_url": "", "speak": False, "tts_url": "", "tts_voice": "af_heart",
-            "stt_url": "", "stt_cmd": ""}
+            "tts_cmd": "", "stt_url": "", "stt_cmd": ""}
 
 
 def load() -> dict:

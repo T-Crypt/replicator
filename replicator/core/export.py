@@ -16,9 +16,10 @@ Y_TO_Z_UP = trimesh.transformations.rotation_matrix(1.5707963267948966, [1, 0, 0
 def _material(spec: dict | None, name: str) -> trimesh.visual.material.PBRMaterial:
     spec = spec or {}
     c = list(spec.get("base_color", [0.7, 0.7, 0.72]))
+    a = min(max(float(spec.get("opacity", 1.0)), 0.0), 1.0)      # glass and clear panels: glTF alpha blend
     return trimesh.visual.material.PBRMaterial(
-        name=name, baseColorFactor=[*c[:3], 1.0], metallicFactor=float(spec.get("metalness", 0.0)),
-        roughnessFactor=float(spec.get("roughness", 0.5)))
+        name=name, baseColorFactor=[*c[:3], a], metallicFactor=float(spec.get("metalness", 0.0)),
+        roughnessFactor=float(spec.get("roughness", 0.5)), alphaMode="BLEND" if a < 1.0 else None)
 
 
 def to_scene(shapes: list[Shape], materials: dict) -> trimesh.Scene:

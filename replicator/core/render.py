@@ -47,10 +47,15 @@ def principled(name, spec):
     b.inputs["Base Color"].default_value = (*[float(x) for x in c[:3]], 1)
     b.inputs["Metallic"].default_value = float(spec.get("metalness", 0.0))
     b.inputs["Roughness"].default_value = float(spec.get("roughness", 0.5))
+    a = float(spec.get("opacity", 1.0))
+    if a < 1.0:                          # glass: clear, thin-walled transmission (panels, tubes, covers)
+        b.inputs["Transmission Weight"].default_value = 1.0 - a * 0.5
+        b.inputs["IOR"].default_value = 1.45
+        b.inputs["Alpha"].default_value = max(a, 0.15)
     e = spec.get("emissive")
     if e and max(e) > 0:
         b.inputs["Emission Color"].default_value = (*[float(x) for x in e[:3]], 1)
-        b.inputs["Emission Strength"].default_value = 6.0
+        b.inputs["Emission Strength"].default_value = float(spec.get("emissive_strength", 6.0))
     cache[name] = m
     return m
 for o in imported:                       # materials straight from the BuildProgram (keeps emission)
@@ -76,7 +81,7 @@ def area(name, loc, size, energy, color=(1, 1, 1)):
 area("key", (-R * 2.2, -R * 2.0, R * 3.0), R * 2.5, 420 * R * R)
 area("rim", (R * 2.4, R * 2.2, R * 1.8), R * 1.2, 650 * R * R, (0.85, 0.92, 1.0))
 area("fill", (R * 2.6, -R * 1.6, R * 0.8), R * 2.0, 110 * R * R, (0.8, 0.88, 1.0))
-area("top", (0, 0, R * 4.0), R * 3.0, 160 * R * R)
+area("top", (0, 0, R * 4.0), R * 1.6, 45 * R * R)     # a big strong top light read dark matte parts as white
 w = bpy.data.worlds.new("w"); sc.world = w; w.use_nodes = True
 w.node_tree.nodes["Background"].inputs["Color"].default_value = (0.012, 0.013, 0.016, 1)
 w.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
@@ -105,6 +110,7 @@ sc.render.threads_mode = "FIXED"; sc.render.threads = args.get("threads", 28)
 sc.render.resolution_x = cam["width"]; sc.render.resolution_y = cam["height"]; sc.render.resolution_percentage = 100
 try:
     sc.view_settings.view_transform = "AgX"; sc.view_settings.look = "AgX - Medium High Contrast"
+    sc.view_settings.exposure = -0.5     # keeps highlights on bright metals in range under the four-light studio
 except Exception:
     sc.view_settings.view_transform = "Filmic"
 sc.render.film_transparent = False

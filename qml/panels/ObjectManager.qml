@@ -100,7 +100,7 @@ Rectangle {
         anchors.centerIn: parent; visible: studio.components.length === 0; spacing: 8
         Icon { name: "layers"; size: 26; color: Theme.faint; anchors.horizontalCenter: parent.horizontalCenter }
         Text {
-            text: "No objects yet.\nDream one, add a primitive,\nor import a model."
+            text: "No objects yet.\nSpecify one, add a primitive,\nor import a model."
             horizontalAlignment: Text.AlignHCenter; color: Theme.faint; font.pixelSize: Theme.fs; font.family: Theme.sans; lineHeight: 1.3
         }
     }

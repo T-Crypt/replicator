@@ -1,6 +1,6 @@
 // Replicator part material: PBR when built, a holo scan while it materializes, cyan line-work in blueprint mode.
 // Uniforms come from HoloMaterial.qml properties: baseColor, emissiveColor, metal, rough, reveal, minY, maxY,
-// blueprint, selected, time.
+// blueprint, selected, alpha, time.
 void MAIN()
 {
     vec3 wp = VAR_WORLD_POSITION;
@@ -29,7 +29,7 @@ void MAIN()
     vec3 albedo = mix(baseColor.rgb, tint.rgb * 0.85, tintAmount);   // colour by component (Dissect)
     albedo = mix(albedo, navy, blueprint);
     albedo = mix(albedo, albedo * 0.25, band);                           // fresh zone is darker under the glow
-    BASE_COLOR = vec4(albedo, 1.0);
+    BASE_COLOR = vec4(albedo, alpha);                                   // < 1 only for glass and clear parts
     METALNESS = mix(metal, 0.0, blueprint);
     ROUGHNESS = mix(rough, 0.9, blueprint);
     vec3 em = emissiveColor.rgb;

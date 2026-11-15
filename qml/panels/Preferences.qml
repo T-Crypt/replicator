@@ -44,6 +44,27 @@ Popup {
         MouseArea { id: tgMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: tg.flip() }
     }
 
+    // one service setting: a label and a field saved when editing ends (Enter or focus leaves)
+    component ServiceField: RowLayout {
+        id: sf
+        property string key
+        property string label
+        property string hint
+        spacing: 10
+        Text { text: sf.label; color: Theme.dim; font.pixelSize: Theme.fs; font.family: Theme.sans; Layout.preferredWidth: 150 }
+        TextField {
+            Layout.fillWidth: true
+            implicitHeight: Theme.ctl + 2
+            text: studio.services[sf.key] || ""
+            placeholderText: sf.hint
+            placeholderTextColor: Theme.faint
+            color: Theme.text; font.pixelSize: Theme.fsSmall; font.family: Theme.mono
+            selectByMouse: true
+            background: Rectangle { radius: Theme.r2; color: Theme.field; border.color: parent.activeFocus ? Theme.accentLine : Theme.line }
+            onEditingFinished: if (text.trim() !== (studio.services[sf.key] || "")) studio.setService(sf.key, JSON.stringify(text.trim()))
+        }
+    }
+
     contentItem: ColumnLayout {
         spacing: 12
         RowLayout {
@@ -141,6 +162,31 @@ Popup {
             Toggle { text: "Timeline"; on: pf.workspace.showTimeline; onFlip: pf.workspace.showTimeline = !pf.workspace.showTimeline }
             Toggle { text: "Floor grid"; on: pf.workspace.showGrid; onFlip: pf.workspace.showGrid = !pf.workspace.showGrid }
             Toggle { text: "Reference images"; on: pf.workspace.showReference; onFlip: pf.workspace.showReference = !pf.workspace.showReference }
+        }
+        Label { text: "RESEARCH AND VOICE"; Layout.topMargin: 6 }
+        Flow {
+            Layout.fillWidth: true
+            spacing: 8
+            Toggle { text: "Web research for Explain and specify"; on: studio.services.research === true; onFlip: studio.setService("research", JSON.stringify(!on)) }
+            Toggle { text: "Read explanations aloud"; on: studio.services.speak === true; onFlip: studio.setService("speak", JSON.stringify(!on)) }
+        }
+        ServiceField { Layout.fillWidth: true; key: "search_url"; label: "SearXNG"; hint: "empty = Wikipedia only  ·  http://host:8888 or a {query} template" }
+        ServiceField { Layout.fillWidth: true; key: "tts_url"; label: "Speech server"; hint: "empty = espeak-ng  ·  Kokoro: http://127.0.0.1:8880" }
+        ServiceField { Layout.fillWidth: true; key: "tts_cmd"; label: "or a speech command"; hint: "…/tts.py {text} -o {wav} --voice {voice}  (CPU)" }
+        ServiceField { Layout.fillWidth: true; key: "tts_voice"; label: "Voice"; hint: "af_heart" }
+        ServiceField { Layout.fillWidth: true; key: "stt_url"; label: "Transcription server"; hint: "OpenAI-compatible, e.g. http://127.0.0.1:8890" }
+        ServiceField { Layout.fillWidth: true; key: "stt_cmd"; label: "or a command"; hint: "whisper-cli -m model.bin -f {wav} -nt" }
+        Text {
+            Layout.fillWidth: true
+            readonly property var st: studio.services.status || {}
+            text: "Speech: " + (st.tts || "none") + "   ·   Dictation: " + (st.stt || "not set up")
+                  + (st.record === false ? "   ·   no microphone recorder" : "")
+            color: Theme.dim; font.pixelSize: Theme.fsTiny; font.family: Theme.sans; wrapMode: Text.WordWrap
+        }
+        Text {
+            Layout.fillWidth: true
+            text: "Research sends only search words, never your build. Voice runs on the CPU; it never uses the RTX card. Saved in ~/.config/Replicator/services.json (mode 600)."
+            color: Theme.faint; font.pixelSize: Theme.fsTiny; font.family: Theme.sans; wrapMode: Text.WordWrap
         }
         Text {
             Layout.fillWidth: true; Layout.topMargin: 4

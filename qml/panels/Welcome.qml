@@ -10,7 +10,7 @@ Item {
     signal runAction(string id)
     readonly property real capsuleY: col.y + slot.y + 4      // Main.qml parks the dream capsule here
 
-    readonly property var kinds: ({ example: ["Example", "build"], dream: ["Dream", "sparkle"],
+    readonly property var kinds: ({ example: ["Example", "build"], dream: ["Specified", "sparkle"],
                                     reverse: ["Reverse", "reverse"], image: ["Image to 3D", "image"] })
 
     Flickable {
@@ -27,7 +27,7 @@ Item {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: "You dream it, you build it."
+                text: "You specify it, you build it."
                 color: Theme.viewText; font.family: Theme.sans; font.pixelSize: 38; font.weight: Font.DemiBold
                 font.letterSpacing: -0.6
             }

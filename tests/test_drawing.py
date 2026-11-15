@@ -56,3 +56,10 @@ def test_the_svg_font_is_a_portable_list_qt_gets_one_installed_family():
     have = QFontDatabase.families()
     assert _one_family("'Nowhere Sans', " + drawing.FONT) in have
     assert _one_family("'Nowhere Sans', Nowhere2") in have
+
+
+def test_electronics_and_liquid_cooling_materials_have_real_densities():
+    assert physics.density("pcb_green")[1] == 1850
+    assert physics.density("acrylic_tube")[1] == 1180
+    assert physics.density("glowing_coolant") == ("coolant", 1050, True)   # coolant is matter, even when it glows
+    assert physics.density("silicon_die")[1] == 2330

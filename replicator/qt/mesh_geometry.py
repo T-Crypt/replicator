@@ -62,9 +62,9 @@ def feature_edges(V: np.ndarray, F: np.ndarray) -> np.ndarray:
 
 
 class EdgeGeometry(QQuick3DGeometry):
-    def __init__(self, segs: np.ndarray, lo, hi):
+    def __init__(self, data: QByteArray, lo, hi):
         super().__init__()
-        self.setVertexData(QByteArray(np.ascontiguousarray(segs.reshape(-1, 3)).tobytes()))
+        self.setVertexData(data)
         self.setStride(12)
         self.setPrimitiveType(QQuick3DGeometry.PrimitiveType.Lines)
         self.addAttribute(A.Semantic.PositionSemantic, 0, A.ComponentType.F32Type)
@@ -73,42 +73,53 @@ class EdgeGeometry(QQuick3DGeometry):
 
 
 class MeshGeometry(QQuick3DGeometry):
-    """One leaf shape. phase: 0 static, 1 arriving (materialize), 2 leaving (dematerialize, reverse playback)."""
+    """One leaf shape. phase: 0 static, 1 arriving (materialize), 2 leaving (dematerialize, reverse playback).
+
+    The bridge caches these per shape, but Qt Quick 3D draws a geometry object only for the first Model that adopts
+    it: once that Model is destroyed (every step change rebuilds the Repeater3D delegates) a new Model holding the same
+    object renders nothing, and update() does not bring it back. So the cache keeps the computed buffers and
+    `for_step` hands each step a fresh object built from them (cheap: the byte arrays are shared, not recomputed)."""
     changed = Signal()
 
-    def __init__(self, shape, material: dict | None, phase: int, comp_color: str, comp_label: str):
+    def __init__(self, shape, material: dict | None, phase: int, comp_color: str, comp_label: str, _from=None):
         super().__init__()
-        self._id, self._label, self._part, self._comp = shape.id, shape.label, shape.part, shape.component
+        if _from is not None:                       # a fresh Qt object over another one's buffers
+            self.__dict__.update({k: v for k, v in _from.__dict__.items() if k.startswith("_") or k == "materialName"})
+        else:
+            self._id, self._label, self._part, self._comp = shape.id, shape.label, shape.part, shape.component
+            self.materialName = ""
+            self._comp_color = QColor(comp_color)
+            self._comp_label = comp_label
+            self._offset = QVector3D(0, 0, 0)
+            mat = material or {}
+            c = mat.get("base_color", [0.72, 0.73, 0.76])
+            e = mat.get("emissive", [0, 0, 0])
+            self._color = QColor.fromRgbF(*[min(max(float(x), 0.0), 1.0) for x in c[:3]])
+            self._emissive = QColor.fromRgbF(*[min(max(float(x), 0.0), 1.0) for x in e[:3]])
+            self._metal = float(mat.get("metalness", 0.0))
+            self._rough = float(mat.get("roughness", 0.5))
+            self._opacity = min(max(float(mat.get("opacity", 1.0)), 0.05), 1.0)
+            verts, tri = mesh_arrays(shape.manifold)
+            self._tris = len(tri)
+            self._lo, self._hi = verts[:, :3].min(0), verts[:, :3].max(0)
+            self._vbytes = QByteArray(verts.tobytes())
+            self._ibytes = QByteArray(tri.astype(np.uint32).tobytes())
+            self._ebytes = QByteArray(np.ascontiguousarray(feature_edges(verts, tri).reshape(-1, 3)).tobytes())
         self._phase = phase
-        self.materialName = ""
-        self._comp_color = QColor(comp_color)
-        self._comp_label = comp_label
-        self._offset = QVector3D(0, 0, 0)
-        mat = material or {}
-        c = mat.get("base_color", [0.72, 0.73, 0.76])
-        e = mat.get("emissive", [0, 0, 0])
-        self._color = QColor.fromRgbF(*[min(max(float(x), 0.0), 1.0) for x in c[:3]])
-        self._emissive = QColor.fromRgbF(*[min(max(float(x), 0.0), 1.0) for x in e[:3]])
-        self._metal = float(mat.get("metalness", 0.0))
-        self._rough = float(mat.get("roughness", 0.5))
-        verts, tri = mesh_arrays(shape.manifold)
-        self._tris = len(tri)
-        lo, hi = verts[:, :3].min(0), verts[:, :3].max(0)
-        self._lo, self._hi = lo, hi
-        self.setVertexData(QByteArray(verts.tobytes()))
-        self.setIndexData(QByteArray(tri.astype(np.uint32).tobytes()))
+        self.setVertexData(self._vbytes)
+        self.setIndexData(self._ibytes)
         self.setStride(24)
         self.setPrimitiveType(QQuick3DGeometry.PrimitiveType.Triangles)
         self.addAttribute(A.Semantic.PositionSemantic, 0, A.ComponentType.F32Type)
         self.addAttribute(A.Semantic.NormalSemantic, 12, A.ComponentType.F32Type)
         self.addAttribute(A.Semantic.IndexSemantic, 0, A.ComponentType.U32Type)
-        self.setBounds(QVector3D(*lo.tolist()), QVector3D(*hi.tolist()))
+        self.setBounds(QVector3D(*self._lo.tolist()), QVector3D(*self._hi.tolist()))
         self.update()
-        self._edges = EdgeGeometry(feature_edges(verts, tri), lo.tolist(), hi.tolist())
+        self._edges = EdgeGeometry(self._ebytes, self._lo.tolist(), self._hi.tolist())
 
-    def with_phase(self, phase: int) -> "MeshGeometry":
-        self._phase = phase
-        return self
+    def for_step(self, phase: int) -> "MeshGeometry":
+        """A new Qt geometry object over these cached buffers, for the next step's delegate."""
+        return MeshGeometry(None, None, phase, "", "", _from=self)
 
     def set_offset(self, v) -> None:
         self._offset = QVector3D(*v)
@@ -140,6 +151,8 @@ class MeshGeometry(QQuick3DGeometry):
     def metalness(self): return self._metal
     @_ro(float)
     def roughness(self): return self._rough
+    @_ro(float)
+    def opacity(self): return self._opacity
     @_ro(float)
     def minY(self): return float(self._lo[1])
     @_ro(float)

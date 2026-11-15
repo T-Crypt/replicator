@@ -1,4 +1,4 @@
-"""Replicator - you dream it, you build it.
+"""Replicator - you specify it, you build it.
 
     python -m replicator.app [program.json] [--software] [--shot out.png --step N]
 
@@ -23,6 +23,10 @@ def main(argv=None) -> int:
     ap.add_argument("program", nargs="?")
     ap.add_argument("--software", action="store_true")
     ap.add_argument("--shot")
+    ap.add_argument("--record", help="record frames to this folder in real time; needs --cues. Run it through "
+                    "tools/record.sh (a headless gamescope on the iGPU): the window must be exposed to be grabbed twice")
+    ap.add_argument("--cues", help='JSON list of [seconds, "QML expression"] played while recording; ["end", t] stops')
+    ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--step", type=int, default=-1)
     ap.add_argument("--blueprint", type=float, default=0.0)
     ap.add_argument("--mode", default="", help="build | dissect | reverse | showcase | present (for --shot)")
@@ -50,7 +54,7 @@ def main(argv=None) -> int:
     QGuiApplication.setOrganizationDomain("replicator.local")
     QGuiApplication.setDesktopFileName("replicator")
     app = QGuiApplication(sys.argv[:1])
-    if a.shot:  # a headless frame never reads or writes the operator's preferences
+    if a.shot or a.record:  # a headless frame never reads or writes the operator's preferences
         import tempfile
         from PySide6.QtCore import QSettings
         QSettings.setPath(QSettings.Format.NativeFormat, QSettings.Scope.UserScope, tempfile.mkdtemp(prefix="replicator-shot-"))
@@ -77,9 +81,9 @@ def main(argv=None) -> int:
     engine.warnings.connect(lambda ws: [print("QML:", w.toString(), file=sys.stderr) for w in ws])
     engine.rootContext().setContextProperty("studio", studio)
     engine.rootContext().setContextProperty("boot", {"theme": a.theme, "accent": a.accent, "density": a.density,
-                                                     "ui": a.ui, "shot": bool(a.shot)})
+                                                     "ui": a.ui, "shot": bool(a.shot or a.record)})
     engine.addImportPath(str(ROOT / "qml"))                 # the Replicator.UI module
-    if a.shot:  # never shown: grabWindow renders a non-exposed window offscreen
+    if a.shot:  # never shown: grabWindow renders a non-exposed window offscreen (once; a second grab crashes Qt)
         engine.setInitialProperties({"visible": False})
     engine.load(str(ROOT / "qml" / "Main.qml"))
     if not engine.rootObjects():
@@ -89,9 +93,9 @@ def main(argv=None) -> int:
 
     if a.program:
         studio.openFile(a.program)
-        if a.step >= 0 or a.shot:
+        if a.step >= 0 or a.shot or a.record:
             studio.setStep(a.step if a.step >= 0 else studio.stepCount - 1)
-        elif not a.shot:
+        elif not (a.shot or a.record):
             win.setProperty("playing", True)
     if a.size:
         w, h = (int(x) for x in a.size.split("x"))
@@ -115,6 +119,8 @@ def main(argv=None) -> int:
             app.exit(3)
     QTimer.singleShot(4000, self_check)
 
+    if a.record:
+        return _record(app, win, studio, a)
     if a.shot:
         state = {"waited": 0, "settled": False}
 
@@ -132,6 +138,52 @@ def main(argv=None) -> int:
             print("saved", a.shot, img.width(), img.height())
             app.exit(0)
         QTimer.singleShot(int(os.environ.get("REPLICATOR_SHOT_MS", "3500")), grab)
+    return app.exec()
+
+
+def _record(app, win, studio, a) -> int:
+    """Grab the hidden window in real time while the cues play. Each frame's real timestamp goes to frames.txt as an
+    ffmpeg concat list, so the film keeps true speed even when a frame takes longer than 1/fps to draw."""
+    import json
+    import time
+    from pathlib import Path
+    from PySide6.QtCore import QMetaObject, QTimer, Q_ARG
+    out = Path(a.record)
+    out.mkdir(parents=True, exist_ok=True)
+    cues = json.loads(Path(a.cues).read_text())
+    end = next(float(c[1]) for c in cues if c[0] == "end")
+    plays = sorted(([float(t), js] for t, js in cues if t != "end"), key=lambda c: c[0])
+    st = {"t0": None, "i": 0, "frames": []}
+
+    def tick():
+        now = time.perf_counter()
+        if st["t0"] is None:
+            st["t0"] = now
+        t = now - st["t0"]
+        while plays and plays[0][0] <= t:
+            _, js = plays.pop(0)
+            try:
+                QMetaObject.invokeMethod(win, "runCue", Q_ARG("QVariant", js))
+            except Exception as e:  # noqa: BLE001 - a bad cue is reported, the take goes on
+                print(f"cue failed at {t:.2f} s: {js}: {e}", file=sys.stderr)
+        img = win.grabWindow()
+        name = f"{st['i']:05d}.jpg"
+        img.save(str(out / name), "JPG", 95)
+        st["frames"].append((name, t))
+        st["i"] += 1
+        if t >= end:
+            lines = ["ffconcat version 1.0"]
+            for (n, t0), (_, t1) in zip(st["frames"], st["frames"][1:] + [(None, t + 1 / a.fps)]):
+                lines += [f"file {n}", f"duration {max(t1 - t0, 0.001):.4f}"]
+            (out / "frames.txt").write_text("\n".join(lines) + "\n")
+            dt = [b - a_ for (_, a_), (_, b) in zip(st["frames"], st["frames"][1:])]
+            print(f"recorded {len(st['frames'])} frames over {t:.1f} s, mean {1 / (sum(dt) / len(dt)):.1f} fps, "
+                  f"worst gap {max(dt) * 1000:.0f} ms -> {out}")
+            app.exit(0)
+            return
+        QTimer.singleShot(max(1, int(1000 / a.fps - (time.perf_counter() - now) * 1000)), tick)
+
+    QTimer.singleShot(int(os.environ.get("REPLICATOR_SHOT_MS", "3500")), tick)
     return app.exec()
 
 

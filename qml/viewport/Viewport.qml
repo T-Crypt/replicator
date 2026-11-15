@@ -24,7 +24,6 @@ Item {
     property bool turntable: false
     property bool gridOn: true
     property bool referenceOn: true
-    property bool renderGate: false   // [DEBUG-rg] harness: freeze the per-frame animation so grabWindow does not race the render thread
     property real revealMs: 1100
     property alias view: view
     signal picked(string shapeId)
@@ -59,10 +58,12 @@ Item {
     readonly property vector3d camRight: Qt.vector3d(Math.cos(yaw * Math.PI / 180), 0, -Math.sin(yaw * Math.PI / 180))
     readonly property vector3d camUp: camDir.crossProduct(camRight).normalized()
 
+    readonly property alias parts: partsRep
     function frameAll(animate) {
         const c = studio.center
         tPivot = Qt.vector3d(c[0], c[1], c[2])
-        tDist = studio.radius * (1.0 + Math.max(explode, explodeGoal) * 1.1) / Math.sin(fov / 2 * Math.PI / 180)
+        // 1.18: room for the dream bar and the title over the view; with 1.0 a tall build touched both edges
+        tDist = studio.radius * 1.18 * (1.0 + Math.max(explode, explodeGoal) * 1.1) / Math.sin(fov / 2 * Math.PI / 180)
         if (!animate) { pivot = tPivot; dist = tDist }
     }
     function heroAngle() { tYaw = nearestYaw(38); tPitch = 14; ortho = false; viewName = "Perspective" }
@@ -110,7 +111,7 @@ Item {
     }
 
     FrameAnimation {
-        running: !root.renderGate
+        running: true
         onTriggered: {
             const k = 1 - Math.exp(-frameTime * 16)
             if (root.present) root.bobClock += frameTime
@@ -144,9 +145,9 @@ Item {
             probeExposure: root.showcase ? 1.3 : 0.9
             probeOrientation: Qt.vector3d(0, 30, 0)
             glowEnabled: true
-            glowStrength: root.showcase ? 1.25 : 1.0
+            glowStrength: 1.0
             glowIntensity: 0.7
-            glowBloom: root.showcase ? 0.35 : 0.2
+            glowBloom: root.showcase ? 0.12 : 0.2     // 0.35 haloed every silhouette
             glowHDRMinimumValue: 1.0
             aoEnabled: root.showcase || root.present
             aoStrength: 50
@@ -236,9 +237,9 @@ Item {
             opacity: root.showcase ? 1.0 : root.present ? 1.0 : (Theme.dark ? 0.5 : 0.4) * (1 - root.blueprint)
             materials: PrincipledMaterial {
                 baseColor: root.showcase ? "#0d0e11" : root.present ? "#ffffff" : Theme.dark ? Theme.raised : "#8a929c"
-                roughness: root.showcase ? 0.22 : 1
+                roughness: root.showcase ? 0.5 : 1
                 metalness: 0
-                specularAmount: root.showcase ? 0.6 : 0
+                specularAmount: root.showcase ? 0.12 : 0   // a glossy floor mirrored the probe into grey haze
             }
         }
 
@@ -275,6 +276,7 @@ Item {
             id: build
             y: studio.ground + root.lift
             Repeater3D {
+                id: partsRep
                 model: studio.shapes
                 delegate: Node {
                     id: part
@@ -299,6 +301,7 @@ Item {
                         visible: root.displayMode !== "wire"
                         opacity: root.displayMode === "xray" ? 0.18 : 1.0
                         materials: HoloMaterial {
+                            alpha: part.modelData.opacity
                             baseColor: part.modelData.baseColor
                             emissiveColor: part.modelData.emissive
                             tint: part.modelData.componentColor

@@ -1,0 +1,884 @@
+{
+ "version": 1,
+ "name": "Raspberry Pi 5",
+ "units": "mm",
+ "summary": "A Raspberry Pi 5 at real scale on four M2.5 standoffs: BCM2712 under the active cooler, LPDDR4X, the RP1 I/O chip, 40-pin GPIO, Ethernet, two USB 3 and two USB 2, USB-C power, two micro HDMI, two MIPI connectors, PCIe FPC and microSD.",
+ "components": [
+  {
+   "id": "board",
+   "label": "PCB",
+   "role": "85 x 56 mm FR-4, 1.6 mm"
+  },
+  {
+   "id": "standoffs",
+   "label": "Standoffs",
+   "role": "M2.5 brass, 6 mm"
+  },
+  {
+   "id": "soc",
+   "label": "SoC, RAM and RP1",
+   "role": "BCM2712, LPDDR4X, RP1 southbridge"
+  },
+  {
+   "id": "cooler",
+   "label": "Active Cooler",
+   "role": "finned sink and blower over the SoC"
+  },
+  {
+   "id": "gpio",
+   "label": "GPIO Header",
+   "role": "2 x 20 at 2.54 mm"
+  },
+  {
+   "id": "ports",
+   "label": "Ports",
+   "role": "Ethernet, USB 3, USB 2, USB-C, micro HDMI"
+  },
+  {
+   "id": "connectors",
+   "label": "FPC and Card Connectors",
+   "role": "MIPI, PCIe, fan, microSD"
+  }
+ ],
+ "materials": {
+  "pcb_green": {
+   "base_color": [
+    0.012,
+    0.15,
+    0.055
+   ],
+   "metalness": 0.0,
+   "roughness": 0.45
+  },
+  "brass": {
+   "base_color": [
+    0.78,
+    0.62,
+    0.3
+   ],
+   "metalness": 1.0,
+   "roughness": 0.3
+  },
+  "brass_gold_plated": {
+   "base_color": [
+    0.95,
+    0.76,
+    0.35
+   ],
+   "metalness": 1.0,
+   "roughness": 0.18
+  },
+  "silicon_package": {
+   "base_color": [
+    0.62,
+    0.64,
+    0.66
+   ],
+   "metalness": 0.9,
+   "roughness": 0.35
+  },
+  "aluminium_6063": {
+   "base_color": [
+    0.8,
+    0.81,
+    0.83
+   ],
+   "metalness": 1.0,
+   "roughness": 0.28
+  },
+  "plastic_black": {
+   "base_color": [
+    0.03,
+    0.03,
+    0.035
+   ],
+   "metalness": 0.0,
+   "roughness": 0.55
+  },
+  "plastic_white": {
+   "base_color": [
+    0.88,
+    0.87,
+    0.84
+   ],
+   "metalness": 0.0,
+   "roughness": 0.5
+  },
+  "steel_shell": {
+   "base_color": [
+    0.72,
+    0.73,
+    0.75
+   ],
+   "metalness": 1.0,
+   "roughness": 0.25
+  }
+ },
+ "ops": [
+  {
+   "id": "pcb_blank",
+   "op": "box",
+   "label": "PCB blank",
+   "component": "board",
+   "material": "pcb_green",
+   "params": {
+    "size": [
+     85.0,
+     1.6,
+     56.0
+    ],
+    "translate": [
+     0.0,
+     6.8,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "hole0",
+   "op": "cylinder",
+   "label": "Mounting hole",
+   "component": "board",
+   "material": "pcb_green",
+   "params": {
+    "radius": 1.35,
+    "height": 4,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -39.0,
+     6.8,
+     -24.5
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "hole1",
+   "op": "cylinder",
+   "label": "Mounting hole",
+   "component": "board",
+   "material": "pcb_green",
+   "params": {
+    "radius": 1.35,
+    "height": 4,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     19.0,
+     6.8,
+     -24.5
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "hole2",
+   "op": "cylinder",
+   "label": "Mounting hole",
+   "component": "board",
+   "material": "pcb_green",
+   "params": {
+    "radius": 1.35,
+    "height": 4,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -39.0,
+     6.8,
+     24.5
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "hole3",
+   "op": "cylinder",
+   "label": "Mounting hole",
+   "component": "board",
+   "material": "pcb_green",
+   "params": {
+    "radius": 1.35,
+    "height": 4,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     19.0,
+     6.8,
+     24.5
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "pcb",
+   "op": "boolean",
+   "label": "PCB, 85 x 56 mm, M2.5 holes on 58 x 49",
+   "component": "board",
+   "inputs": [
+    "pcb_blank",
+    "hole0",
+    "hole1",
+    "hole2",
+    "hole3"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "standoff0",
+   "op": "cylinder",
+   "label": "M2.5 brass standoff",
+   "component": "standoffs",
+   "material": "brass",
+   "params": {
+    "radius": 2.5,
+    "height": 6.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -39.0,
+     3.0,
+     -24.5
+    ],
+    "segments": 6
+   }
+  },
+  {
+   "id": "standoff1",
+   "op": "cylinder",
+   "label": "M2.5 brass standoff",
+   "component": "standoffs",
+   "material": "brass",
+   "params": {
+    "radius": 2.5,
+    "height": 6.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     19.0,
+     3.0,
+     -24.5
+    ],
+    "segments": 6
+   }
+  },
+  {
+   "id": "standoff2",
+   "op": "cylinder",
+   "label": "M2.5 brass standoff",
+   "component": "standoffs",
+   "material": "brass",
+   "params": {
+    "radius": 2.5,
+    "height": 6.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -39.0,
+     3.0,
+     24.5
+    ],
+    "segments": 6
+   }
+  },
+  {
+   "id": "standoff3",
+   "op": "cylinder",
+   "label": "M2.5 brass standoff",
+   "component": "standoffs",
+   "material": "brass",
+   "params": {
+    "radius": 2.5,
+    "height": 6.0,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     19.0,
+     3.0,
+     24.5
+    ],
+    "segments": 6
+   }
+  },
+  {
+   "id": "standoffs",
+   "op": "boolean",
+   "label": "Four M2.5 standoffs",
+   "component": "standoffs",
+   "inputs": [
+    "standoff0",
+    "standoff1",
+    "standoff2",
+    "standoff3"
+   ],
+   "params": {
+    "mode": "union"
+   }
+  },
+  {
+   "id": "soc",
+   "op": "box",
+   "label": "BCM2712 SoC (heat spreader)",
+   "component": "soc",
+   "material": "silicon_package",
+   "params": {
+    "size": [
+     17.0,
+     1.2,
+     17.0
+    ],
+    "translate": [
+     -13.0,
+     8.2,
+     3.5
+    ]
+   }
+  },
+  {
+   "id": "ram",
+   "op": "box",
+   "label": "LPDDR4X SDRAM",
+   "component": "soc",
+   "material": "silicon_package",
+   "params": {
+    "size": [
+     12.0,
+     1.0,
+     14.0
+    ],
+    "translate": [
+     4.5,
+     8.1,
+     4.0
+    ]
+   }
+  },
+  {
+   "id": "rp1",
+   "op": "box",
+   "label": "RP1 I/O controller",
+   "component": "soc",
+   "material": "silicon_package",
+   "params": {
+    "size": [
+     7.0,
+     0.9,
+     7.0
+    ],
+    "translate": [
+     21.0,
+     8.05,
+     4.5
+    ]
+   }
+  },
+  {
+   "id": "sink_base",
+   "op": "box",
+   "label": "Heatsink base plate",
+   "component": "cooler",
+   "material": "aluminium_6063",
+   "params": {
+    "size": [
+     37.0,
+     2.0,
+     34.0
+    ],
+    "translate": [
+     -7.0,
+     9.8,
+     3.0
+    ]
+   }
+  },
+  {
+   "id": "fin",
+   "op": "box",
+   "label": "Heatsink fin",
+   "component": "cooler",
+   "material": "aluminium_6063",
+   "params": {
+    "size": [
+     0.8,
+     5.5,
+     16.0
+    ],
+    "translate": [
+     -25.1,
+     13.55,
+     -6.0
+    ]
+   }
+  },
+  {
+   "id": "fins",
+   "op": "array",
+   "input": "fin",
+   "label": "Heatsink, 18 fins",
+   "component": "cooler",
+   "material": "aluminium_6063",
+   "params": {
+    "mode": "linear",
+    "count": 18,
+    "offset": [
+     2.06,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "fan_frame_blank",
+   "op": "box",
+   "label": "Blower housing",
+   "component": "cooler",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     22.0,
+     5.5,
+     17.0
+    ],
+    "translate": [
+     -2.5,
+     13.55,
+     11.5
+    ]
+   }
+  },
+  {
+   "id": "fan_bore",
+   "op": "cylinder",
+   "label": "Blower intake",
+   "component": "cooler",
+   "material": "plastic_black",
+   "params": {
+    "radius": 7.6,
+    "height": 8,
+    "rotate": [
+     0,
+     0,
+     0
+    ],
+    "translate": [
+     -2.5,
+     14.799999999999999,
+     11.5
+    ],
+    "segments": 48
+   }
+  },
+  {
+   "id": "fan_housing",
+   "op": "boolean",
+   "label": "Blower fan housing",
+   "component": "cooler",
+   "inputs": [
+    "fan_frame_blank",
+    "fan_bore"
+   ],
+   "params": {
+    "mode": "difference"
+   }
+  },
+  {
+   "id": "fan_rotor",
+   "op": "rotor",
+   "label": "Blower impeller",
+   "component": "cooler",
+   "material": "plastic_black",
+   "params": {
+    "hub_radius": 2.8,
+    "tip_radius": 7.2,
+    "chord": 2.6,
+    "blades": 11,
+    "pitch": 30,
+    "twist": 5,
+    "hub_length": 3.0,
+    "translate": [
+     -2.5,
+     12.299999999999999,
+     11.5
+    ]
+   }
+  },
+  {
+   "id": "gpio_base",
+   "op": "box",
+   "label": "GPIO header body",
+   "component": "gpio",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     50.8,
+     2.5,
+     5.08
+    ],
+    "translate": [
+     -11.27,
+     8.85,
+     24.17
+    ]
+   }
+  },
+  {
+   "id": "pin",
+   "op": "box",
+   "label": "Header pin",
+   "component": "gpio",
+   "material": "brass_gold_plated",
+   "params": {
+    "size": [
+     0.64,
+     6.0,
+     0.64
+    ],
+    "translate": [
+     -35.4,
+     13.1,
+     22.9
+    ]
+   }
+  },
+  {
+   "id": "pin_row",
+   "op": "array",
+   "input": "pin",
+   "label": "Pin row",
+   "component": "gpio",
+   "material": "brass_gold_plated",
+   "params": {
+    "mode": "linear",
+    "count": 20,
+    "offset": [
+     2.54,
+     0,
+     0
+    ]
+   }
+  },
+  {
+   "id": "pins",
+   "op": "array",
+   "input": "pin_row",
+   "label": "40 GPIO pins",
+   "component": "gpio",
+   "material": "brass_gold_plated",
+   "params": {
+    "mode": "linear",
+    "count": 2,
+    "offset": [
+     0,
+     0,
+     2.54
+    ]
+   }
+  },
+  {
+   "id": "eth_solid",
+   "op": "box",
+   "label": "Gigabit Ethernet jack",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     21.5,
+     13.5,
+     16.0
+    ],
+    "translate": [
+     34.25,
+     14.35,
+     -17.5
+    ]
+   }
+  },
+  {
+   "id": "eth",
+   "op": "shell",
+   "input": "eth_solid",
+   "label": "Gigabit Ethernet jack",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "thickness": 0.4
+   }
+  },
+  {
+   "id": "usb3_solid",
+   "op": "box",
+   "label": "USB 3.0 pair (blue)",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     17.5,
+     16.0,
+     15.0
+    ],
+    "translate": [
+     36.25,
+     15.6,
+     1.1
+    ]
+   }
+  },
+  {
+   "id": "usb3",
+   "op": "shell",
+   "input": "usb3_solid",
+   "label": "USB 3.0 pair (blue)",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "thickness": 0.4
+   }
+  },
+  {
+   "id": "usb2_solid",
+   "op": "box",
+   "label": "USB 2.0 pair",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     17.5,
+     16.0,
+     15.0
+    ],
+    "translate": [
+     36.25,
+     15.6,
+     19.3
+    ]
+   }
+  },
+  {
+   "id": "usb2",
+   "op": "shell",
+   "input": "usb2_solid",
+   "label": "USB 2.0 pair",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "thickness": 0.4
+   }
+  },
+  {
+   "id": "usbc",
+   "op": "box",
+   "label": "USB-C power input",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     9.0,
+     3.2,
+     7.5
+    ],
+    "translate": [
+     -30.9,
+     9.2,
+     -25.25
+    ]
+   }
+  },
+  {
+   "id": "hdmi0",
+   "op": "box",
+   "label": "Micro HDMI 0",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     6.5,
+     3.5,
+     7.5
+    ],
+    "translate": [
+     -16.65,
+     9.35,
+     -25.25
+    ]
+   }
+  },
+  {
+   "id": "hdmi1",
+   "op": "box",
+   "label": "Micro HDMI 1",
+   "component": "ports",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     6.5,
+     3.5,
+     7.5
+    ],
+    "translate": [
+     -3.25,
+     9.35,
+     -25.25
+    ]
+   }
+  },
+  {
+   "id": "button",
+   "op": "box",
+   "label": "Power button",
+   "component": "ports",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     4.0,
+     2.5,
+     4.0
+    ],
+    "translate": [
+     -40.0,
+     8.85,
+     -16.0
+    ]
+   }
+  },
+  {
+   "id": "mipi0",
+   "op": "box",
+   "label": "MIPI camera/display 0",
+   "component": "connectors",
+   "material": "plastic_white",
+   "params": {
+    "size": [
+     3.0,
+     4.0,
+     12.5
+    ],
+    "translate": [
+     4.5,
+     9.6,
+     -20.25
+    ]
+   }
+  },
+  {
+   "id": "mipi1",
+   "op": "box",
+   "label": "MIPI camera/display 1",
+   "component": "connectors",
+   "material": "plastic_white",
+   "params": {
+    "size": [
+     3.0,
+     4.0,
+     12.5
+    ],
+    "translate": [
+     8.5,
+     9.6,
+     -20.25
+    ]
+   }
+  },
+  {
+   "id": "pcie",
+   "op": "box",
+   "label": "PCIe 2.0 x1 FPC connector",
+   "component": "connectors",
+   "material": "plastic_white",
+   "params": {
+    "size": [
+     3.5,
+     2.5,
+     16.0
+    ],
+    "translate": [
+     -39.75,
+     8.85,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "fan_hdr",
+   "op": "box",
+   "label": "Fan header",
+   "component": "connectors",
+   "material": "plastic_white",
+   "params": {
+    "size": [
+     5.0,
+     3.0,
+     3.0
+    ],
+    "translate": [
+     17.0,
+     9.1,
+     16.5
+    ]
+   }
+  },
+  {
+   "id": "sd",
+   "op": "box",
+   "label": "microSD card slot (underside)",
+   "component": "connectors",
+   "material": "steel_shell",
+   "params": {
+    "size": [
+     14.0,
+     1.4,
+     15.0
+    ],
+    "translate": [
+     -35.5,
+     5.3,
+     0.0
+    ]
+   }
+  },
+  {
+   "id": "sd_card",
+   "op": "box",
+   "label": "microSD card",
+   "component": "connectors",
+   "material": "plastic_black",
+   "params": {
+    "size": [
+     2.5,
+     1.0,
+     11.0
+    ],
+    "translate": [
+     -43.75,
+     5.3,
+     0.0
+    ]
+   }
+  }
+ ]
+}

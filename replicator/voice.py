@@ -1,7 +1,7 @@
 """Optional voice: Replicator reads an explanation aloud, and you can dictate a dream.
 
 Nothing here loads a model in this process or touches the RTX card. Speech comes from a server you already run
-(any OpenAI-compatible `/v1/audio/speech`, such as Kokoro-FastAPI) or from espeak-ng on the CPU; dictation goes to
+(any OpenAI-compatible `/v1/audio/speech`, such as Kokoro-FastAPI), a local command (Kokoro on the CPU) or espeak-ng; dictation goes to
 an OpenAI-compatible `/v1/audio/transcriptions` server or to a local command such as whisper.cpp's `whisper-cli`.
 Child processes get an environment with every GPU hidden. Audio is recorded and played through PipeWire.
 """
@@ -28,11 +28,29 @@ def _env() -> dict:
 def status(cfg: dict) -> dict:
     """What is usable right now, in words the Preferences panel can show."""
     tts = ("Kokoro / OpenAI-compatible server" if cfg.get("tts_url") else
+           "local command" if cfg.get("tts_cmd") and _runnable(cfg["tts_cmd"]) else
            "espeak-ng (CPU, robotic; set a speech server for a natural voice)" if shutil.which("espeak-ng") else "")
     stt = ("transcription server" if cfg.get("stt_url") else
-           "local command" if cfg.get("stt_cmd") and shutil.which(shlex.split(cfg["stt_cmd"])[0]) else "")
+           "local command" if cfg.get("stt_cmd") and _runnable(cfg["stt_cmd"]) else "")
     return {"tts": tts, "stt": stt, "play": bool(shutil.which("pw-play") or shutil.which("paplay")),
             "record": bool(shutil.which("pw-record") or shutil.which("arecord"))}
+
+
+def _runnable(cmd: str) -> bool:
+    try:
+        return bool(shutil.which(os.path.expanduser(shlex.split(cmd)[0])))
+    except (ValueError, IndexError):
+        return False
+
+
+def _fill(cmd: str, **values: str) -> list[str]:
+    """Split a command template and fill {placeholders} per argument: no shell, so text cannot inject anything."""
+    out = []
+    for arg in shlex.split(cmd):
+        for k, v in values.items():
+            arg = arg.replace("{" + k + "}", v)
+        out.append(os.path.expanduser(arg))
+    return out
 
 
 def synthesize(text: str, cfg: dict) -> Path:
@@ -50,6 +68,12 @@ def synthesize(text: str, cfg: dict) -> Path:
             return out
         except OSError as e:
             raise RuntimeError(f"speech server unreachable ({e})") from None
+    if cfg.get("tts_cmd"):
+        cmd = _fill(cfg["tts_cmd"], text=text, wav=str(out), voice=cfg.get("tts_voice") or "af_heart")
+        r = subprocess.run(cmd, capture_output=True, text=True, env=_env(), timeout=180)
+        if r.returncode or not out.exists():
+            raise RuntimeError(f"speech command failed: {(r.stderr or r.stdout).strip()[-200:]}")
+        return out
     if shutil.which("espeak-ng"):
         subprocess.run(["espeak-ng", "-s", "165", "-w", str(out), text], check=True, env=_env(), timeout=60)
         return out
@@ -88,7 +112,7 @@ def transcribe(wav: Path, cfg: dict) -> str:
         except OSError as e:
             raise RuntimeError(f"transcription server unreachable ({e})") from None
     if cfg.get("stt_cmd"):
-        cmd = [a.replace("{wav}", str(wav)) for a in shlex.split(cfg["stt_cmd"])]
+        cmd = _fill(cfg["stt_cmd"], wav=str(wav))
         r = subprocess.run(cmd, capture_output=True, text=True, env=_env(), timeout=180)
         if r.returncode:
             raise RuntimeError(f"transcription command failed: {r.stderr.strip()[-200:]}")

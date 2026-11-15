@@ -46,7 +46,6 @@ ApplicationWindow {
     readonly property string part: studio.selectedComponent
     readonly property string partLabel: { const c = studio.components.find(c => c.id === part); return c ? c.label : part }
     readonly property bool idle: studio.busy === ""
-    property alias renderGate: viewport.renderGate   // [DEBUG-rg] harness
     readonly property bool showcase: studio.mode === "showcase"
     readonly property bool present: studio.mode === "present"
     readonly property bool empty: studio.stepCount === 0
@@ -89,6 +88,7 @@ ApplicationWindow {
                        : boot.ui === "context" ? window.openContext(studio.shapes.length ? studio.shapes[0].shapeId : "", 760, 330)
                        : preferences.open() }
 
+    function runCue(js) { return eval(js) }   // --record: a scripted moment of a preview film (QML ids in scope)
     function setMode(m) {
         studio.setMode(m)
         if (m === "build") { explodeTarget = 0; viewport.colorByComponent = false; isolate = "" }
@@ -673,7 +673,7 @@ ApplicationWindow {
                                 anchors.centerIn: parent; spacing: 6
                                 Icon { name: modeChip.edit ? "pencil" : "sparkle"; size: 14; color: modeChip.edit ? Theme.amber : Theme.accentHi
                                        anchors.verticalCenter: parent.verticalCenter }
-                                Text { text: modeChip.edit ? "EDIT" : "DREAM"; color: modeChip.edit ? Theme.amber : Theme.accentHi
+                                Text { text: modeChip.edit ? "EDIT" : "SPECIFY"; color: modeChip.edit ? Theme.amber : Theme.accentHi
                                        font.pixelSize: Theme.fsSmall; font.weight: Font.Bold; font.letterSpacing: 1.5; font.family: Theme.sans
                                        anchors.verticalCenter: parent.verticalCenter }
                             }
@@ -688,13 +688,21 @@ ApplicationWindow {
                             placeholderTextColor: Theme.faint
                             selectionColor: Theme.accent; selectedTextColor: Theme.onAccent
                             placeholderText: modeChip.edit ? "Change it: \"make the reverser doors longer, add a second intake ring\""
-                                                           : "Dream it: \"a rocket engine with a regenerative nozzle and turbopumps\""
+                                                           : "Specify it: \"a rocket engine with a regenerative nozzle and turbopumps\""
                             enabled: studio.busy === ""
                             onAccepted: go()
                             function go() {
                                 if (!text.trim()) return
                                 if (modeChip.edit) studio.edit(text); else studio.dream(text)
                             }
+                        }
+                        IconButton {   // dictation: press, speak, press again; the words land in the field, Enter sends
+                            visible: (studio.services.status || {}).stt !== "" && (studio.services.status || {}).stt !== undefined
+                            icon: "mic"; on: studio.listening
+                            tip: studio.listening ? "Stop and transcribe" : "Dictate (CPU Whisper)"
+                            enabled: studio.busy === ""
+                            onHit: studio.toggleDictation()
+                            Connections { target: studio; function onDictated(t) { prompt.text = t; prompt.forceActiveFocus() } }
                         }
                         Pill {
                             primary: true; enabled: studio.busy === ""

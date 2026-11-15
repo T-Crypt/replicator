@@ -114,3 +114,17 @@ def test_sheet_job_writes_svg_and_png_and_a_new_build_closes_it(studio, tmp_path
     assert Path(sheet["svg"]).parent == tmp_path / "sheets"
     studio.duplicateComponent("gimbal")
     assert studio.sheet == {}
+
+
+def test_each_step_gets_fresh_geometry_objects_over_cached_buffers(studio):
+    # Qt Quick 3D draws a geometry object only for the first Model that adopts it; reusing one across steps made every
+    # carried-over part vanish during playback. The buffers are cached; the Qt objects are not.
+    studio.setStep(3)
+    first = {g.shapeId: g for g in studio.shapes}
+    studio.setStep(4)
+    second = {g.shapeId: g for g in studio.shapes}
+    shared = set(first) & set(second)
+    assert shared
+    for sid in shared:
+        assert first[sid] is not second[sid]
+        assert first[sid]._vbytes is second[sid]._vbytes
