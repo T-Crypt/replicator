@@ -274,16 +274,23 @@ A saved program lives in a `<name>.replicator/` folder: `program.json` plus `his
 file per version, so an edit can be undone across sessions. `fixtures/` holds examples: rocket
 engines, a turbofan, a liquid-cooled PC, a Raspberry Pi 5, a quadcopter and a house.
 
-**Headless frames.** `--shot` renders one frame of the real window to a PNG (it needs a display; Qt's
-`offscreen` platform cannot run Qt Quick 3D):
+**Headless frames.** `--shot` renders one frame of a hidden window to a PNG. It needs a display,
+because Qt's `offscreen` platform cannot run Qt Quick 3D.
 
 ```sh
 python -m replicator.app fixtures/turbofan.json --software --shot out/build.png
 python -m replicator.app fixtures/turbofan.json --software --shot out/x.png --mode dissect --explode 0.9
 ```
 
-`--step N`, `--select ID`, `--size WxH`, `--ui preferences` and `--cue "QML expression"` set up the
-frame.
+`--step N`, `--select ID`, `--ui preferences` and `--cue "QML expression"` set up the frame. A hidden
+window lays out only while it is grabbed, so Dissect callouts and other window sizes can come out wrong.
+For those, `tools/shot.sh` takes one frame of the real window inside a headless gamescope:
+
+```sh
+tools/shot.sh fixtures/turbofan.json out/dissect.png 1280x760 'window.setMode("dissect")'
+```
+
+Frames use an empty `services.json`, so they never show your endpoints or paths.
 
 ## Project layout
 
@@ -335,9 +342,9 @@ that a design is safe.
 
 ## Contributing
 
-Issues and pull requests are welcome. [AGENTS.md](AGENTS.md) is the map of the code, its invariants
-and how to extend each table (an op, a check, a knowledge card, a material, an import format). Run
-`pytest -q`, and `python -m tools.check` on any program you touch; a change to the window needs a
-`--shot` that shows it working.
+Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) lists the checks a change
+passes, and [AGENTS.md](AGENTS.md) is the map of the code, its invariants and how to extend each
+table (an op, a check, a knowledge card, a material, an import format). Report security problems
+privately as [SECURITY.md](SECURITY.md) describes.
 
 Licensed under [MIT](LICENSE). The vendored mcp-for-blender add-on is MIT, copyright its authors.
