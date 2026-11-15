@@ -39,7 +39,14 @@ mcp = MCPServer("replicator", instructions=(
 
 
 def _path(p: str) -> Path:
-    return Path(p).expanduser().resolve()
+    """Resolve a path an agent named. With REPLICATOR_MCP_ROOT set, a path outside that folder is refused."""
+    path = Path(p).expanduser().resolve()
+    root = os.environ.get("REPLICATOR_MCP_ROOT", "")
+    if root:
+        r = Path(root).expanduser().resolve()
+        if path != r and r not in path.parents:
+            raise PermissionError(f"{p} is outside REPLICATOR_MCP_ROOT ({r})")
+    return path
 
 
 def _report(program: dict, root: Path, step: int = -1) -> dict:

@@ -36,3 +36,14 @@ def test_report_step_and_export_step(tmp_path):
     assert M.build_report(p, step=0)["report"]["ops"] == 1
     out = M.export(p, str(tmp_path / "b.step"))
     assert out["ok"] and (tmp_path / "b.step").read_text().startswith("ISO-10303-21;")
+
+
+def test_a_root_confines_every_path(tmp_path, monkeypatch):
+    inside, outside = tmp_path / "work", tmp_path / "elsewhere"
+    inside.mkdir()
+    monkeypatch.setenv("REPLICATOR_MCP_ROOT", str(inside))
+    assert M.write_program(str(inside / "b.json"), PROG)["ok"]
+    r = M.write_program(str(outside / "b.json"), PROG)
+    assert not r["ok"] and "outside REPLICATOR_MCP_ROOT" in r["error"] and not outside.exists()
+    r = M.read_program(str(inside / ".." / "work" / ".." / "b.json"))
+    assert not r["ok"] and "outside REPLICATOR_MCP_ROOT" in r["error"]

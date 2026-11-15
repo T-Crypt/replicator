@@ -17,7 +17,7 @@ the code does with it.
 | `.blend`, FBX, USD and Alembic files | Blender converts them with `--factory-startup --disable-autoexec`, so a file's embedded Python does not run, whatever your Blender preferences say. |
 | BuildProgram JSON | The schema validates every op. Parameter sizes are bounded so a program cannot hang the kernel. A `mesh` op reads only `.npz` files inside the program's folder, with pickles disabled. |
 | Model replies | A reply is parsed as JSON and validated like any other program before anything is built. |
-| The MCP server | It reads and writes any path the connected agent names, like any local tool the agent runs. Connect only agents you trust with your files. |
+| The MCP server | It reads and writes any path the connected agent names, like any local tool the agent runs. Set `REPLICATOR_MCP_ROOT` to a folder to refuse every path outside it. |
 | The Blender link | The vendored add-on listens on `127.0.0.1:9876` only. |
 
 ## Network

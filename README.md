@@ -208,6 +208,10 @@ lands on the timeline as one undo step.
 This repo's `.mcp.json` registers the server for Claude Code when it runs in the repo with the
 venv at `.venv`. For another client, point it at `replicator-mcp`.
 
+The server reads and writes any path the agent names. To keep an agent inside one folder, set
+`REPLICATOR_MCP_ROOT` to that folder in the server's environment; every tool then refuses a path
+outside it.
+
 ## Printing (optional)
 
 Most of Replicator never touches a printer. When you do print, the bed is a hard limit and replicas
