@@ -62,7 +62,7 @@ replicator                                    # the start screen lists nine exam
 git clone https://github.com/T-Crypt/replicator.git && cd replicator
 python -m venv .venv && . .venv/bin/activate
 pip install -e ".[all]"                 # the app, the MCP server, STEP/IGES import, MuJoCo and the tests
-pytest -q                               # about 200 tests, under 30 s
+pytest -q                               # about 230 tests, under 30 s
 replicator replicator/fixtures/rocket_engine.json  # open a program and watch it build
 ```
 
@@ -81,7 +81,7 @@ Optional: `blender` 4.x or 5.x on `PATH` for Cycles stills, the Blender round tr
 
 ## How it works
 
-<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name." width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Five modes share one scene: Build, Dissect, Reverse, Showcase and Present. Image to 3D and mesh import come in; a Blender round trip and STEP, DXF, STL, 3MF, GLB, OBJ, URDF or MJCF export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name." width="100%"></p>
 
 1. **Specify.** You type what you want: *"a two-bedroom house with a gable roof"* or *"a turbofan with
    reverse thrust doors"*. Curated knowledge cards (houses, electronics boards, desktop PCs, drones,
@@ -243,7 +243,7 @@ with the Hunyuan3D 2.x models. Replicator cleans it, scales it to millimetres an
 Reverse. Point it at your ComfyUI with `COMFY_URL` (default `http://127.0.0.1:8188`).
 
 *Render > Open in Blender* sends the build to Blender through a vendored copy of the
-[mcp-for-blender](vendor/mcp-for-blender) add-on (pinned, update check off, telemetry off, listening
+[mcp-for-blender](https://github.com/T-Crypt/replicator/tree/main/vendor/mcp-for-blender) add-on (pinned, update check off, telemetry off, listening
 on `localhost:9876` only): one collection per component, objects named by label. Sculpt or texture
 it there, then *Pull back from Blender* brings the result into Reverse.
 
@@ -284,8 +284,8 @@ applies last. Coordinates are Y-up and right-handed, in the program's `units`.
 ```
 
 A saved program lives in a `<name>.replicator/` folder: `program.json` plus `history/NNNN.json`, one
-file per version, so an edit can be undone across sessions. `replicator/fixtures/` holds examples: rocket
-engines, a turbofan, a liquid-cooled PC, a Raspberry Pi 5, a quadcopter and a house.
+file per version, so an edit can be undone across sessions. `replicator/fixtures/` holds the nine examples: three rocket
+engines, two jet engines, a liquid-cooled PC, a Raspberry Pi 5, a quadcopter and a house.
 
 **Headless frames.** `--shot` renders one frame of a hidden window to a PNG. It needs a display,
 because Qt's `offscreen` platform cannot run Qt Quick 3D.
@@ -334,7 +334,8 @@ bench/  tools/    benchmark tasks, check, corpus, preview stills and films
 - [ ] Joints and mates as program data
 - [ ] Scale-aware printability, slicing and send to printer
 - [ ] Reverse to program: imported pieces become real, editable ops
-- [ ] A packaged app with a first-run model picker
+- [x] `pip install replicator-workshop`, or pipx; the window, shaders and examples ship in the package
+- [ ] A one-click app (AppImage or Flatpak) with a first-run model picker
 
 Details and the check for each item: [docs/ROADMAP.md](https://github.com/T-Crypt/replicator/blob/main/docs/ROADMAP.md).
 

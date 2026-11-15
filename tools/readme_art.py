@@ -197,7 +197,7 @@ def banner() -> str:
 <rect x="520" y="219" width="96" height="34" rx="17" fill="{BL}"/>
 <text x="568" y="241" text-anchor="middle" class="s" font-size="14" font-weight="600" fill="#fff">Replicate</text>
 {"".join(chip_svg)}
-<text x="64" y="356" class="m" font-size="12" fill="{DIM}">your models · editable at every step · STEP / STL / 3MF / GLB · agents over MCP</text>
+<text x="64" y="356" class="m" font-size="12" fill="{DIM}">your models · editable at every step · STEP / DXF / STL / 3MF / URDF · agents over MCP</text>
 </svg>
 """
 
@@ -267,14 +267,15 @@ def how() -> str:
 
     # ---- row 2: modes
     y1 = 430
-    o.append(f'<text x="40" y="{y1 - 18}" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">FOUR MODES, ONE SCENE</text>')
+    o.append(f'<text x="40" y="{y1 - 18}" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">FIVE MODES, ONE SCENE</text>')
     modes = [
-        ("Build", BL, "1", ["Play, pause and scrub the build.", "Select any step, edit its params", "or its placement, and rebuild."]),
-        ("Dissect", "#e06b7b", "2", ["Exploded view along each part's", "own axis, with callouts that", "follow the parts."]),
-        ("Reverse", "#7ee8ac", "3", ["Import any mesh. Pieces, repeats,", "contacts and assembly order, each", "marked observed or inferred."]),
-        ("Showcase", AM, "4", ["Stage, turntable, depth of field.", "Render a Cycles still on the CPU", "in seconds."]),
+        ("Build", BL, "1", ["Play and scrub the build.", "Edit any step's params", "or placement; it rebuilds."]),
+        ("Dissect", "#e06b7b", "2", ["Exploded along each part's", "own axis, with callouts", "that follow the parts."]),
+        ("Reverse", "#7ee8ac", "3", ["Import any mesh: pieces,", "repeats, contacts, order,", "observed or inferred."]),
+        ("Showcase", AM, "4", ["Stage and turntable.", "A Cycles still renders", "on the CPU."]),
+        ("Present", "#c4a1ff", "5", ["Explain writes a checked", "account; Present walks", "it part by part."]),
     ]
-    mw, mg = 266, 12.6
+    mw, mg = 210.3, 12.6
     for i, (name, col, key, lines) in enumerate(modes):
         x = 40 + i * (mw + mg)
         o.append(f'<rect x="{x}" y="{y1}" width="{mw}" height="132" rx="12" fill="#111b28" stroke="{LINE}"/>')
@@ -291,7 +292,7 @@ def how() -> str:
     ins = [("image", "#c4a1ff", "Image to 3D", "a character sheet or any picture", "becomes a mesh in your ComfyUI"),
            ("cube", "#7ee8ac", "Mesh import", "GLB, STEP, OBJ, STL and 20 more formats", "open in Reverse and are taken apart")]
     outs = [("cube", AM, "Blender round trip", "Open in Blender, sculpt or texture,", "Pull back into Reverse (localhost:9876)"),
-            ("sheet", CY, "Export", "STEP for CAD, GLB for the web,", "STL and 3MF when you print")]
+            ("sheet", CY, "Export", "STEP and DXF for CAD, GLB and OBJ,", "STL and 3MF to print, URDF and MJCF to simulate")]
     for col_i, group in enumerate((ins, outs)):
         for j, (ic, col, title, a, b) in enumerate(group):
             x = 40 if col_i == 0 else 640
@@ -323,7 +324,7 @@ def how() -> str:
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="t d">
 <title id="t">How Replicator works</title>
-<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name.</desc>
+<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Five modes share one scene: Build, Dissect, Reverse, Showcase and Present. Image to 3D and mesh import come in; a Blender round trip and STEP, DXF, STL, 3MF, GLB, OBJ, URDF or MJCF export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1420"/><stop offset="1" stop-color="#070c13"/></linearGradient>
 <style>{STYLE}</style>

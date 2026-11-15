@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" width="1200" height="1000" role="img" aria-labelledby="t d">
 <title id="t">How Replicator works</title>
-<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name.</desc>
+<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Five modes share one scene: Build, Dissect, Reverse, Showcase and Present. Image to 3D and mesh import come in; a Blender round trip and STEP, DXF, STL, 3MF, GLB, OBJ, URDF or MJCF export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1420"/><stop offset="1" stop-color="#070c13"/></linearGradient>
 <style>
@@ -76,35 +76,42 @@
 <path class="flow" d="M1036.0,148 v-10 H580.0 v8" fill="none" stroke="#e8b56f" stroke-width="1.8"/>
 <path d="M575.0,141 l5,7 l5,-7" fill="none" stroke="#e8b56f" stroke-width="1.8"/>
 <text x="853.0" y="132" text-anchor="middle" class="m" font-size="11.5" fill="#e8b56f">"make the doors wider" becomes a JSON Patch on the program, saved as a new version</text>
-<text x="40" y="412" class="m" font-size="12.5" letter-spacing="2.5" fill="#8ba0b8">FOUR MODES, ONE SCENE</text>
-<rect x="40.0" y="430" width="266" height="132" rx="12" fill="#111b28" stroke="#243549"/>
+<text x="40" y="412" class="m" font-size="12.5" letter-spacing="2.5" fill="#8ba0b8">FIVE MODES, ONE SCENE</text>
+<rect x="40.0" y="430" width="210.3" height="132" rx="12" fill="#111b28" stroke="#243549"/>
 <rect x="40.0" y="430" width="4" height="132" rx="2" fill="#3a8ee6"/>
 <text x="60.0" y="462" class="s" font-size="17" font-weight="700" fill="#3a8ee6">Build</text>
-<rect x="262.0" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="273.0" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">1</text>
-<text x="60.0" y="492" class="s" font-size="13.5" fill="#c9d6e3">Play, pause and scrub the build.</text>
-<text x="60.0" y="512" class="s" font-size="13.5" fill="#c9d6e3">Select any step, edit its params</text>
-<text x="60.0" y="532" class="s" font-size="13.5" fill="#c9d6e3">or its placement, and rebuild.</text>
-<rect x="318.6" y="430" width="266" height="132" rx="12" fill="#111b28" stroke="#243549"/>
-<rect x="318.6" y="430" width="4" height="132" rx="2" fill="#e06b7b"/>
-<text x="338.6" y="462" class="s" font-size="17" font-weight="700" fill="#e06b7b">Dissect</text>
-<rect x="540.6" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="551.6" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">2</text>
-<text x="338.6" y="492" class="s" font-size="13.5" fill="#c9d6e3">Exploded view along each part's</text>
-<text x="338.6" y="512" class="s" font-size="13.5" fill="#c9d6e3">own axis, with callouts that</text>
-<text x="338.6" y="532" class="s" font-size="13.5" fill="#c9d6e3">follow the parts.</text>
-<rect x="597.2" y="430" width="266" height="132" rx="12" fill="#111b28" stroke="#243549"/>
-<rect x="597.2" y="430" width="4" height="132" rx="2" fill="#7ee8ac"/>
-<text x="617.2" y="462" class="s" font-size="17" font-weight="700" fill="#7ee8ac">Reverse</text>
-<rect x="819.2" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="830.2" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">3</text>
-<text x="617.2" y="492" class="s" font-size="13.5" fill="#c9d6e3">Import any mesh. Pieces, repeats,</text>
-<text x="617.2" y="512" class="s" font-size="13.5" fill="#c9d6e3">contacts and assembly order, each</text>
-<text x="617.2" y="532" class="s" font-size="13.5" fill="#c9d6e3">marked observed or inferred.</text>
-<rect x="875.8000000000001" y="430" width="266" height="132" rx="12" fill="#111b28" stroke="#243549"/>
-<rect x="875.8000000000001" y="430" width="4" height="132" rx="2" fill="#e8b56f"/>
-<text x="895.8000000000001" y="462" class="s" font-size="17" font-weight="700" fill="#e8b56f">Showcase</text>
-<rect x="1097.8000000000002" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="1108.8000000000002" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">4</text>
-<text x="895.8000000000001" y="492" class="s" font-size="13.5" fill="#c9d6e3">Stage, turntable, depth of field.</text>
-<text x="895.8000000000001" y="512" class="s" font-size="13.5" fill="#c9d6e3">Render a Cycles still on the CPU</text>
-<text x="895.8000000000001" y="532" class="s" font-size="13.5" fill="#c9d6e3">in seconds.</text>
+<rect x="206.3" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="217.3" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">1</text>
+<text x="60.0" y="492" class="s" font-size="13.5" fill="#c9d6e3">Play and scrub the build.</text>
+<text x="60.0" y="512" class="s" font-size="13.5" fill="#c9d6e3">Edit any step's params</text>
+<text x="60.0" y="532" class="s" font-size="13.5" fill="#c9d6e3">or placement; it rebuilds.</text>
+<rect x="262.9" y="430" width="210.3" height="132" rx="12" fill="#111b28" stroke="#243549"/>
+<rect x="262.9" y="430" width="4" height="132" rx="2" fill="#e06b7b"/>
+<text x="282.9" y="462" class="s" font-size="17" font-weight="700" fill="#e06b7b">Dissect</text>
+<rect x="429.2" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="440.2" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">2</text>
+<text x="282.9" y="492" class="s" font-size="13.5" fill="#c9d6e3">Exploded along each part's</text>
+<text x="282.9" y="512" class="s" font-size="13.5" fill="#c9d6e3">own axis, with callouts</text>
+<text x="282.9" y="532" class="s" font-size="13.5" fill="#c9d6e3">that follow the parts.</text>
+<rect x="485.8" y="430" width="210.3" height="132" rx="12" fill="#111b28" stroke="#243549"/>
+<rect x="485.8" y="430" width="4" height="132" rx="2" fill="#7ee8ac"/>
+<text x="505.8" y="462" class="s" font-size="17" font-weight="700" fill="#7ee8ac">Reverse</text>
+<rect x="652.1" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="663.1" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">3</text>
+<text x="505.8" y="492" class="s" font-size="13.5" fill="#c9d6e3">Import any mesh: pieces,</text>
+<text x="505.8" y="512" class="s" font-size="13.5" fill="#c9d6e3">repeats, contacts, order,</text>
+<text x="505.8" y="532" class="s" font-size="13.5" fill="#c9d6e3">observed or inferred.</text>
+<rect x="708.7" y="430" width="210.3" height="132" rx="12" fill="#111b28" stroke="#243549"/>
+<rect x="708.7" y="430" width="4" height="132" rx="2" fill="#e8b56f"/>
+<text x="728.7" y="462" class="s" font-size="17" font-weight="700" fill="#e8b56f">Showcase</text>
+<rect x="875.0" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="886.0" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">4</text>
+<text x="728.7" y="492" class="s" font-size="13.5" fill="#c9d6e3">Stage and turntable.</text>
+<text x="728.7" y="512" class="s" font-size="13.5" fill="#c9d6e3">A Cycles still renders</text>
+<text x="728.7" y="532" class="s" font-size="13.5" fill="#c9d6e3">on the CPU.</text>
+<rect x="931.6" y="430" width="210.3" height="132" rx="12" fill="#111b28" stroke="#243549"/>
+<rect x="931.6" y="430" width="4" height="132" rx="2" fill="#c4a1ff"/>
+<text x="951.6" y="462" class="s" font-size="17" font-weight="700" fill="#c4a1ff">Present</text>
+<rect x="1097.9" y="446" width="22" height="22" rx="5" fill="none" stroke="#8ba0b8" stroke-opacity=".6"/><text x="1108.9" y="462" text-anchor="middle" class="m" font-size="11" fill="#8ba0b8">5</text>
+<text x="951.6" y="492" class="s" font-size="13.5" fill="#c9d6e3">Explain writes a checked</text>
+<text x="951.6" y="512" class="s" font-size="13.5" fill="#c9d6e3">account; Present walks</text>
+<text x="951.6" y="532" class="s" font-size="13.5" fill="#c9d6e3">it part by part.</text>
 <text x="40" y="602" class="m" font-size="12.5" letter-spacing="2.5" fill="#8ba0b8">IN AND OUT</text>
 <rect x="40" y="620" width="520" height="72" rx="10" fill="#0f1a28" stroke="#243549"/>
 <rect x="58" y="642" width="30" height="24" rx="4" fill="none" stroke="#c4a1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M62,662l7-8l6,6l4-4l8,6" fill="none" stroke="#c4a1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="649" r="2.5" fill="none" stroke="#c4a1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -124,8 +131,8 @@
 <rect x="640" y="704" width="520" height="72" rx="10" fill="#0f1a28" stroke="#243549"/>
 <rect x="658" y="724" width="28" height="30" rx="3" fill="none" stroke="#7ad4f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M664,732h16M664,739h16M664,746h10" fill="none" stroke="#7ad4f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="706" y="732" class="s" font-size="15" font-weight="700" fill="#f0f5fa">Export</text>
-<text x="706" y="753" class="s" font-size="13" fill="#c9d6e3">STEP for CAD, GLB for the web,</text>
-<text x="706" y="769" class="s" font-size="13" fill="#8ba0b8">STL and 3MF when you print</text>
+<text x="706" y="753" class="s" font-size="13" fill="#c9d6e3">STEP and DXF for CAD, GLB and OBJ,</text>
+<text x="706" y="769" class="s" font-size="13" fill="#8ba0b8">STL and 3MF to print, URDF and MJCF to simulate</text>
 <circle cx="600" cy="698" r="30" fill="#0b1420" stroke="#7ad4f2" stroke-width="1.5" class="pulse"/>
 <text x="600" y="703" text-anchor="middle" class="m" font-size="11" fill="#7ad4f2">scene</text>
 <path class="flow" d="M561,656 C580,656 575,698 570,698" fill="none" stroke="#7ad4f2" stroke-width="1.6"/>
