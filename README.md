@@ -39,6 +39,7 @@ It is built for many kinds of work, and most of it needs neither a model nor a p
 | Design a building | Walls, openings and a roof from one sentence; a floor plan and elevations on the drawing sheet; checks that the roof covers the walls |
 | Lay out electronics | Boards and parts at real scale from knowledge cards, ready for an enclosure |
 | Engineer a machine | Formula-driven ops (a Rao bell nozzle, involute gears, NACA wings), mass, centre of gravity, STEP for CAD |
+| Simulate it | URDF and MJCF with mass, centre and inertia measured from the exact solid, ready for MuJoCo or ROS |
 | Understand an object | Import any of 24 formats and take it apart in Reverse; Explain writes a checked explanation, Present narrates it |
 | Make a replica | Scale and orient to fit any printer bed, refused rather than clipped when it does not fit |
 | Train or test a model | A seeded benchmark scored by measuring the solid, and a corpus export where every row re-verifies |
@@ -51,7 +52,7 @@ work wherever PySide6 and manifold3d install, but nobody has tested them yet; re
 ```sh
 git clone https://github.com/T-Crypt/replicator.git && cd replicator
 python -m venv .venv && . .venv/bin/activate
-pip install -e ".[all]"                 # the app, the MCP server, STEP/IGES import and the tests
+pip install -e ".[all]"                 # the app, the MCP server, STEP/IGES import, MuJoCo and the tests
 pytest -q                               # about 200 tests, under 30 s
 replicator fixtures/rocket_engine.json  # open a program and watch it build
 ```
@@ -63,7 +64,7 @@ replicator path/to/model.glb            # take a model apart in Reverse
 ```
 
 The extras install separately if you want less: `.[app]` for the window, `.[mcp]` for agents,
-`.[cad]` for STEP and IGES import, `.[dev]` for the tests. The core alone (`pip install -e .`) builds,
+`.[cad]` for STEP and IGES import, `.[sim]` for the MuJoCo check, `.[dev]` for the tests. The core alone (`pip install -e .`) builds,
 checks and exports programs with no window: `python -m tools.check fixtures/house_two_bed.json`.
 
 Optional: `blender` 4.x or 5.x on `PATH` for Cycles stills, the Blender round trip, and FBX, USD or
@@ -120,6 +121,10 @@ accepted one is a version you can step back to.
 - **Exports.** STEP for CAD (faceted solids, one per connected lump, cavities kept as voids;
   OpenCASCADE reads every fixture back as valid solids with the same volume), GLB with materials, OBJ,
   STL and 3MF.
+- **Simulator export.** *File > Export for simulators* writes URDF and MJCF, one link per part, with
+  mass, centre and inertia from the exact solid. MuJoCo loads the fixtures with the mass Replicator
+  reports and they come to rest upright. Joints are not program data yet, so every link is fixed to
+  a base.
 
 **A workspace that stays out of the way**
 - **Viewport.** A damped orbit camera with zoom to cursor, a perspective view and three orthographic
@@ -193,7 +198,7 @@ lands on the timeline as one undo step.
 | `op_reference` | The op vocabulary, generated from the kernel's own table |
 | `read_program`, `write_program`, `patch_program` | Read, create, or change by RFC 6902 JSON Patch |
 | `build_report` | Size, mass, components and every check, for the whole build or ops 0 to *k* |
-| `export` | STEP, STL, 3MF, GLB or OBJ |
+| `export` | STEP, STL, 3MF, GLB, OBJ, URDF or MJCF |
 | `drawing_sheet` | The A3 sheet as SVG and PNG |
 | `specify`, `engines` | A new program from a sentence, and which engines can write it |
 | `reverse` | Take an existing model apart into a program with its evidence ledger |
@@ -284,7 +289,7 @@ frame.
 ```
 replicator/
   core/           program schema, kernel and ops, checks, mass, materials, import, reverse,
-                  drawing sheets, STEP and mesh export, printers and fit, Blender and Cycles
+                  drawing sheets, STEP, mesh and simulator export, printers and fit, Blender and Cycles
   llm/            specify, repair, edit, explain and naming prompts; engines
   knowledge/      engineering cards picked into the prompts by keyword
   research/       optional web research (Wikipedia, your SearXNG)
@@ -304,7 +309,8 @@ fixtures/         sample programs
 - [x] Drawing sheets, STEP export, an MCP server, any OpenAI-compatible endpoint
 - [x] Benchmark and corpus export, scored by measuring the solid
 - [x] Printer profiles and fit; measure tool; one-button navigation
-- [ ] URDF and MJCF out with inertias from the exact solid; joints and mates as program data
+- [x] URDF and MJCF out with inertias from the exact solid
+- [ ] Joints and mates as program data
 - [ ] DXF from the drawing sheet
 - [ ] Scale-aware printability, slicing and send to printer
 - [ ] Reverse to program: imported pieces become real, editable ops
