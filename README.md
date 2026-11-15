@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/banner.svg" alt="Replicator: a turbofan engine floats in an exploded view over a night workshop floor while a scan plane turns its cyan blueprint wireframe into solid coloured parts. On the left, a specify prompt and the pipeline blueprint, program, manifold3d, build." width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/banner.svg" alt="Replicator: a turbofan engine floats in an exploded view over a night workshop floor while a scan plane turns its cyan blueprint wireframe into solid coloured parts. On the left, a specify prompt and the pipeline blueprint, program, manifold3d, build." width="100%"></p>
 
 <p align="center">
   <a href="https://github.com/T-Crypt/replicator/actions/workflows/test.yml"><img src="https://github.com/T-Crypt/replicator/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
@@ -28,9 +28,9 @@ program, not a picture or generated code, so every part has a size, a material a
 mode works the other way: it takes an existing model apart into pieces, with an evidence ledger that
 says what was measured, what was inferred and what nobody can tell.
 
-<p align="center"><img src="assets/range.jpg" alt="Six things Replicator built: a liquid-cooled PC with glowing coolant in a glass case, a Raspberry Pi 5 at real scale, a gas-generator rocket engine with a bell nozzle, the PC exploded in Dissect mode with labelled callouts, a two-bedroom house with a gable roof, and that house's drawing sheet with a floor plan and two elevations." width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/range.jpg" alt="Six things Replicator built: a liquid-cooled PC with glowing coolant in a glass case, a Raspberry Pi 5 at real scale, a gas-generator rocket engine with a bell nozzle, the PC exploded in Dissect mode with labelled callouts, a two-bedroom house with a gable roof, and that house's drawing sheet with a floor plan and two elevations." width="100%"></p>
 
-<p align="center"><img src="assets/build-timeline.gif" alt="The liquid-cooled PC assembling in the workshop one build step at a time along the timeline, then sliding apart in Dissect mode with callouts on every component." width="900"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/build-timeline.gif" alt="The liquid-cooled PC assembling in the workshop one build step at a time along the timeline, then sliding apart in Dissect mode with callouts on every component." width="900"></p>
 
 It is built for many kinds of work, and most of it needs neither a model nor a printer:
 
@@ -48,6 +48,15 @@ It is built for many kinds of work, and most of it needs neither a model nor a p
 
 Python 3.11 or later. Tested on Linux (Wayland and X11) with PySide6 6.12. macOS and Windows should
 work wherever PySide6 and manifold3d install, but nobody has tested them yet; reports are welcome.
+
+To use it:
+
+```sh
+pipx install "replicator-workshop[app,mcp]"   # the window and the MCP server
+replicator                                    # the start screen lists nine examples
+```
+
+`pip install "replicator-workshop[app,mcp]"` in a venv works the same. To work on it:
 
 ```sh
 git clone https://github.com/T-Crypt/replicator.git && cd replicator
@@ -72,7 +81,7 @@ Optional: `blender` 4.x or 5.x on `PATH` for Cycles stills, the Blender round tr
 
 ## How it works
 
-<p align="center"><img src="assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name." width="100%"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name." width="100%"></p>
 
 1. **Specify.** You type what you want: *"a two-bedroom house with a gable roof"* or *"a turbofan with
    reverse thrust doors"*. Curated knowledge cards (houses, electronics boards, desktop PCs, drones,
@@ -149,13 +158,13 @@ accepted one is a version you can step back to.
 | `4` | **Showcase** | A product stage with soft shadows, ambient occlusion, depth of field and a turntable. *Render* writes a Cycles still on the CPU. |
 | `5` | **Present** | Plays the checked explanation of the object chapter by chapter, isolating and framing each component, read aloud when voice is on. |
 
-<p align="center"><img src="assets/preview-build.jpg" alt="Build mode: a turbofan specified by a local model on the workshop grid, the Object Manager listing fourteen components, and the timeline with all 22 build steps as coloured blocks." width="900"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/preview-build.jpg" alt="Build mode: a turbofan specified by a local model on the workshop grid, the Object Manager listing fourteen components, and the timeline with all 22 build steps as coloured blocks." width="900"></p>
 
-<p align="center"><img src="assets/preview-dissect.jpg" alt="Dissect mode: the same engine exploded along its axis with labelled callouts for each component, and the Assembled to Exploded slider." width="900"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/preview-dissect.jpg" alt="Dissect mode: the same engine exploded along its axis with labelled callouts for each component, and the Assembled to Exploded slider." width="900"></p>
 
-<p align="center"><img src="assets/preview-reverse.jpg" alt="Reverse mode: the evidence ledger on the right lists observed facts about the engine, such as 22 build steps producing 15 visible parts and a radial array of 22 fan blades." width="900"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/preview-reverse.jpg" alt="Reverse mode: the evidence ledger on the right lists observed facts about the engine, such as 22 build steps producing 15 visible parts and a radial array of 22 fan blades." width="900"></p>
 
-<p align="center"><img src="assets/preview-cycles.jpg" alt="A Showcase still rendered with Cycles on the CPU: the engine on a reflective studio floor with a cyan glow ring inside the intake." width="640"></p>
+<p align="center"><img src="https://raw.githubusercontent.com/T-Crypt/replicator/main/assets/preview-cycles.jpg" alt="A Showcase still rendered with Cycles on the CPU: the engine on a reflective studio floor with a cyan glow ring inside the intake." width="640"></p>
 
 ## Models
 
@@ -243,7 +252,7 @@ it there, then *Pull back from Blender* brings the result into Reverse.
 `bench/` scores any engine on construction, not prose. Four seeded tasks (a flange, a circuit
 board, a house, a desk lamp) change their dimensions with the seed, and each result is scored by
 measuring the built solid (extents, through-holes, volume, named parts, floor area) and by the
-checks. The same program and seed always score the same. See [bench/README.md](bench/README.md).
+checks. The same program and seed always score the same. See [bench/README.md](https://github.com/T-Crypt/replicator/blob/main/bench/README.md).
 
 ```sh
 python -m tools.bench run --engine local --task all --seed 13 --trials 3
@@ -327,7 +336,7 @@ bench/  tools/    benchmark tasks, check, corpus, preview stills and films
 - [ ] Reverse to program: imported pieces become real, editable ops
 - [ ] A packaged app with a first-run model picker
 
-Details and the check for each item: [docs/ROADMAP.md](docs/ROADMAP.md).
+Details and the check for each item: [docs/ROADMAP.md](https://github.com/T-Crypt/replicator/blob/main/docs/ROADMAP.md).
 
 ## What Replicator never does
 
@@ -346,9 +355,9 @@ that a design is safe.
 
 ## Contributing
 
-Issues and pull requests are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) lists the checks a change
-passes, and [AGENTS.md](AGENTS.md) is the map of the code, its invariants and how to extend each
+Issues and pull requests are welcome. [CONTRIBUTING.md](https://github.com/T-Crypt/replicator/blob/main/CONTRIBUTING.md) lists the checks a change
+passes, and [AGENTS.md](https://github.com/T-Crypt/replicator/blob/main/AGENTS.md) is the map of the code, its invariants and how to extend each
 table (an op, a check, a knowledge card, a material, an import format). Report security problems
-privately as [SECURITY.md](SECURITY.md) describes.
+privately as [SECURITY.md](https://github.com/T-Crypt/replicator/blob/main/SECURITY.md) describes.
 
-Licensed under [MIT](LICENSE). The vendored mcp-for-blender add-on is MIT, copyright its authors.
+Licensed under [MIT](https://github.com/T-Crypt/replicator/blob/main/LICENSE). The vendored mcp-for-blender add-on is MIT, copyright its authors.
