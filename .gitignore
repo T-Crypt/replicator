@@ -10,3 +10,6 @@ build/
 dist/
 .pytest_cache/
 CLAUDE.local.md
+local/
+.claude/skills/
+bench/results/

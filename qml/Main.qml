@@ -347,6 +347,7 @@ ApplicationWindow {
                    font.weight: Font.DemiBold; font.family: Theme.sans; Layout.leftMargin: 12; Layout.rightMargin: 4 }
             RCombo {
                 model: studio.engines; implicitWidth: 104
+                currentIndex: Math.max(0, studio.engines.indexOf(studio.engine))
                 onActivated: studio.setEngine(currentText)
             }
             IconButton { icon: "sliders"; tip: "Preferences"; keys: "Ctrl+,"; onHit: preferences.open(); Layout.leftMargin: 4 }

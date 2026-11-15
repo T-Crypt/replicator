@@ -975,5 +975,5 @@
    "All openings are modelled as boolean cuts in their host walls."
   ]
  },
- "notes": "Specified by Strata (Qwen3.8-Flash-Next) from one sentence on 2026-11-14. The roof came out as a V that left both end walls bare (the roof check now blocks that). Corrected through the MCP server: ridge along the 11 m length, 30 deg pitch across the 8 m depth, 450 mm overhangs, ridge at 5.06 m (5.12 m overall). The plan's own 4.6 m height cannot hold with a 30 deg pitch over 8 m; at +11% that stays under the size check's 15% warning line. Gable-end infill walls are missing; roof material is a placeholder."
+ "notes": "Specified by a local model from one sentence on 2026-11-14. The roof came out as a V that left both end walls bare (the roof check now blocks that). Corrected through the MCP server: ridge along the 11 m length, 30 deg pitch across the 8 m depth, 450 mm overhangs, ridge at 5.06 m (5.12 m overall). The plan's own 4.6 m height cannot hold with a 30 deg pitch over 8 m; at +11% that stays under the size check's 15% warning line. Gable-end infill walls are missing; roof material is a placeholder."
 }

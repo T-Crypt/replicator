@@ -51,6 +51,7 @@ class Studio(QObject):
     renderChanged = Signal()
     sheetChanged = Signal()
     holodeckChanged = Signal()
+    engineChanged = Signal()
     historyChanged = Signal()
     libraryChanged = Signal()
     explanationChanged = Signal()
@@ -708,7 +709,14 @@ class Studio(QObject):
 
     @Slot(str)
     def setEngine(self, name: str):
-        self._engine = name
+        if name and name != self._engine:
+            self._engine = name
+            self.engineChanged.emit()
+
+    @Property(str, notify=engineChanged)
+    def engine(self):
+        """The engine Specify, Edit, Name parts and Explain use now."""
+        return self._engine
 
     # ------------------------------------------------------------------ files
     @Slot(str)

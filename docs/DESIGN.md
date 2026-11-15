@@ -10,7 +10,8 @@ Three rules shape every decision:
 1. **One document.** The BuildProgram is the only source of truth; every panel is a view of it.
 2. **Evidence is labelled.** Observed, inferred, unknown in Reverse; cited, measured, concept in Explain. A guess
    is never drawn as a fact.
-3. **The card belongs to the models.** The window draws on the iGPU; GPU work goes through llama-swap or Berth.
+3. **The card belongs to the models.** Replicator never loads a model itself; GPU work goes to the user's model
+   server or ComfyUI, and the window draws on the iGPU when there is one beside a discrete card.
 
 ## What the review found
 
@@ -57,17 +58,9 @@ no Qt, so they are testable without a window.
 
 Guaranteed: nothing is shown as cited without a matching excerpt. Not guaranteed: that the source is right or that
 a paraphrase kept every nuance, which is why the sources are listed and clickable. Research is off until the
-operator turns it on; only search words leave the machine. With research on, a dream is grounded the same way: the
+user turns it on; only search words leave the machine. With research on, a dream is grounded the same way: the
 blueprint stage receives the excerpts and records which real mechanism each part follows.
 
 ## Roadmap
 
-1. Present mode UI, services in Preferences, dictation button (HANDOFF steps 1 to 4).
-2. README and homelab docs.
-3. Accuracy first (session 4, done): engineering ops (tube, nozzle, rotor, grille), knowledge cards, the accuracy
-   critic with a critique round, mass and stability, scoped agent rework, right-click part menus, aerospace
-   materials and whole-build swaps, every common 3D format on import. See `AGENTS.md`.
-4. The Workbench: fabrication, breakdown, mechanics, wiring, sourcing and refinement, built for 27B local models.
-   Requirements: `docs/REQUIREMENTS-workbench.md` (draft, open questions in section 8; no printer yet).
-5. Split the bridge; node editor over the op DAG; four-up viewport.
-6. Holodeck "Replicate" action; texturing lane; floor plans (M2); sculpting (M4).
+See [ROADMAP.md](ROADMAP.md).

@@ -64,11 +64,11 @@ Rectangle {
                 id: printerChip
                 icon: "printer"
                 label: "PRINTER"
-                value: parent.p.name + " " + parent.p.usable.join("×")
+                value: parent.visible ? parent.p.name + " " + parent.p.usable.join("×") : ""
             }
             MouseArea { id: printerMa; anchors.fill: parent; hoverEnabled: true }
             ToolTip.visible: printerMa.containsMouse; ToolTip.delay: 300
-            ToolTip.text: "Prints for " + p.name + ": usable volume " + p.usable.join(" × ") + " mm after a 2 mm margin. "
+            ToolTip.text: !visible ? "" : "Prints for " + p.name + ": usable volume " + p.usable.join(" × ") + " mm after a 2 mm margin. "
                           + "Set in services.json (active_printer); a build that overflows is refused, never clipped."
         }
         Rectangle { width: 1; height: 12; color: Theme.line }

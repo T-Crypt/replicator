@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1000" width="1200" height="1000" role="img" aria-labelledby="t d">
 <title id="t">How Replicator works</title>
-<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. The workshop draws on the Intel iGPU, and the models run on the RTX card under llama-swap and Berth.</desc>
+<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1420"/><stop offset="1" stop-color="#070c13"/></linearGradient>
 <style>
@@ -35,7 +35,7 @@
 <rect x="263" y="150" width="208" height="4" rx="2" fill="#9aa8ff"/>
 <rect x="281" y="172" width="28" height="30" rx="3" fill="none" stroke="#9aa8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M287,180h16M287,187h16M287,194h10" fill="none" stroke="#9aa8ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="325" y="194" class="s" font-size="16" font-weight="700" fill="#f0f5fa">2 · Blueprint</text>
-<text x="281" y="236" class="s" font-size="13.5" fill="#c9d6e3">Dirk-27B plans parts,</text>
+<text x="281" y="236" class="s" font-size="13.5" fill="#c9d6e3">Your model plans parts,</text>
 <text x="281" y="256" class="s" font-size="13.5" fill="#c9d6e3">sizes, materials</text>
 <rect x="277" y="278" width="180" height="48" rx="7" fill="#081220" stroke="#243549"/>
 <text x="289" y="298" class="m" font-size="12" fill="#9aa8ff">parts: 14</text>
@@ -69,7 +69,7 @@
 <text x="950" y="256" class="s" font-size="13.5" fill="#c9d6e3">the floor, Qt Quick 3D</text>
 <rect x="946" y="278" width="180" height="48" rx="7" fill="#081220" stroke="#243549"/>
 <text x="958" y="298" class="m" font-size="12" fill="#e8b56f">scrub · edit</text>
-<text x="958" y="317" class="m" font-size="12" fill="#e8b56f">on the iGPU</text>
+<text x="958" y="317" class="m" font-size="12" fill="#e8b56f">Qt Quick 3D</text>
 <path class="flow" d="M813.0,342 v24 H600.0 v-22" fill="none" stroke="#fb7185" stroke-width="1.8"/>
 <path d="M595.0,350 l5,-7 l5,7" fill="none" stroke="#fb7185" stroke-width="1.8"/>
 <text x="701.5" y="384" text-anchor="middle" class="m" font-size="11.5" fill="#fb7185">validation errors go back to the model: repair rounds</text>
@@ -109,13 +109,13 @@
 <rect x="40" y="620" width="520" height="72" rx="10" fill="#0f1a28" stroke="#243549"/>
 <rect x="58" y="642" width="30" height="24" rx="4" fill="none" stroke="#c4a1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M62,662l7-8l6,6l4-4l8,6" fill="none" stroke="#c4a1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="649" r="2.5" fill="none" stroke="#c4a1ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="106" y="648" class="s" font-size="15" font-weight="700" fill="#f0f5fa">Image to 3D</text>
-<text x="106" y="669" class="s" font-size="13" fill="#c9d6e3">a Holodeck character sheet or any</text>
-<text x="106" y="685" class="s" font-size="13" fill="#8ba0b8">picture becomes a mesh (local, Berth lease)</text>
+<text x="106" y="669" class="s" font-size="13" fill="#c9d6e3">a character sheet or any picture</text>
+<text x="106" y="685" class="s" font-size="13" fill="#8ba0b8">becomes a mesh in your ComfyUI</text>
 <rect x="40" y="704" width="520" height="72" rx="10" fill="#0f1a28" stroke="#243549"/>
 <path d="M73,724l14,7v16l-14,7l-14-7v-16z M59,731l14,7l14-7 M73,738v16" fill="none" stroke="#7ee8ac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="106" y="732" class="s" font-size="15" font-weight="700" fill="#f0f5fa">Mesh import</text>
-<text x="106" y="753" class="s" font-size="13" fill="#c9d6e3">GLB, OBJ, STL or PLY opens in Reverse</text>
-<text x="106" y="769" class="s" font-size="13" fill="#8ba0b8">and is taken apart</text>
+<text x="106" y="753" class="s" font-size="13" fill="#c9d6e3">GLB, STEP, OBJ, STL and 20 more formats</text>
+<text x="106" y="769" class="s" font-size="13" fill="#8ba0b8">open in Reverse and are taken apart</text>
 <rect x="640" y="620" width="520" height="72" rx="10" fill="#0f1a28" stroke="#243549"/>
 <path d="M673,640l14,7v16l-14,7l-14-7v-16z M659,647l14,7l14-7 M673,654v16" fill="none" stroke="#e8b56f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="706" y="648" class="s" font-size="15" font-weight="700" fill="#f0f5fa">Blender round trip</text>
@@ -124,22 +124,22 @@
 <rect x="640" y="704" width="520" height="72" rx="10" fill="#0f1a28" stroke="#243549"/>
 <rect x="658" y="724" width="28" height="30" rx="3" fill="none" stroke="#7ad4f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M664,732h16M664,739h16M664,746h10" fill="none" stroke="#7ad4f2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
 <text x="706" y="732" class="s" font-size="15" font-weight="700" fill="#f0f5fa">Export</text>
-<text x="706" y="753" class="s" font-size="13" fill="#c9d6e3">GLB for engines and the web,</text>
-<text x="706" y="769" class="s" font-size="13" fill="#8ba0b8">STL for the printer</text>
+<text x="706" y="753" class="s" font-size="13" fill="#c9d6e3">STEP for CAD, GLB for the web,</text>
+<text x="706" y="769" class="s" font-size="13" fill="#8ba0b8">STL and 3MF when you print</text>
 <circle cx="600" cy="698" r="30" fill="#0b1420" stroke="#7ad4f2" stroke-width="1.5" class="pulse"/>
 <text x="600" y="703" text-anchor="middle" class="m" font-size="11" fill="#7ad4f2">scene</text>
 <path class="flow" d="M561,656 C580,656 575,698 570,698" fill="none" stroke="#7ad4f2" stroke-width="1.6"/>
 <path class="flow" d="M630,698 C625,698 620,656 639,656" fill="none" stroke="#7ad4f2" stroke-width="1.6"/>
 <path class="flow" d="M561,740 C580,740 575,698 570,698" fill="none" stroke="#7ad4f2" stroke-width="1.6"/>
 <path class="flow" d="M630,698 C625,698 620,740 639,740" fill="none" stroke="#7ad4f2" stroke-width="1.6"/>
-<text x="40" y="812" class="m" font-size="12.5" letter-spacing="2.5" fill="#8ba0b8">WHO USES WHICH GPU</text>
+<text x="40" y="812" class="m" font-size="12.5" letter-spacing="2.5" fill="#8ba0b8">WHERE THE WORK RUNS</text>
 <rect x="40" y="830" width="1120" height="128" rx="12" fill="#0f1a28" stroke="#243549"/>
 <rect x="64" y="854" width="500" height="80" rx="9" fill="#0b1420" stroke="#7ee8ac" stroke-opacity=".6"/>
-<text x="84" y="882" class="m" font-size="14" font-weight="700" fill="#7ee8ac">Intel iGPU</text>
-<text x="84" y="904" class="s" font-size="13.5" fill="#c9d6e3">The workshop window, the materialize shader, Showcase.</text>
-<text x="84" y="923" class="s" font-size="12.5" fill="#8ba0b8">Pinned at start; the app quits if it lands on the RTX card.</text>
+<text x="84" y="882" class="m" font-size="14" font-weight="700" fill="#7ee8ac">Your machine</text>
+<text x="84" y="904" class="s" font-size="13.5" fill="#c9d6e3">Kernel, checks, mass, drawings and exports on the CPU.</text>
+<text x="84" y="923" class="s" font-size="12.5" fill="#8ba0b8">The window on any GPU; the iGPU when a model needs the big card.</text>
 <rect x="596" y="854" width="540" height="80" rx="9" fill="#0b1420" stroke="#e8b56f" stroke-opacity=".6"/>
-<text x="616" y="882" class="m" font-size="14" font-weight="700" fill="#e8b56f">RTX card</text>
-<text x="616" y="904" class="s" font-size="13.5" fill="#c9d6e3">The model that specifies (llama-swap) and image-to-3D (Berth).</text>
-<text x="616" y="923" class="s" font-size="12.5" fill="#8ba0b8">Always under a lease, so a build never fights a chat for memory.</text>
+<text x="616" y="882" class="m" font-size="14" font-weight="700" fill="#e8b56f">Your model</text>
+<text x="616" y="904" class="s" font-size="13.5" fill="#c9d6e3">Any OpenAI-compatible endpoint: llama.cpp, Ollama, vLLM, hosted.</text>
+<text x="616" y="923" class="s" font-size="12.5" fill="#8ba0b8">Only the endpoints you name; keys stay in the environment.</text>
 </svg>

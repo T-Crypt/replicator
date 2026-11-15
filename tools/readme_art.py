@@ -232,10 +232,10 @@ def how() -> str:
     o.append(f'<text x="40" y="132" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">THE PIPELINE</text>')
     stages = [
         ("chat", CY, "1 · Specify", ["A sentence, a sketch", "of an idea, or an edit"], '"a turbofan with', 'reverse doors"'),
-        ("sheet", "#9aa8ff", "2 · Blueprint", ["Dirk-27B plans parts,", "sizes, materials"], "parts: 14", "units: mm"),
+        ("sheet", "#9aa8ff", "2 · Blueprint", ["Your model plans parts,", "sizes, materials"], "parts: 14", "units: mm"),
         ("code", "#c4a1ff", "3 · BuildProgram", ["Ordered ops, each tagged", "with its component"], "revolve · array", "boolean · loft"),
         ("cube", "#7ee8ac", "4 · Kernel", ["manifold3d evaluates", "every step, cached"], "10-60 ms", "watertight"),
-        ("eye", AM, "5 · Workshop", ["Steps materialize on", "the floor, Qt Quick 3D"], "scrub · edit", "on the iGPU"),
+        ("eye", AM, "5 · Workshop", ["Steps materialize on", "the floor, Qt Quick 3D"], "scrub · edit", "Qt Quick 3D"),
     ]
     bw, gap, y0 = 208, 15, 150
     for i, (ic, col, title, lines, k1, k2) in enumerate(stages):
@@ -288,10 +288,10 @@ def how() -> str:
     # ---- row 3: in and out
     y2 = 620
     o.append(f'<text x="40" y="{y2 - 18}" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">IN AND OUT</text>')
-    ins = [("image", "#c4a1ff", "Image to 3D", "a Holodeck character sheet or any", "picture becomes a mesh (local, Berth lease)"),
-           ("cube", "#7ee8ac", "Mesh import", "GLB, OBJ, STL or PLY opens in Reverse", "and is taken apart")]
+    ins = [("image", "#c4a1ff", "Image to 3D", "a character sheet or any picture", "becomes a mesh in your ComfyUI"),
+           ("cube", "#7ee8ac", "Mesh import", "GLB, STEP, OBJ, STL and 20 more formats", "open in Reverse and are taken apart")]
     outs = [("cube", AM, "Blender round trip", "Open in Blender, sculpt or texture,", "Pull back into Reverse (localhost:9876)"),
-            ("sheet", CY, "Export", "GLB for engines and the web,", "STL for the printer")]
+            ("sheet", CY, "Export", "STEP for CAD, GLB for the web,", "STL and 3MF when you print")]
     for col_i, group in enumerate((ins, outs)):
         for j, (ic, col, title, a, b) in enumerate(group):
             x = 40 if col_i == 0 else 640
@@ -308,22 +308,22 @@ def how() -> str:
         o.append(f'<path class="flow" d="M561,{yy} C580,{yy} 575,{y2 + 78} 570,{y2 + 78}" fill="none" stroke="{CY}" stroke-width="1.6"/>')
         o.append(f'<path class="flow" d="M630,{y2 + 78} C625,{y2 + 78} 620,{yy} 639,{yy}" fill="none" stroke="{CY}" stroke-width="1.6"/>')
 
-    # ---- row 4: who holds what
+    # ---- row 4: where the work runs
     y3 = 830
-    o.append(f'<text x="40" y="{y3 - 18}" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">WHO USES WHICH GPU</text>')
+    o.append(f'<text x="40" y="{y3 - 18}" class="m" font-size="12.5" letter-spacing="2.5" fill="{DIM}">WHERE THE WORK RUNS</text>')
     o.append(f'<rect x="40" y="{y3}" width="1120" height="128" rx="12" fill="#0f1a28" stroke="{LINE}"/>')
     o.append(f'<rect x="64" y="{y3 + 24}" width="500" height="80" rx="9" fill="#0b1420" stroke="#7ee8ac" stroke-opacity=".6"/>')
-    o.append(f'<text x="84" y="{y3 + 52}" class="m" font-size="14" font-weight="700" fill="#7ee8ac">Intel iGPU</text>')
-    o.append(f'<text x="84" y="{y3 + 74}" class="s" font-size="13.5" fill="#c9d6e3">The workshop window, the materialize shader, Showcase.</text>')
-    o.append(f'<text x="84" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">Pinned at start; the app quits if it lands on the RTX card.</text>')
+    o.append(f'<text x="84" y="{y3 + 52}" class="m" font-size="14" font-weight="700" fill="#7ee8ac">Your machine</text>')
+    o.append(f'<text x="84" y="{y3 + 74}" class="s" font-size="13.5" fill="#c9d6e3">Kernel, checks, mass, drawings and exports on the CPU.</text>')
+    o.append(f'<text x="84" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">The window on any GPU; the iGPU when a model needs the big card.</text>')
     o.append(f'<rect x="596" y="{y3 + 24}" width="540" height="80" rx="9" fill="#0b1420" stroke="{AM}" stroke-opacity=".6"/>')
-    o.append(f'<text x="616" y="{y3 + 52}" class="m" font-size="14" font-weight="700" fill="{AM}">RTX card</text>')
-    o.append(f'<text x="616" y="{y3 + 74}" class="s" font-size="13.5" fill="#c9d6e3">The model that specifies (llama-swap) and image-to-3D (Berth).</text>')
-    o.append(f'<text x="616" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">Always under a lease, so a build never fights a chat for memory.</text>')
+    o.append(f'<text x="616" y="{y3 + 52}" class="m" font-size="14" font-weight="700" fill="{AM}">Your model</text>')
+    o.append(f'<text x="616" y="{y3 + 74}" class="s" font-size="13.5" fill="#c9d6e3">Any OpenAI-compatible endpoint: llama.cpp, Ollama, vLLM, hosted.</text>')
+    o.append(f'<text x="616" y="{y3 + 93}" class="s" font-size="12.5" fill="{DIM}">Only the endpoints you name; keys stay in the environment.</text>')
 
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" width="{W}" height="{H}" role="img" aria-labelledby="t d">
 <title id="t">How Replicator works</title>
-<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. The workshop draws on the Intel iGPU, and the models run on the RTX card under llama-swap and Berth.</desc>
+<desc id="d">Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair; edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name.</desc>
 <defs>
 <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b1420"/><stop offset="1" stop-color="#070c13"/></linearGradient>
 <style>{STYLE}</style>

@@ -149,3 +149,18 @@ def test_an_agent_edit_on_disk_shows_up_as_one_undo_step(tmp_path, monkeypatch):
     f.write_text("{ broken")
     s._reload_from_disk()
     assert s._program["name"] == "Pi 5, edited by an agent"
+
+
+def test_the_engine_picker_starts_on_the_configured_default_and_follows_changes(tmp_path):
+    from replicator import config
+    config.PATH.write_text(json.dumps({"default_engine": "lab", "endpoints": [
+        {"name": "lab", "url": "http://192.168.1.40:8000/v1", "model": "m"}]}))
+    s = bridge.Studio()
+    assert s.engines == ["local", "lab"]
+    assert s.engine == "lab"
+    s.setEngine("local")
+    assert s.engine == "local"
+
+
+def test_with_nothing_configured_the_engine_is_local():
+    assert bridge.Studio().engine == "local"

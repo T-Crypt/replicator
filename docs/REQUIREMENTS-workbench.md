@@ -1,6 +1,6 @@
 # Replicator Workbench: requirements (draft 1, 2026-11-14)
 
-Status: **draft for operator review.** Nothing here is built yet. It extends `docs/DESIGN.md` (roadmap item 3,
+Status: **draft.** Parts of section 5.9a are built (printer profiles, gating, fit); the rest is planned. It extends `docs/DESIGN.md` (roadmap item 3,
 "3D printing") into a full workbench, and it keeps that document's three rules: one document, labelled evidence,
 and the GPU belongs to the models.
 
@@ -42,7 +42,7 @@ layers, and each layer is usable alone. These limits are known up front:
 | P3 | Every claim has a kind | `measured` (from geometry), `computed` (a solver, with its formula), `cited` (a source with date), `catalog` (a library entry), `assumed` (a model or user guess), `concept` (fiction). Shown in the UI as in Reverse and Explain. |
 | P4 | Small asks | No model call does more than one job. "Design a robot arm" becomes many bounded calls, each with a schema, a short context and a checker. |
 | P5 | Checkers close every loop | After each stage, deterministic checkers produce a list of issues. Issues go back to the model as repair input (as validation errors do today), up to a bounded number of rounds, and then to the user. |
-| P6 | Local and private | Models on llama-swap or Strata. Slicers, solvers and Blender on the CPU with `CUDA_VISIBLE_DEVICES=`. Printers are reached on the tailnet only. Nothing is uploaded. |
+| P6 | Local and private | Models only on endpoints the user names. Slicers, solvers and Blender on the CPU with `CUDA_VISIBLE_DEVICES=`. Printers are reached on the local network only. Nothing is uploaded. |
 | P7 | The user can always take the wheel | Every agent action is a proposal you can see as a diff. Parts can be locked. Manual edits are never overwritten by a later model edit. |
 
 ## 3. Data model: from BuildProgram to Project
@@ -141,7 +141,7 @@ Priority: **P0** first usable release, **P1** next, **P2** later. Each requireme
 |---|---|---|---|
 | FR-CO-1 | P0 | A **spec interview**: from one sentence, the model drafts the `spec` and asks at most 5 short questions for gaps that matter (size, load, power, budget, printer). Each answer is a patch to `spec` | The golden prompts each yield a valid spec with no more than 5 questions |
 | FR-CO-2 | P0 | **Variants**: 2 to 4 concept directions (for example "belt drive" against "gear drive"), each a light blueprint with its trade-offs, side by side on the floor | Variants render together and one click promotes a variant to the project |
-| FR-CO-3 | P1 | Concept from image or sketch: the Holodeck sheet or a photo goes to the `vision` role, which drafts the spec and scaffold; the existing image-to-3D lane supplies reference geometry | One image yields a scaffold that matches its proportions within 10 % |
+| FR-CO-3 | P1 | Concept from image or sketch: a character sheet or a photo goes to the `vision` role, which drafts the spec and scaffold; the existing image-to-3D lane supplies reference geometry | One image yields a scaffold that matches its proportions within 10 % |
 | FR-CO-4 | P1 | Concept from salvage: start from an imported mesh or from library items ("build around this motor and this battery") | Placed library items become locked parts the design must fit |
 
 ### 5.2 Scaffold
@@ -250,17 +250,16 @@ any moment:
 | FR-PR-5 | P0 | **Slice** with PrusaSlicer or OrcaSlicer CLI on the CPU; time, grams and support volume come back as `measured` | Runs headless with no GPU context (checked with `nvidia-smi`) |
 | FR-PR-6 | P0 | **Export**: 3MF with part names, colours and per-part settings; STL per part; G-code from the slicer | 3MF opens in the chosen slicer with parts named |
 | FR-PR-7 | P1 | **Plate packing**: lay out all printed parts across plates by material and colour | Plates fit the bed with margins |
-| FR-PR-8 | P1 | **Send and watch**: upload and start on Moonraker or OctoPrint over the tailnet; show progress; the webcam frame if the host offers one | Never sent without a confirm click |
+| FR-PR-8 | P1 | **Send and watch**: upload and start on Moonraker or OctoPrint over the private network; show progress; the webcam frame if the host offers one | Never sent without a confirm click |
 | FR-PR-9 | P1 | **Multi-material**: per-part and per-face material and colour mapped to filament slots | Shown in the 3MF |
 | FR-PR-10 | P1 | **Tolerance test print**: generate a calibration coupon for the active printer and material; measured results update the fit clearances in the profile | The next fit uses the new clearance |
 | FR-PR-11 | P2 | Resin printing profile (hollowing, drain holes, supports) | |
 
-### 5.9a Printing direction (operator, 2026-11-14): Bambu Lab first, then other printers
+### 5.9a Printing direction: Bambu Lab first, then other printers
 
 Notes, not yet built. They extend FR-PR-1 to FR-PR-11 above and set their order.
 
-**Target printer.** Build for a Bambu Lab printer first; other printers follow. The operator is buying one (model not
-chosen yet). Until it arrives, code is written against Bambu's published profiles and LAN-mode behaviour, and the
+**Target printer.** Build for a Bambu Lab printer first; other printers follow. Until it arrives, code is written against Bambu's published profiles and LAN-mode behaviour, and the
 file export path always works without a printer. Everything printer-specific sits behind the printer profile
 (FR-PR-1), so Klipper/Moonraker, OctoPrint and Prusa printers become profiles plus a transport, not a rewrite.
 
@@ -281,13 +280,13 @@ function, not an error message.
 | FR-PR-16 | P0 | **Send to printer**: one action that fits, slices (Bambu Studio or OrcaSlicer CLI, CPU only), packages a printer-ready 3MF and sends it to the active printer over the LAN, with a confirm click every time. The access code lives in a mode 600 file referenced from config, never in a repo or a log | A print starts on the Bambu from Replicator after one confirm |
 | FR-PR-17 | P0 | **Export for printing** without a printer: 3MF (named parts, colours, the plate), STL per part, STEP for CAD, and the sliced file when a slicer is present | Opens in Bambu Studio with parts named and inside the bed |
 | FR-PR-18 | P1 | **Print queue and status**: queued, slicing, sending, printing (progress, layer, time left, camera frame where the printer offers one), done or failed; a job keeps its program version, scale and settings so it can be reprinted exactly | The queue survives an app restart |
-| FR-PR-19 | P2 | **Replicator network print service**: a small tailnet-only service that holds the queue and talks to the printers, so a phone, the PWA or another machine can queue a print without the desktop app open | Not exposed beyond the tailnet |
+| FR-PR-19 | P2 | **Replicator network print service**: a small private-network-only service that holds the queue and talks to the printers, so a phone, the PWA or another machine can queue a print without the desktop app open | Not exposed beyond the private network |
 
 **Small PWA, off by default.**
 
 | ID | Pri | Requirement | Accepted when |
 |---|---|---|---|
-| FR-PWA-1 | P1 | A toggle in Preferences, off by default, that serves a small installable web app from the desktop app (or the print service) on the tailnet only, behind a token; nothing public | With the toggle off, no port is open |
+| FR-PWA-1 | P1 | A toggle in Preferences, off by default, that serves a small installable web app from the desktop app (or the print service) on the private network only, behind a token; nothing public | With the toggle off, no port is open |
 | FR-PWA-2 | P1 | Read-only views: renders, projects, creations, build timelines (step through a build, using exported per-step frames or GLB), and the print queue with live status | A queued print shows its progress on the phone |
 | FR-PWA-3 | P2 | Light actions from the phone: queue a print of an existing job, pause or cancel a running print (each with a confirm) | Never starts a print without a confirm |
 
@@ -296,7 +295,7 @@ function, not an error message.
 | ID | Pri | Requirement | Accepted when |
 |---|---|---|---|
 | FR-AG-P1 | P1 | MCP tools for printing: list printers and the active envelope, fit check, scale to fit, orient, split, slice, export for printing, queue, status | An agent fits and queues a part through MCP alone |
-| FR-AG-P2 | P1 | Sending to a physical printer needs the operator's confirm in the app (or a per-printer auto-send switch the operator sets); the agent can prepare and queue, not start a print on its own by default | The confirm appears in the app and the PWA |
+| FR-AG-P2 | P1 | Sending to a physical printer needs the user's confirm in the app (or a per-printer auto-send switch the user sets); the agent can prepare and queue, not start a print on its own by default | The confirm appears in the app and the PWA |
 | FR-AG-P3 | P1 | Print assistance in the app: the agent explains the chosen orientation, supports and settings, fixes printability issues as patches, and reads a failed print's report back into suggestions | A printability issue is fixed by an agent patch and passes the fit and printability checks |
 
 ### 5.10 Refinement
@@ -332,14 +331,14 @@ knowledge cards, recipes, catalog entries, checkers, prompt snippets, export for
 
 | ID | Requirement |
 |---|---|
-| NF-1 | **GPU rule.** The window stays on the iGPU. Slicers, solvers, CalculiX and Blender workers run with `CUDA_VISIBLE_DEVICES=` and are checked with `nvidia-smi --query-compute-apps` in tests. Only llama-swap or Strata (under Berth) touch the card. |
-| NF-2 | **Network.** Off by default. With research on, only search words and part numbers leave. Printers are reached by tailnet address only. No telemetry. |
+| NF-1 | **GPU rule.** The window follows the GPU policy (`REPLICATOR_GPU`). Slicers, solvers, CalculiX and Blender workers run with `CUDA_VISIBLE_DEVICES=` and are checked with `nvidia-smi --query-compute-apps` in tests. Only the user's model servers touch the card. |
+| NF-2 | **Network.** Off by default. With research on, only search words and part numbers leave. Printers are reached by local-network address only. No telemetry. |
 | NF-3 | **Speed.** Params slider rebuild under 100 ms for 200 ops; the full checker pass under 2 s; a slice under 60 s per plate on a desktop CPU; each model stage reports its time. |
 | NF-4 | **Model budget.** A full concept-to-printable run on a golden task needs at most 25 model calls, and each call stays under the FR-AI-2 context budget. Logged per run. |
 | NF-5 | **Determinism.** Every solver, checker and cost result is reproducible from the project folder alone. |
 | NF-6 | **Testability.** `core/`, `knowledge/`, `catalog/` and the solvers import no Qt. Each card and recipe has tests. The golden suite runs headless with `--shot`. |
 | NF-7 | **Safety.** FR-EL-9 flags, plus notices for load-bearing, food-contact, heat and child use. The tool never states a design is safe. |
-| NF-8 | **Docs.** The README, the homelab guide (`guide/replicator.md`) and `state/changes.md` are updated with each phase. |
+| NF-8 | **Docs.** The README and `docs/ROADMAP.md` are updated with each phase. |
 
 ## 7. Phasing
 
@@ -355,16 +354,10 @@ Each phase ends with its golden tasks passing and shots in `out/`.
 | W5 Sourcing and scaling | Full BOM, match to spec, live quotes (research lane), scaling with re-selection, make or buy | Costs to spec |
 | W6 Refinement and packs | Critique loop, goals, physical feedback, version compare, props pack, then P2 packs | Improves everything before it |
 
-## 8. Open questions for the operator
+## 8. Open questions
 
-1. **Printer(s).** Answered 2026-11-14: a Bambu Lab printer first (model not chosen yet, arriving), Bambu LAN mode;
-   other printers later. Still open: which model, and a row in `~/homelab/inventory/hosts.yaml` once it is on the
-   network.
-2. **Slicer.** PrusaSlicer or OrcaSlicer (neither is installed)? Both have a CLI.
-3. **Currency and vendors.** USD? Which vendors for parts (Amazon, AliExpress, McMaster, Digi-Key, LCSC)? McMaster has
-   no public price API; others need keys (FR-SO-8).
-4. **Research lane for sourcing.** Is it acceptable for part numbers and search words to leave the machine when
-   research is on (as Explain does today)?
-5. **First golden tasks.** What are three things you actually want to build first? They become the W0 suite, and
-   they decide which cards and recipes are written first.
-6. **KiCad.** Is a custom PCB in scope (FR-EL-8), or are off-the-shelf boards and wiring enough?
+1. **Slicer.** PrusaSlicer, OrcaSlicer or Bambu Studio first? All have a CLI.
+2. **Vendors for sourcing.** McMaster has no public price API; others need keys (FR-SO-8).
+3. **Research lane for sourcing.** Part numbers and search words would leave the machine when research is on, as
+   Explain does today.
+4. **KiCad.** Is a custom PCB in scope (FR-EL-8), or are off-the-shelf boards and wiring enough?

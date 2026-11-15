@@ -83,7 +83,7 @@ def test_a_concept_keeps_unbacked_claims_but_never_as_cited():
 def test_finish_lists_only_sources_that_were_used():
     checked = explain.verify(_raw([{"kind": "concept", "text": "It would hum."}], concept=True), SOURCES, FACTS)
     doc = explain.finish("Thing", checked, {"title": "At a glance", "component": "", "sentences": [
-        {"kind": "measured", "text": "Thing measures 10 mm.", "cite": []}]}, SOURCES, "levitate", "dirk")
+        {"kind": "measured", "text": "Thing measures 10 mm.", "cite": []}]}, SOURCES, "levitate", "local")
     assert doc["sources"] == [] and doc["notice"].startswith("Concept.") and doc["counts"]["concept"] == 1
     assert all(ch["seconds"] >= 4 for ch in doc["chapters"])
 

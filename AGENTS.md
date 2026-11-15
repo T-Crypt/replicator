@@ -1,27 +1,26 @@
-# Replicator: rules for agents
-
-**Work in poteto-mode, every session and every task** (operator, 2026-11-14): read `.claude/skills/poteto-mode/SKILL.md`, follow the matching playbook, and read each `principle-*` leaf before citing it. `CLAUDE.md` has the steps.
+# Replicator: rules for agents and contributors
 
 Replicator is an engineering and research workshop for nearly anything physical: houses and floor plans, electronics,
 household objects, machines, concepts. A sentence becomes a blueprint, the blueprint becomes a **BuildProgram**
 (ordered solid-modelling ops), manifold3d builds it, a critic measures it, and the Qt Quick 3D workspace shows it
 step by step. You can dissect it, reverse-engineer an imported model, explain it, render it and hand it to Blender.
-Models are local by default or any endpoint the operator names; agents drive it over MCP. Read `README.md` for the product, `docs/DESIGN.md` for direction and
-`docs/REQUIREMENTS-workbench.md` for where it is going (fabrication, mechanics, wiring, sourcing).
+Models are any OpenAI-compatible endpoint the user names; agents drive it over MCP. Printing is optional: every
+feature that does not need a printer works without one. Read `README.md` for the product, `docs/DESIGN.md` for
+direction, `docs/ROADMAP.md` for what is next and `docs/REQUIREMENTS-workbench.md` for where it is going.
 
 ## Commands
 
 ```sh
-.venv/bin/python -m pytest -q                                   # all tests, under 2 s; must stay green
-.venv/bin/python -m tools.check path/to/program.json            # validate, build, mass, critic; exit 1 on a FIX issue
-WAYLAND_DISPLAY=wayland-1 .venv/bin/python -m replicator.app fixtures/rocket_engine.json --software \
+pip install -e ".[all]"                                         # once, in a venv
+python -m pytest -q                                             # all tests, under 30 s; must stay green
+python -m tools.check path/to/program.json                      # validate, build, mass, critic; exit 1 on a FIX issue
+python -m replicator.app fixtures/rocket_engine.json --software \
     --shot out/x.png [--mode build|dissect|reverse|showcase|present] [--ui materials|commander|preferences]
-.venv/bin/python -m tools.rocket_fixture                        # regenerate the reference rocket engine
-./launch.sh [program.json | model.glb | bundle.zip]             # the real window (operator's session)
+python -m tools.rocket_fixture                                  # regenerate the reference rocket engine
+replicator [program.json | model.glb | bundle.zip]              # the real window
 ```
 
-`--shot` needs a Wayland socket: a shell without `WAYLAND_DISPLAY` aborts in `QGuiApplication` (Qt's `offscreen`
-platform cannot run Quick3D). Look at every shot you take; a shot is the only proof a QML change works.
+`--shot` needs a display (a Wayland or X11 session): Qt's `offscreen` platform cannot run Quick3D. Look at every shot you take; a shot is the only proof a QML change works.
 
 ## Where things live
 
@@ -44,7 +43,7 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
 | `replicator/qt/bridge.py` | the `studio` QObject: every property and slot QML uses |
 | `qml/Main.qml` | layout, workspace state and the `actions` registry (menus, shortcuts, right-click menus, Commander) |
 | `qml/panels/`, `qml/viewport/`, `qml/Replicator/UI/` | one file per panel; the 3D view; design tokens and controls |
-| `fixtures/` | sample programs. `rocket_engine.json` is the accuracy reference; `dirk_engine_v1.json` is kept as a bad example |
+| `fixtures/` | sample programs. `rocket_engine.json` is the accuracy reference; `turbofan_bad.json` is kept as a bad example |
 
 ## Invariants
 
@@ -61,13 +60,15 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
 5. **Agent edits are patches.** `client.edit` returns RFC 6902 operations; with `scope` (op ids) any change outside the
    scope is sent back to the model as an error. A job result carries `base`; if the program changed while the model
    worked, the result is dropped, never merged over the operator's work.
-6. **GPU.** The window draws on the Intel iGPU. Blender, slicers and converters run with `CUDA_VISIBLE_DEVICES=`.
-   Models are reached only through llama-swap `:9090` or Strata `:8080` (`ENGINES` in `client.py`). Never load a model
-   in-process. One local-model job at a time.
-7. **Local only.** No cloud models. Research (Wikipedia, optional SearXNG) is off until the operator enables it and
-   sends only search words.
+6. **GPU.** Never load a model in-process. Models are reached only through the engines in `client.engines()`
+   (`local` plus the user's `endpoints`). Blender, slicers and converters run with `CUDA_VISIBLE_DEVICES=`. The
+   window follows `replicator.gpu` (`REPLICATOR_GPU`). One model job at a time.
+7. **Only what the user named.** No engine, service or network call the user did not configure. Research
+   (Wikipedia, optional SearXNG) is off until the user enables it and sends only search words.
 8. **Imports are untrusted.** Archives unpack into their own new folder with path, size and count checks
    (`importers.unpack`). Never execute anything from an imported file.
+9. **Printing is optional.** The printer gate applies only when an active printer is set; with none, every export and
+   feature works. Never make a non-print feature depend on printer state.
 
 ## BuildProgram in brief
 
@@ -118,5 +119,4 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
 
 ## Git
 
-Work on a branch, small commits, each one tested. No AI attribution anywhere. Do not push or open a PR unless the
-operator asks.
+Small commits, each one tested. No AI attribution lines in commits or PRs.

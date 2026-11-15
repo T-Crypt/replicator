@@ -38,7 +38,7 @@ def test_a_turbofan_ringing_around_the_wrong_axis_is_sent_back():
 
 
 def test_a_correctly_ringed_engine_passes():
-    assert not [i for i in issues(FIX / "dirk_engine_v2.json") if i.kind in NEW_KINDS]
+    assert not [i for i in issues(FIX / "turbofan.json") if i.kind in NEW_KINDS]
 
 
 def test_a_flat_lamp_whose_springs_stand_straight_is_sent_back():
@@ -82,6 +82,6 @@ def test_a_ring_that_spins_sideways_is_sent_back(tmp_path):
 
 
 @pytest.mark.parametrize("name", sorted(p.name for p in FIX.glob("*.json")
-                                        if p.name not in ("dirk_engine_v1.json", "advanced_ops.json")))
+                                        if p.name not in ("turbofan_bad.json", "advanced_ops.json")))
 def test_no_other_fixture_trips_the_new_checks(name):
     assert not [i for i in issues(FIX / name) if i.kind in NEW_KINDS]

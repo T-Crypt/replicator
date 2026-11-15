@@ -1,16 +1,16 @@
 <p align="center"><img src="assets/banner.svg" alt="Replicator: a turbofan engine floats in an exploded view over a night workshop floor while a scan plane turns its cyan blueprint wireframe into solid coloured parts. On the left, a specify prompt and the pipeline blueprint, program, manifold3d, build." width="100%"></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.14-7ad4f2?labelColor=0a1017" alt="Python 3.14">
-  <img src="https://img.shields.io/badge/qt-6.12%20%C2%B7%20Quick%203D-7ad4f2?labelColor=0a1017" alt="Qt 6.12, Qt Quick 3D">
+  <img src="https://img.shields.io/badge/python-3.11%2B-7ad4f2?labelColor=0a1017" alt="Python 3.11 or later">
+  <img src="https://img.shields.io/badge/qt-6.9%2B%20%C2%B7%20Quick%203D-7ad4f2?labelColor=0a1017" alt="Qt 6.9 or later, Qt Quick 3D">
   <img src="https://img.shields.io/badge/kernel-manifold3d-7ee8ac?labelColor=0a1017" alt="manifold3d kernel">
   <img src="https://img.shields.io/badge/models-local%20or%20your%20endpoint-e8b56f?labelColor=0a1017" alt="Local models or any endpoint you name">
   <img src="https://img.shields.io/badge/agents-MCP-e8b56f?labelColor=0a1017" alt="Agents over MCP">
-  <img src="https://img.shields.io/badge/runs%20on-arch%20linux%20%C2%B7%20hyprland-c4a1ff?labelColor=0a1017" alt="Arch Linux, Hyprland">
+  <img src="https://img.shields.io/badge/license-MIT-c4a1ff?labelColor=0a1017" alt="MIT licence">
 </p>
 
 <p align="center">
-  <a href="#quick-start">Quick start</a> &nbsp;·&nbsp; <a href="#how-it-works">How it works</a> &nbsp;·&nbsp; <a href="#the-buildprogram">BuildProgram</a> &nbsp;·&nbsp; <a href="#modes">Modes</a> &nbsp;·&nbsp; <a href="#agents-mcp">Agents</a> &nbsp;·&nbsp; <a href="#image-to-3d">Image to 3D</a> &nbsp;·&nbsp; <a href="#blender">Blender</a> &nbsp;·&nbsp; <a href="#roadmap">Roadmap</a>
+  <a href="#quick-start">Quick start</a> &nbsp;·&nbsp; <a href="#how-it-works">How it works</a> &nbsp;·&nbsp; <a href="#the-buildprogram">BuildProgram</a> &nbsp;·&nbsp; <a href="#modes">Modes</a> &nbsp;·&nbsp; <a href="#agents-mcp">Agents</a> &nbsp;·&nbsp; <a href="#printing-optional">Printing</a> &nbsp;·&nbsp; <a href="#image-to-3d">Image to 3D</a> &nbsp;·&nbsp; <a href="#blender">Blender</a> &nbsp;·&nbsp; <a href="#roadmap">Roadmap</a>
 </p>
 
 # Replicator
@@ -31,20 +31,23 @@ measured, what was inferred and what nobody can tell.
 
 <p align="center"><img src="assets/build-timeline.gif" alt="The liquid-cooled PC assembling in the workshop one build step at a time along the timeline, then sliding apart in Dissect mode with callouts on every component." width="900"></p>
 
-Models are yours to choose: local ones on llama-swap or Strata by default, or any OpenAI-compatible
-endpoint you name (a lab's own checkpoint, vLLM, Ollama, a hosted API). Agents such as Claude Code
-or Codex can drive the same workshop over MCP. The window draws on the integrated GPU; the geometry
-comes from manifold3d on the CPU.
+You choose the model: a local server (llama.cpp, Ollama, LM Studio, vLLM) or any OpenAI-compatible
+endpoint, including a hosted one. Agents such as Claude Code, Codex or Cursor can drive the same
+workshop over MCP. The geometry comes from manifold3d on the CPU, so everything except specifying
+works with no model at all: open a program, edit it, check it, draw it, export it.
+
+Printing is one output among many. A build can stay a design, become a drawing sheet, go to CAD as
+STEP, to a renderer as GLB, to Blender, or to a printer. Nothing needs a printer.
 
 ```sh
-./launch.sh                                   # an empty workshop
-./launch.sh fixtures/house_two_bed.json       # open a program and watch it build
-./launch.sh ~/Downloads/robot.glb             # take a model apart in Reverse
+replicator                                    # an empty workshop
+replicator fixtures/house_two_bed.json        # open a program and watch it build
+replicator path/to/model.glb                  # take a model apart in Reverse
 ```
 
 ## How it works
 
-<p align="center"><img src="assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by Dirk-27B, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. The workshop draws on the Intel iGPU; the models run on the RTX card under llama-swap and Berth." width="100%"></p>
+<p align="center"><img src="assets/how-it-works.svg" alt="How Replicator works. Five stages: a sentence that specifies the object, a blueprint written by the model you choose, a BuildProgram of ordered operations, the manifold3d kernel that evaluates every step, and the workshop where the steps materialize. Validation errors loop back to the model for repair, and edits in plain words become JSON Patches on the program. Four modes share one scene: Build, Dissect, Reverse and Showcase. Image to 3D and mesh import come in; a Blender round trip and STEP, STL, 3MF or GLB export go out. Geometry, checks and exports run on your CPU; the model is any OpenAI-compatible endpoint you name." width="100%"></p>
 
 1. **Specify.** You type what you want: *"a two-bedroom house with a gable roof"* or *"a turbofan with
    reverse thrust doors"*. With research on, the model looks up real proportions first (only search
@@ -80,8 +83,8 @@ Patch against the program, not a new program. Each save is a version you can ste
   models tend to add.
 - **Edits by patch.** An edit is a JSON Patch: applied, validated, then saved as a version. A bad
   patch never replaces a good program.
-- **Your choice of model.** `dirk` (Dirk-27B, the default, reasoning at xhigh), the `coder` and
-  `agent` roles on llama-swap, `strata` when that engine is up, or any endpoint you add (below).
+- **Your choice of model.** The built-in `local` engine (any OpenAI-compatible server, configured by
+  environment variables) or any endpoint you add to `services.json` ([Models](#models)).
 - **Checks the result.** Nine engineering checks run on every build: floating parts, parts loose in a
   cavity, clipping, array copies, thin walls, off-axis rings, size against the blueprint, planned
   parts that are missing, and whether it stands. Mass, centre of gravity and principal inertia come
@@ -123,7 +126,7 @@ Patch against the program, not a new program. Each save is a version you can ste
 
 ## Preview
 
-<p align="center"><img src="assets/preview-build.jpg" alt="Build mode: a turbofan specified by Dirk-27B on the workshop grid, the Object Manager listing fourteen components, and the timeline with all 22 build steps as coloured blocks." width="900"></p>
+<p align="center"><img src="assets/preview-build.jpg" alt="Build mode: a turbofan specified by a local model on the workshop grid, the Object Manager listing fourteen components, and the timeline with all 22 build steps as coloured blocks." width="900"></p>
 
 <p align="center"><img src="assets/preview-dissect.jpg" alt="Dissect mode: the same engine exploded along its axis with labelled callouts for each component, and the Assembled to Exploded slider." width="900"></p>
 
@@ -151,7 +154,7 @@ step.
 | `reverse` | Take an existing model apart into a program with its evidence ledger |
 
 This repo's `.mcp.json` registers it for Claude Code; for another client, run
-`.venv/bin/python -m replicator.mcp_server` over stdio.
+`python -m replicator.mcp_server` over stdio.
 
 ## Benchmark and corpus
 
@@ -161,8 +164,8 @@ a house, a desk lamp) whose dimensions move with the seed, scored by measuring t
 seed always score the same. See [bench/README.md](bench/README.md).
 
 ```sh
-.venv/bin/python -m tools.bench run --engine dirk --task all --seed 13 --trials 3
-.venv/bin/python -m tools.bench report
+python -m tools.bench run --engine local --task all --seed 13 --trials 3
+python -m tools.bench report
 ```
 
 `tools/corpus.py export` turns a folder of programs into JSONL rows (prompt, program, geometry digest,
@@ -170,36 +173,62 @@ mass, verdict) for training or evaluation, and `verify` rebuilds every row to pr
 
 ## Quick start
 
-Replicator is built for one workstation (Arch Linux, Hyprland, an Intel iGPU beside an RTX card)
-and runs on any Linux machine with Qt 6.12.
+Python 3.11 or later. Tested on Linux (X11 and Wayland); macOS and Windows should work wherever
+PySide6 and manifold3d install, but nobody has tested them yet.
 
 ```sh
-git clone git@github.com:T-Crypt/replicator.git && cd replicator
-python -m venv .venv --system-site-packages        # PySide6 6.12 comes from the system pyside6 package
-.venv/bin/pip install manifold3d trimesh numpy scipy networkx pillow jsonpatch cascadio pycollada mcp
-.venv/bin/pip install cadquery-ocp                 # optional: OpenCASCADE checks in the STEP tests
-.venv/bin/python -m pytest -q tests                # kernel, schema and reverse tests
-./launch.sh fixtures/vector_engine.json
+git clone https://github.com/T-Crypt/replicator.git && cd replicator
+python -m venv .venv && . .venv/bin/activate
+pip install -e ".[all]"            # the app, MCP server, STEP/IGES import and tests
+pytest -q                          # about 200 tests, under 30 s
+replicator fixtures/rocket_engine.json
 ```
 
-Specifying needs an OpenAI-compatible endpoint. The built-ins point at llama-swap on
-`127.0.0.1:9090` and Strata on `:8080`. Add your own under `endpoints` in
-`~/.config/Replicator/services.json`; the API key stays in the environment variable the entry names:
+The extras are separate if you want less: `.[app]` for the window, `.[mcp]` for agents, `.[cad]` for
+STEP and IGES import, `.[dev]` for tests. The core alone (`pip install -e .`) builds, checks and
+exports programs headless: `python -m tools.check fixtures/house_two_bed.json`.
+
+Optional tools: `blender` 4.x or 5.x on `PATH` for Cycles stills, the Blender round trip and FBX, USD
+or .blend import.
+
+### Models
+
+Specifying, editing by sentence, naming parts and explaining need an OpenAI-compatible chat
+endpoint. Nothing else does. The built-in `local` engine reads three environment variables:
+
+| Variable | Default | Example |
+|---|---|---|
+| `REPLICATOR_LLM_URL` | `http://127.0.0.1:8080/v1` (llama.cpp server) | `http://127.0.0.1:11434/v1` (Ollama), `http://127.0.0.1:1234/v1` (LM Studio) |
+| `REPLICATOR_LLM_MODEL` | `local` | `qwen3:32b` |
+| `REPLICATOR_LLM_KEY` | unset | a bearer token, if your server wants one |
+
+Bigger models write better programs; a 27B to 32B coder model is a good start, and `tools.bench`
+measures how well yours does. To name more engines, add them to `services.json` (in
+`~/.config/Replicator/` on Linux, or wherever `$REPLICATOR_SERVICES` points). The key itself stays in
+the environment variable the entry names:
 
 ```json
-{"endpoints": [{"name": "lab-ft", "url": "http://192.168.1.40:8000/v1", "model": "cad-ft-7b"},
+{"default_engine": "lab-ft",
+ "endpoints": [{"name": "lab-ft", "url": "http://192.168.1.40:8000/v1", "model": "cad-ft-7b"},
                {"name": "hosted", "url": "https://api.example.com/v1", "model": "big", "key_env": "EXAMPLE_KEY"}]}
 ```
 
-Added endpoints appear in the engine picker and in the MCP `specify` tool. The Showcase render and the Blender round trip need `blender` 5.x on `PATH`.
+Engines appear in the picker in the header and in the MCP `specify` tool.
+
+### GPU
+
+The window draws with Qt Quick 3D on whatever GPU Qt picks. On a machine with an Intel iGPU and an
+NVIDIA card, Replicator draws on the iGPU, so the card's memory stays free for a local model.
+`REPLICATOR_GPU=any` turns that off and `REPLICATOR_GPU=igpu` forces it. `--software` draws on the
+CPU with Mesa's llvmpipe.
 
 ### Headless frames
 
 Qt's `offscreen` platform can't run Qt Quick 3D, so `--shot` loads the window hidden and grabs a frame:
 
 ```sh
-.venv/bin/python -m replicator.app fixtures/dirk_engine_v2.json --software --shot out/build.png
-.venv/bin/python -m replicator.app fixtures/dirk_engine_v2.json --software --shot out/x.png --mode dissect --explode 0.9
+python -m replicator.app fixtures/turbofan.json --software --shot out/build.png
+python -m replicator.app fixtures/turbofan.json --software --shot out/x.png --mode dissect --explode 0.9
 ```
 
 `--step N`, `--blueprint 0..1`, `--select ID` and `--size WxH` set up the frame. The README previews
@@ -228,11 +257,30 @@ applies last. Coordinates are Y-up and right-handed, in the program's `units`.
 A saved program lives in a `<name>.replicator/` folder: `program.json` plus `history/NNNN.json`, one
 file per version, so an edit can be undone across sessions.
 
+## Printing (optional)
+
+Most of Replicator never touches a printer. When you do print, it treats the bed as a hard limit and
+replicas as normal work:
+
+- **Printer profiles.** A catalog of Bambu Lab beds (published sizes) or any custom bed, saved in
+  `services.json`, with one active printer shown in the status bar. No active printer means no gate:
+  every export works as before.
+- **Never bigger than the bed.** STL and 3MF export to the active printer is refused when the build
+  does not fit, naming each axis and the millimetres over, and the scale that would fit. Nothing is
+  ever clipped.
+- **Fit, orient and scale.** Fit check, orient to fit, scale to fit and replica presets (1:1, 1:N,
+  fit to bed, target height). A scaled replica scales its plan too, so its checks still pass.
+- **Agents.** MCP `printers`, `fit_check` and `scale_for_printer`.
+
+Slicing and sending to a printer over the network are on the [roadmap](#roadmap).
+
 ## Image to 3D
 
 Some shapes don't come from a list of operations: characters, creatures, anything organic. For
-those, Replicator turns a picture into a mesh locally and opens it in Reverse. This lane is being
-built; see the [roadmap](#roadmap).
+those, *File > Image to 3D* turns a picture (or a multi-view character sheet) into a mesh through a
+ComfyUI you run with the Hunyuan3D 2.x models, cleans it, scales it to millimetres and opens it in
+Reverse. Point it at your ComfyUI with `COMFY_URL` (default `http://127.0.0.1:8188`). Replicator never
+loads an image model itself.
 
 ## Blender
 
@@ -259,7 +307,8 @@ replicator/
   llm/                  specify, repair, edit, explain and name-parts prompts; built-in and configured engines
   knowledge/            curated engineering cards picked into the prompts by keyword
   qt/                   QML bridge, mesh geometry, procedural studio HDRI
-  gpu.py                pins the window to the integrated GPU
+  gpu.py                picks the GPU the window draws on (REPLICATOR_GPU)
+  core/printers.py, core/fit.py  printer profiles, fit, orient and scale to the bed
 qml/  shaders/          the workspace, the materialize and blueprint shaders
 fixtures/               sample programs: engines, a PC, a Pi 5, a drone, a house
 tools/                  check, sheet, showcase stills, record (preview films), readme_art
@@ -268,26 +317,35 @@ tools/readme_art.py     draws the README artwork
 
 ## Roadmap
 
-- [x] M1: text to blueprint to program, step-by-step build, edit by sentence
-- [x] Dissect, Reverse and Showcase modes; Blender round trip
-- [ ] M3: image to 3D (TRELLIS.2 or Hunyuan3D under a Berth lease), then a Holodeck character sheet straight into the workshop
-- [x] Blueprint sheets: a technical drawing with callouts, dimensions and a parts list from the program
+- [x] Text to blueprint to program, step-by-step build, edit by sentence
+- [x] Dissect, Reverse and Showcase modes; Blender round trip; image to 3D through ComfyUI
+- [x] Drawing sheets: views, a section or floor plan, dimensions and a parts list from the program
 - [x] STEP export, an MCP server for agents, endpoints you configure
-- [x] Benchmark v0 and corpus export: seeded tasks scored by measuring the solid, any endpoint, deterministic scoring
+- [x] Benchmark v0 and corpus export: seeded tasks scored by measuring the solid
+- [x] Printer profiles, never-exceed gating, fit, orient and scale to the bed
+- [ ] Scale-aware printability: features too thin at replica scale, and a thicken edit
+- [ ] Slicing and send to printer, a print queue
 - [ ] Reverse to program: imported pieces become real ops, each tied to its ledger entry
 - [ ] Joints and mates as program data; URDF and MJCF with inertias from the exact solid
-- [ ] M2: a floor plan becomes rooms (a Sims-style build mode)
-- [ ] M4: sculpting and a node editor
+- [ ] A floor plan becomes rooms; sculpting and a node editor
 
-Where it stands against nurb, Chili3D, text-to-cad, CADAM, Multi-Agent-CAD and sand3d, read at source level, and the lanes it is built to own: [docs/COMPETITORS-2026-11-14.md](docs/COMPETITORS-2026-11-14.md).
+The longer plan is in [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/REQUIREMENTS-workbench.md](docs/REQUIREMENTS-workbench.md).
+
 
 ## What Replicator never does
 
-- **Never calls a model you did not name.** Out of the box every specify, repair, edit and label comes
-  from a model on your machine; a hosted endpoint is used only if you add it yourself.
-- **Never draws on the RTX card.** The window pins itself to the iGPU and quits if it lands on the
-  discrete card, which belongs to the models.
-- **Never loads a GPU model without a lease.** Image to 3D asks Berth for the card first, so it
-  waits for a chat to finish instead of crashing it.
+- **Never calls a model you did not name.** Every specify, repair, edit and label goes to the
+  `local` engine or an endpoint you added yourself. Research (Wikipedia, or your own SearXNG) is off
+  until you turn it on, and sends only search words.
+- **Never loads a model in its own process.** Models run in your server; image to 3D runs in your
+  ComfyUI; Cycles renders on the CPU with CUDA hidden.
+- **Never runs anything from an imported file.** Archives unpack into a new folder with path, size
+  and count checks.
 - **Never replaces your program behind your back.** An edit that fails validation is dropped, and
   the last good version stays on screen.
+
+## Contributing
+
+Read [AGENTS.md](AGENTS.md): it is the map of the code, the invariants and how to extend each table
+(an op, a check, a knowledge card, a material, an import format). Run `pytest -q` and
+`python -m tools.check` on any program you touch. Licensed under [MIT](LICENSE).

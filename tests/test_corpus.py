@@ -97,10 +97,10 @@ def test_files_that_are_not_programs_are_skipped(tmp_path, capsys):
 
 def test_stamp_source_records_and_preserves_origin():
     program = {"version": 1, "ops": [{"id": "a", "op": "box", "params": {"size": [1, 1, 1]}}]}
-    out = client.stamp_source(program, "a small box", "dirk")
+    out = client.stamp_source(program, "a small box", "local")
     assert out is program
     assert out["source"]["prompt"] == "a small box"
-    assert out["source"]["engine"] == "dirk"
+    assert out["source"]["engine"] == "local"
     assert out["source"]["date"] == datetime.now(timezone.utc).date().isoformat()
     check(out)    # validation tolerates the extra top-level key
     again = client.stamp_source(out, "something else", "coder")

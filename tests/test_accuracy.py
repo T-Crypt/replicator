@@ -90,7 +90,7 @@ def test_critic_compares_with_the_blueprint():
 
 
 def test_shipped_engine_has_no_blocking_issues():
-    p = json.loads((FIX / "dirk_engine_v2.json").read_text())
+    p = json.loads((FIX / "turbofan.json").read_text())
     assert critique.blocking(critique.critique(p, *build(p))) == []
 
 

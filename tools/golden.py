@@ -1,6 +1,6 @@
 """Golden dreams: run client.dream on a fixed prompt list and record how many tries and fixes each one cost.
 
-    .venv/bin/python -m tools.golden [--force] [--engine dirk] [--only SLUG] [--dir out/golden]
+    .venv/bin/python -m tools.golden [--force] [--engine NAME] [--only SLUG] [--dir out/golden]
 
 One model job at a time. A prompt with an existing result is skipped unless --force.
 """
