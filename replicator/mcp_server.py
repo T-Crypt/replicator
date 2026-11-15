@@ -140,12 +140,17 @@ def build_report(path: str, step: int = -1) -> dict:
 @mcp.tool()
 def export(path: str, out: str) -> dict:
     """Export a program's solids. Format from the extension: .step/.stp (faceted B-rep for CAD), .stl and .3mf
-    (printers, Z-up, watertight only), .glb, .obj."""
+    (printers, Z-up, watertight only), .glb, .obj, or a simulator model: .urdf, or .xml/.mjcf for MuJoCo (one link per
+    component, mass and inertia from the exact solid, meshes/ written beside it)."""
     try:
         p, o = _path(path), _path(out)
         program = _load(p)
         o.parent.mkdir(parents=True, exist_ok=True)
         shapes = Evaluator(p.parent).step(program)
+        if o.suffix.lower() in (".urdf", ".xml", ".mjcf"):
+            from .core import robot
+            f = robot.write(program, shapes, o)
+            return {"ok": True, "file": str(f), "meshes": str(f.parent / "meshes"), "bytes": f.stat().st_size}
         exporter.export(shapes, program.get("materials", {}), o, name=program.get("name", p.stem),
                         units=program.get("units", "mm"))
         return {"ok": True, "file": str(o), "bytes": o.stat().st_size}

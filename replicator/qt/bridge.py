@@ -1164,9 +1164,11 @@ class Studio(QObject):
     # ------------------------------------------------------------------ export and render
     @Slot(str, result=str)
     def exportAs(self, fmt: str) -> str:
-        if not self._program or fmt not in ("glb", "stl", "obj", "3mf", "step"):
+        if not self._program or fmt not in ("glb", "stl", "obj", "3mf", "step", "sim"):
             return ""
         name = "".join(c if c.isalnum() else "-" for c in self.title.lower()).strip("-") or "build"
+        if fmt == "sim":
+            return self._export_sim(name)
         path, n = OUT / f"{name}.{fmt}", 2
         while path.exists():                    # never overwrite an earlier export
             path, n = OUT / f"{name}-{n}.{fmt}", n + 1
@@ -1182,6 +1184,23 @@ class Studio(QObject):
         except (OSError, ValueError, EvalError, ImportError) as e:
             path.unlink(missing_ok=True)
             self._say(f"export failed: {e}" + (" (3MF needs core support that is not installed)" if fmt == "3mf" else ""))
+            return ""
+
+    def _export_sim(self, name: str) -> str:
+        """URDF and MJCF side by side in a new folder, with one STL per component in meshes/."""
+        from ..core import robot
+        folder, n = OUT / f"{name}-sim", 2
+        while folder.exists():
+            folder, n = OUT / f"{name}-sim-{n}", n + 1
+        try:
+            shapes = self._ev.step(self._program)
+            folder.mkdir(parents=True)
+            robot.write(self._program, shapes, folder / f"{name}.urdf")
+            robot.write(self._program, shapes, folder / f"{name}.xml")
+            self._say(f"exported URDF and MJCF to {folder}")
+            return str(folder)
+        except (OSError, ValueError, EvalError) as e:
+            self._say(f"simulator export failed: {e}")
             return ""
 
     @Slot(str)

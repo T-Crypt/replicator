@@ -51,29 +51,39 @@ class Mass:
     inertia: list[float] = field(default_factory=list)   # principal moments about the CG, kg m^2, ascending
 
 
+def _integrals(sh: Shape, unit: float) -> tuple[float, np.ndarray, np.ndarray] | None:
+    """(kg, centroid in program units, rho * integral of x x^T dV about the origin in kg x unit^2) of one solid, or
+    None when it has no mass (a light effect, or no volume)."""
+    _, rho, _ = density(sh.material)
+    if not rho:
+        return None
+    V, F = sh.arrays()
+    a, b, c = (V[F[:, i]].astype(np.float64) for i in range(3))
+    vol6 = np.einsum("ij,ij->i", a, np.cross(b, c))
+    vol = abs(vol6.sum()) / 6.0
+    if vol <= 0:
+        return None
+    centroid = ((a + b + c) * vol6[:, None]).sum(0) / (4.0 * vol6.sum())
+    kg = vol * unit ** 3 * rho
+    sgn = 1.0 if vol6.sum() > 0 else -1.0
+    S = a + b + c
+    cov = (np.einsum("n,ni,nj->ij", vol6 * sgn, a, a) + np.einsum("n,ni,nj->ij", vol6 * sgn, b, b)
+           + np.einsum("n,ni,nj->ij", vol6 * sgn, c, c) + np.einsum("n,ni,nj->ij", vol6 * sgn, S, S)) / 120.0
+    return kg, centroid, cov * (kg / vol)
+
+
 def properties(program: dict, shapes: list[Shape]) -> Mass:
     s = UNIT_M.get(program.get("units", "mm"), 1e-3)
     total, moment, by_comp, assumed = 0.0, np.zeros(3), {}, []
-    second = np.zeros((3, 3))             # sum of rho * integral of x x^T dV about the origin, kg mm^2
+    second = np.zeros((3, 3))
     for sh in shapes:
-        _, rho, known = density(sh.material)
-        if not known:
+        if not density(sh.material)[2]:
             assumed.append(sh.id)
-        if not rho:                       # a light effect carries no mass
+        got = _integrals(sh, s)
+        if got is None:
             continue
-        V, F = sh.arrays()
-        a, b, c = (V[F[:, i]].astype(np.float64) for i in range(3))
-        vol6 = np.einsum("ij,ij->i", a, np.cross(b, c))
-        vol = abs(vol6.sum()) / 6.0
-        if vol <= 0:
-            continue
-        centroid = ((a + b + c) * vol6[:, None]).sum(0) / (4.0 * vol6.sum())
-        kg = vol * s ** 3 * rho
-        sgn = 1.0 if vol6.sum() > 0 else -1.0
-        S = a + b + c
-        cov = (np.einsum("n,ni,nj->ij", vol6 * sgn, a, a) + np.einsum("n,ni,nj->ij", vol6 * sgn, b, b)
-               + np.einsum("n,ni,nj->ij", vol6 * sgn, c, c) + np.einsum("n,ni,nj->ij", vol6 * sgn, S, S)) / 120.0
-        second += cov * (kg / vol)
+        kg, centroid, sec = got
+        second += sec
         total += kg
         moment += kg * centroid
         by_comp[sh.component] = by_comp.get(sh.component, 0.0) + kg
@@ -81,6 +91,34 @@ def properties(program: dict, shapes: list[Shape]) -> Mass:
     return Mass(round(float(total), 3), [round(float(v), 1) for v in cg],
                 {k: round(float(v), 3) for k, v in by_comp.items()},
                 assumed, _stands(shapes, cg), _principal(second, total, cg, s))
+
+
+@dataclass(frozen=True)
+class Body:
+    """Rigid-body properties of a group of solids, in SI: kg, the centre of mass in metres (program axes), and the
+    inertia tensor about that centre in kg m^2 (program axes)."""
+    kg: float
+    com: tuple[float, float, float]
+    inertia: tuple[tuple[float, float, float], ...]
+
+
+def body(program: dict, shapes: list[Shape]) -> Body:
+    s = UNIT_M.get(program.get("units", "mm"), 1e-3)
+    total, moment, second = 0.0, np.zeros(3), np.zeros((3, 3))
+    for sh in shapes:
+        got = _integrals(sh, s)
+        if got is None:
+            continue
+        kg, centroid, sec = got
+        total += kg
+        moment += kg * centroid
+        second += sec
+    if not total:
+        return Body(0.0, (0.0, 0.0, 0.0), ((0.0,) * 3,) * 3)
+    cg = moment / total
+    cov = (second - total * np.outer(cg, cg)) * s ** 2
+    tensor = np.trace(cov) * np.eye(3) - cov
+    return Body(float(total), tuple(float(v) for v in cg * s), tuple(tuple(float(v) for v in row) for row in tensor))
 
 
 def _principal(second: np.ndarray, total: float, cg: np.ndarray, unit: float) -> list[float]:
