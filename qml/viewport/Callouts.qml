@@ -10,6 +10,7 @@ Item {
     property real explode: 0
     property string isolate: ""
     property var hidden: ({})
+    property real keepOutLeft: 0          // bottom of the title block: left-column tags stay below it
     signal chosen(string cid)
 
     readonly property int tick: viewport ? viewport.tick : 0
@@ -32,9 +33,10 @@ Item {
         for (const side of [-1, 1]) {
             const col = items.filter(it => (it.x < mid ? -1 : 1) === side).sort((a, b) => a.y - b.y)
             let lastY = -1e9
+            const top = side < 0 ? Math.max(70, co.keepOutLeft + 18) : 70
             for (const it of col) {
                 it.side = side
-                it.ly = Math.max(it.y - 40, lastY + gap, 70)
+                it.ly = Math.max(it.y - 40, lastY + gap, top)
                 lastY = it.ly
                 const spread = Math.min(220, Math.max(90, Math.abs(it.x - mid) * 0.35 + 70))
                 const tagW = 40 + (it.label.length + (it.count > 1 ? 4 : 0)) * 6.8     // estimated: keeps the tag inside the view
@@ -42,7 +44,7 @@ Item {
                                  : Math.min(width - tagW - 12, Math.max(it.x + spread, mid + 260))
             }
             const over = col.length ? col[col.length - 1].ly - (height - 150) : 0   // stay above the bottom bar
-            if (over > 0) for (const it of col) it.ly = Math.max(60, it.ly - over)
+            if (over > 0) for (const it of col) it.ly = Math.max(top, it.ly - over)
         }
         return items
     }

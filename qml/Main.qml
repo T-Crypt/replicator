@@ -468,6 +468,7 @@ ApplicationWindow {
                     explode: window.explode
                     isolate: window.isolate
                     hidden: window.hidden
+                    keepOutLeft: issuesCard.visible ? issuesCard.y + issuesCard.height : titleCard.visible ? titleCard.y + titleCard.height : 0
                     visible: studio.mode === "dissect" || studio.mode === "reverse" || (window.showcase && window.explode > 0.2)
                     onChosen: (cid) => { studio.select(cid); window.isolate = window.isolate === cid ? "" : cid }
                 }

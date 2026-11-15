@@ -283,7 +283,8 @@ Item {
     // ------------------------------------------------- empty state: no explanation yet
     Rectangle {
         visible: presenter.chapters.length === 0
-        anchors.centerIn: parent
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: parent.height - height - 60       // where the captions will play, never over the model
         width: Math.min(460, parent.width - 80); height: empCol.implicitHeight + 44; radius: 16
         color: "#f2ffffff"; border.color: "#d5dae1"
         ColumnLayout {
