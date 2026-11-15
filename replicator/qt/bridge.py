@@ -81,7 +81,7 @@ class Studio(QObject):
         self._comps: list[assembly.Component] = []
         self._log: list[str] = []
         self._busy = ""
-        self._engine = "dirk"
+        self._engine = client.default_engine()
         self._selected = ""
         self._mode = "build"
         self._mode_after: str | None = None
@@ -295,6 +295,14 @@ class Studio(QObject):
         return out
 
     @Property(str, constant=True)
+    def drawsOn(self):
+        """What the window renders with, from the policy replicator.gpu applied before Qt loaded."""
+        import os
+        if os.environ.get("LIBGL_ALWAYS_SOFTWARE") == "1":
+            return "CPU"
+        return "iGPU" if os.environ.get("__GLX_VENDOR_LIBRARY_NAME") == "mesa" else "GPU"
+
+    @Property(str, constant=True)
     def importPatterns(self):
         return importers.patterns()
 
@@ -356,7 +364,7 @@ class Studio(QObject):
 
     @Property("QVariantList", notify=holodeckChanged)
     def holodeckSheets(self):
-        """Holodeck character sheets, newest first."""
+        """Character sheets in $REPLICATOR_SHEETS, newest first."""
         rows = []
         if sheet.CHARACTERS.is_dir():
             for p in sheet.CHARACTERS.glob("*.png"):
@@ -750,7 +758,7 @@ class Studio(QObject):
 
     @Slot(str, bool)
     def imageTo3D(self, path: str, single: bool):
-        """Image or Holodeck sheet -> a 3D model via Hunyuan3D in ComfyUI (one Berth batch)."""
+        """Image or character sheet -> a 3D model via Hunyuan3D in ComfyUI."""
         src = _local(path)
 
         def job(log):
@@ -1215,7 +1223,7 @@ class Studio(QObject):
             if blender_link.is_up():
                 raise RuntimeError("a Blender with the MCP socket is already open (localhost:9876); close it first")
             blender_link.open_in_blender(glb, mats, parts)
-            log("blender: starting (iGPU, CUDA hidden, update check off)")
+            log("blender: starting (CUDA hidden, update check off)")
             if not blender_link.wait_up(60):
                 raise RuntimeError("Blender opened but the MCP socket did not come up on localhost:9876")
             info = blender_link.send("get_scene_info")
@@ -1303,7 +1311,7 @@ class Studio(QObject):
         config.save(self._cfg)
         self.servicesChanged.emit()
 
-    # ------------------------------------------------------------------ voice (optional; never on the RTX card)
+    # ------------------------------------------------------------------ voice (optional; CPU only)
     @Slot(str)
     def speak(self, text: str):
         """Read `text` aloud. Emits voiceChanged when it starts and when it ends."""

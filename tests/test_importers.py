@@ -55,6 +55,7 @@ def test_unknown_formats_are_refused_with_the_supported_list(tmp_path):
 
 
 def test_a_real_step_part_arrives_welded_and_in_millimetres(tmp_path):
+    pytest.importorskip("cascadio")
     from pathlib import Path
     step = Path(__file__).parent / "data" / "featuretype.STEP"
     glb, what = importers.prepare(step, tmp_path / "w")

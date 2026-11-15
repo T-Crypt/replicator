@@ -1,4 +1,4 @@
-"""Replicator as an MCP server: any agent (Claude Code, Codex, OMP, a lab's own harness) can read, edit, build, check,
+"""Replicator as an MCP server: any agent (Claude Code, Codex, Cursor, a lab's own harness) can read, edit, build, check,
 draw and export a BuildProgram, and ask the local models to specify a new one.
 
     .venv/bin/python -m replicator.mcp_server            # stdio, for an agent's MCP config
@@ -15,7 +15,7 @@ import os
 import time
 from pathlib import Path
 
-os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")           # the RTX card belongs to the model server, never to us
+os.environ.setdefault("CUDA_VISIBLE_DEVICES", "")           # a GPU is left to the model server
 
 from mcp.server import MCPServer  # noqa: E402
 
@@ -253,10 +253,10 @@ def drawing_sheet(path: str, out_dir: str, style: str = "blueprint") -> dict:
 
 
 @mcp.tool()
-def specify(description: str, out: str, engine: str = "dirk") -> dict:
+def specify(description: str, out: str, engine: str = "") -> dict:
     """Ask the local models for a new BuildProgram from a description (blueprint, program, repair and critique
-    rounds; takes minutes). Writes it to `out` only if it validates and builds. engine: dirk, coder, agent, strata,
-    or any endpoint named in ~/.config/Replicator/services.json (see `engines`)."""
+    rounds; takes minutes). Writes it to `out` only if it validates and builds. engine: empty for the default
+    (`default_engine` in services.json, else "local"), or any name `engines` lists."""
     from .llm import client
     log: list[str] = []
     try:
@@ -268,9 +268,9 @@ def specify(description: str, out: str, engine: str = "dirk") -> dict:
 
 @mcp.tool()
 def engines() -> dict:
-    """The model engines `specify` can use: name -> model and chat URL (built-in local ones plus configured endpoints)."""
+    """The model engines `specify` can use: name -> model and chat URL ("local" plus configured endpoints)."""
     from .llm import client
-    return {k: {"model": m, "url": u, "needs_key": bool(env)} for k, (u, m, _, env) in client.engines().items()}
+    return {k: {"model": m, "url": u, "needs_key": bool(env) and not env.startswith("?")} for k, (u, m, _, env) in client.engines().items()}
 
 
 @mcp.tool()

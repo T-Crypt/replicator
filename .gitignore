@@ -5,3 +5,8 @@ __pycache__/
 out/
 brag-output/
 .claude/worktrees/
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+CLAUDE.local.md

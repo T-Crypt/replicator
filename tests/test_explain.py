@@ -132,7 +132,7 @@ def test_configured_endpoints_join_the_engines_and_keys_stay_in_the_environment(
         {"name": "broken"}]}))
     monkeypatch.setattr(config, "PATH", f)
     e = client.engines()
-    assert {"dirk", "strata", "lab-ft", "hosted"} <= set(e) and "broken" not in e
+    assert {"local", "lab-ft", "hosted"} <= set(e) and "broken" not in e
     assert e["lab-ft"][0] == "http://192.168.1.40:8000/v1/chat/completions"
     assert e["hosted"][0] == "https://api.example.com/v1/chat/completions"
     monkeypatch.delenv("EXAMPLE_KEY", raising=False)

@@ -88,7 +88,10 @@ def _blender(src: Path, dst: Path) -> Path:
 
 
 def _cad(src: Path, dst: Path) -> Path:
-    import cascadio
+    try:
+        import cascadio
+    except ImportError:
+        raise RuntimeError(f"{src.name}: STEP and IGES import needs OpenCASCADE: pip install -e '.[cad]'") from None
     kind = cascadio.FileType.IGES if src.suffix.lower() in (".iges", ".igs") else cascadio.FileType.STEP
     raw = dst.with_suffix(".raw.glb")
     raw.write_bytes(cascadio.to_glb_bytes(src.read_bytes(), file_type=kind, tol_linear=0.05, tol_angular=0.3,

@@ -1,4 +1,4 @@
-"""Holodeck character sheets: find the views, cut them apart, square them up for image-to-3D.
+"""Character sheets (a ComfyUI workflow's multi-view renders; folder $REPLICATOR_SHEETS): find the views, cut them apart, square them up for image-to-3D.
 
 A Holodeck sheet (`characters/sheet-*.png` plus a `.png.json` sidecar with the prompt) shows one character several
 times side by side, for example "front view, three-quarter view, side view and back view". This module reads the
@@ -9,6 +9,7 @@ way Hunyuan3D-2mv's training renders were framed. CPU only (numpy + Pillow).
 from __future__ import annotations
 
 import json
+import os
 import re
 from dataclasses import dataclass
 from pathlib import Path
@@ -16,7 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-CHARACTERS = Path("/mnt/models/comfy/output/characters")
+CHARACTERS = Path(os.environ.get("REPLICATOR_SHEETS", "~/ComfyUI/output/characters")).expanduser()
 VIEW_WORDS = [("three-quarter", "three-quarter"), ("three quarter", "three-quarter"), ("3/4", "three-quarter"),
               ("front", "front"), ("side", "side"), ("profile", "side"), ("back", "back"), ("rear", "back"),
               ("left", "left"), ("right", "right")]

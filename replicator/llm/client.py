@@ -1,10 +1,11 @@
 """Specify -> blueprint -> BuildProgram, on any OpenAI-compatible chat endpoint.
 
-Built-in engines are local: "dirk" (Dirk-27B, default, reasoning xhigh), "coder"/"agent" (NInfer roles) on llama-swap
-:9090, "strata" (Strata :8080, only while it is the resident engine). More come from the `endpoints` list in
-~/.config/Replicator/services.json: a lab's served checkpoint, vLLM, Ollama, or a hosted API. Nothing talks to a
-model the operator has not named there; an API key is read from the environment variable the entry names, never
-stored in a file.
+One engine is built in, "local": the server at $REPLICATOR_LLM_URL (default http://127.0.0.1:8080/v1, the llama.cpp
+server's default; Ollama is http://127.0.0.1:11434/v1, LM Studio http://127.0.0.1:1234/v1) serving
+$REPLICATOR_LLM_MODEL (default "local"), with an optional bearer key in $REPLICATOR_LLM_KEY. More come from the
+`endpoints` list in services.json (see replicator.config): a lab's served checkpoint, vLLM, Ollama, or a hosted API,
+and `default_engine` there picks which one is used. Nothing talks to a model the operator has not named; an API key
+is read from the environment variable the entry names, never stored in a file.
 """
 from __future__ import annotations
 
@@ -21,12 +22,7 @@ from ..core.evaluate import EvalError, Evaluator
 from ..core.program import OPS, PLACEMENT, VERSION, op_inputs, validate
 
 PROMPTS = Path(__file__).parent / "prompts"
-ENGINES = {
-    "dirk": ("http://127.0.0.1:9090/v1/chat/completions", "dirk", {"reasoning_effort": "xhigh"}),
-    "coder": ("http://127.0.0.1:9090/v1/chat/completions", "coder", None),
-    "agent": ("http://127.0.0.1:9090/v1/chat/completions", "agent", None),
-    "strata": ("http://127.0.0.1:8080/v1/chat/completions", "strata", None),
-}
+LOCAL_URL = "http://127.0.0.1:8080/v1"
 REPAIR_ROUNDS = 2
 CRITIQUE_ROUNDS = 1
 # When set (the benchmark sets the trial seed), "seed" goes into the request body.
@@ -40,20 +36,33 @@ def _chat_url(url: str) -> str:
 
 
 def engines() -> dict[str, tuple[str, str, dict | None, str]]:
-    """name -> (chat URL, model, chat_template_kwargs, key env var): the built-ins plus the operator's endpoints."""
+    """name -> (chat URL, model, chat_template_kwargs, key env var): "local" plus the endpoints in services.json.
+    A configured endpoint named "local" replaces the built-in one."""
+    import os
     from .. import config
-    out = {k: (*v, "") for k, v in ENGINES.items()}
+    out = {"local": (_chat_url(os.environ.get("REPLICATOR_LLM_URL") or LOCAL_URL),
+                     os.environ.get("REPLICATOR_LLM_MODEL") or "local", None, "?REPLICATOR_LLM_KEY")}
     for e in config.load().get("endpoints", []):
         if isinstance(e, dict) and e.get("name") and e.get("url") and e.get("model"):
-            out[str(e["name"])] = (_chat_url(str(e["url"])), str(e["model"]), None, str(e.get("key_env", "")))
+            kw = e.get("chat_template_kwargs")
+            out[str(e["name"])] = (_chat_url(str(e["url"])), str(e["model"]), kw if isinstance(kw, dict) else None,
+                                   str(e.get("key_env", "")))
     return out
 
 
-def chat(messages: list[dict], engine: str = "dirk", max_tokens: int = 14000, timeout: int = 900) -> str:
+def default_engine() -> str:
+    """services.json `default_engine` when it names a known engine, else "local"."""
+    from .. import config
+    name = config.load().get("default_engine", "")
+    return name if name and name in engines() else "local"
+
+
+def chat(messages: list[dict], engine: str = "", max_tokens: int = 14000, timeout: int = 900) -> str:
+    engine = engine or default_engine()
     known = engines()
     if engine not in known:
         raise ValueError(f"unknown engine {engine!r}; known: {', '.join(known)} (add more under endpoints in "
-                         "~/.config/Replicator/services.json)")
+                         "services.json; see replicator/config.py)")
     url, model, kwargs, key_env = known[engine]
     body = {"model": model, "messages": messages, "max_tokens": max_tokens, "temperature": 0.6}
     if SEED.get() is not None:
@@ -63,10 +72,13 @@ def chat(messages: list[dict], engine: str = "dirk", max_tokens: int = 14000, ti
     headers = {"Content-Type": "application/json"}
     if key_env:
         import os
+        optional = key_env.startswith("?")
+        key_env = key_env.lstrip("?")
         key = os.environ.get(key_env, "")
-        if not key:
+        if not key and not optional:
             raise ValueError(f"engine {engine!r} needs an API key in ${key_env}, which is not set")
-        headers["Authorization"] = f"Bearer {key}"
+        if key:
+            headers["Authorization"] = f"Bearer {key}"
     req = urllib.request.Request(url, json.dumps(body).encode(), headers)
     with urllib.request.urlopen(req, timeout=timeout) as r:
         data = json.load(r)
@@ -269,7 +281,7 @@ shaft, vent the heat), keep proportions a machinist would accept, and add a "gro
 "source": 0 when it is your own engineering judgment."""
 
 
-def research_queries(subject: str, parts: list[str], engine: str = "dirk", log=print) -> list[str]:
+def research_queries(subject: str, parts: list[str], engine: str = "", log=print) -> list[str]:
     """Search words for the real machines and principles closest to `subject` (which may be fictional)."""
     try:
         out = extract_json(chat([{"role": "user", "content": _prompt(
@@ -290,9 +302,10 @@ def stamp_source(program: dict, prompt: str, engine: str) -> dict:
     return program
 
 
-def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = None) -> dict:
+def dream(prompt: str, engine: str = "", log=print, sources: list | None = None) -> dict:
     """Text in, a validated BuildProgram out (its blueprint stage kept under program["blueprint"]).
     `sources` (research lane) grounds a concept in real mechanisms; they are kept with the blueprint."""
+    engine = engine or default_engine()
     log(f"blueprint: asking {engine}")
     refs = ""
     if sources:
@@ -346,7 +359,7 @@ def _outside_scope(old: dict, new: dict, scope: set[str]) -> list[str]:
             for oid, op in before.items() if oid not in scope and after.get(oid) != op]
 
 
-def edit(program: dict, instruction: str, engine: str = "dirk", log=print, scope: set[str] | None = None) -> list[dict]:
+def edit(program: dict, instruction: str, engine: str = "", log=print, scope: set[str] | None = None) -> list[dict]:
     """A text edit ("longer thrusters") as an RFC 6902 patch over the program. Caller applies it.
     With `scope` (op ids), every other op must come back unchanged; new ops may be added."""
     from ..core.program import apply_patch
@@ -374,7 +387,7 @@ def edit(program: dict, instruction: str, engine: str = "dirk", log=print, scope
     raise ValueError(f"no valid edit: {errs[:5]}")
 
 
-def name_components(facts: list[dict], context: str, engine: str = "dirk", log=print) -> dict:
+def name_components(facts: list[dict], context: str, engine: str = "", log=print) -> dict:
     """Inferred names and roles for components from observed measurements only. Returns {id: {label, role,
     confidence}}. The caller tags every result `inferred`; the model never sees or claims anything else."""
     prompt = _prompt("name_parts", CONTEXT=context, FACTS=json.dumps(facts, indent=1))
@@ -393,7 +406,7 @@ def name_components(facts: list[dict], context: str, engine: str = "dirk", log=p
     raise ValueError("no usable names from the model")
 
 
-def explain(subject: str, origin: str, facts: list[dict], sources_block: str, engine: str = "dirk", log=print) -> dict:
+def explain(subject: str, origin: str, facts: list[dict], sources_block: str, engine: str = "", log=print) -> dict:
     """The raw explanation from the model. `core/explain.verify` decides what survives."""
     prompt = _prompt("explain", SUBJECT=subject, ORIGIN=origin, FACTS=json.dumps(facts, indent=1),
                      SOURCES=sources_block or "(none: no source could be read; write measured and concept only)")

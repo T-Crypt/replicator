@@ -65,7 +65,7 @@ def run(prompt: str, engine: str) -> dict:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--engine", default="dirk")
+    ap.add_argument("--engine", default="")
     ap.add_argument("--only", help="slug substring")
     ap.add_argument("--dir", default="out/golden")
     a = ap.parse_args()

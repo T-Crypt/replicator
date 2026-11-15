@@ -770,7 +770,7 @@ ApplicationWindow {
                         IconButton { size: 26; iconSize: 14; icon: "eye"; tip: "Show everything"
                                      visible: studio.mode !== "reverse"; onHit: { window.hidden = ({}); window.isolate = "" } }
                     }
-                    HolodeckPanel { Layout.fillWidth: true; visible: studio.mode === "reverse" }
+                    HolodeckPanel { Layout.fillWidth: true; visible: studio.mode === "reverse" && studio.holodeckSheets.length > 0 }
                     ObjectManager {
                         Layout.fillWidth: true; Layout.fillHeight: true
                         visible: studio.mode !== "reverse"

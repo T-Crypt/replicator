@@ -185,12 +185,12 @@ Popup {
         }
         Text {
             Layout.fillWidth: true
-            text: "Research sends only search words, never your build. Voice runs on the CPU; it never uses the RTX card. Saved in ~/.config/Replicator/services.json (mode 600)."
+            text: "Research sends only search words, never your build. Voice runs on the CPU. Saved in services.json (mode 600) in the Replicator config folder."
             color: Theme.faint; font.pixelSize: Theme.fsTiny; font.family: Theme.sans; wrapMode: Text.WordWrap
         }
         Text {
             Layout.fillWidth: true; Layout.topMargin: 4
-            text: "Saved in ~/.config/Replicator/Replicator.conf. The viewport always draws on the integrated GPU; the RTX card stays with the models."
+            text: "Saved in Replicator.conf in the Replicator config folder. The viewport draws on: " + studio.drawsOn + " (REPLICATOR_GPU=auto, igpu or any)."
             color: Theme.faint; font.pixelSize: Theme.fsTiny; font.family: Theme.sans; wrapMode: Text.WordWrap
         }
     }

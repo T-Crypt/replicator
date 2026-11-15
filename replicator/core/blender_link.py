@@ -1,6 +1,6 @@
 """Replicator <-> Blender through the mcp-for-blender add-on (vendored, pinned; see vendor/mcp-for-blender/PIN.md).
 
-Open in Blender: start the Blender GUI on the Intel iGPU (CUDA hidden, update check off), import the current build
+Open in Blender: start the Blender GUI (CUDA hidden, update check off), import the current build
 with its BuildProgram materials, and start the add-on's socket server on localhost:9876. From there any local agent
 can drive Blender through the MCP server (`DISABLE_TELEMETRY=true`), or Replicator itself talks to the socket.
 Pull from Blender: export the live Blender scene to GLB over that socket and reverse-engineer it back into a
@@ -78,9 +78,12 @@ bpy.app.timers.register(setup, first_interval=1.0)
 
 
 def _env() -> dict:
-    return dict(os.environ, CUDA_VISIBLE_DEVICES="", BLENDERMCP_NO_UPDATE_CHECK="1", DISABLE_TELEMETRY="true",
-                __EGL_VENDOR_LIBRARY_FILENAMES="/usr/share/glvnd/egl_vendor.d/50_mesa.json",
-                __GLX_VENDOR_LIBRARY_NAME="mesa")
+    """Blender's GUI follows the window's GPU policy (replicator.gpu): on the iGPU when the app is pinned there."""
+    from .. import gpu
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES="", BLENDERMCP_NO_UPDATE_CHECK="1", DISABLE_TELEMETRY="true")
+    if gpu.should_pin():
+        env.update(__EGL_VENDOR_LIBRARY_FILENAMES=gpu.MESA_EGL, __GLX_VENDOR_LIBRARY_NAME="mesa")
+    return env
 
 
 def is_up(timeout: float = 0.5) -> bool:

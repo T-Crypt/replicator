@@ -1,7 +1,7 @@
 """Benchmark runner: dream a task instance through a configured engine, score the built solid, and
 collect one JSON line per trial; report reads the collected lines back as markdown tables.
 
-    .venv/bin/python -m tools.bench run --engine dirk --task all --seed 13 --trials 3
+    .venv/bin/python -m tools.bench run --engine local --task all --seed 13 --trials 3
     .venv/bin/python -m tools.bench score fixtures/house_two_bed.json --task house --seed 13
     .venv/bin/python -m tools.bench prompt --task flange --seed 13
     .venv/bin/python -m tools.bench report --out bench/results
@@ -52,7 +52,7 @@ def run(engine: str, task: str, seed: int, trials: int, out: Path) -> int:
     known = client.engines()
     if engine not in known:
         print(f"error: unknown engine {engine!r}; known: {', '.join(sorted(known))} "
-              f"(add more under endpoints in ~/.config/Replicator/services.json)", file=sys.stderr)
+              f"(add more under endpoints in services.json)", file=sys.stderr)
         return 2
     try:
         names = _pick_tasks(task)

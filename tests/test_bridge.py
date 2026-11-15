@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+pytest.importorskip("PySide6")
 from PySide6.QtGui import QGuiApplication  # noqa: E402
 
 from replicator.qt import bridge  # noqa: E402

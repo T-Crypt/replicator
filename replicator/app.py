@@ -2,9 +2,8 @@
 
     python -m replicator.app [program.json] [--software] [--shot out.png --step N]
 
-The GPU pin is applied before Qt is imported (replicator.gpu), so the window draws on the Intel iGPU and never
-on the 4090. After the first frame the app checks nvidia-smi for its own PID and quits if it is there.
---software uses llvmpipe (test harness). --shot renders one frame to a PNG and exits (headless checks).
+The GPU policy is applied before Qt is imported (replicator.gpu): on a machine with an Intel iGPU beside an NVIDIA
+card the window draws on the iGPU and leaves the card to the model server. --software uses llvmpipe (test harness). --shot renders one frame to a PNG and exits (headless checks).
 """
 from __future__ import annotations
 
@@ -24,7 +23,7 @@ def main(argv=None) -> int:
     ap.add_argument("--software", action="store_true")
     ap.add_argument("--shot")
     ap.add_argument("--record", help="record frames to this folder in real time; needs --cues. Run it through "
-                    "tools/record.sh (a headless gamescope on the iGPU): the window must be exposed to be grabbed twice")
+                    "tools/record.sh (a headless gamescope): the window must be exposed to be grabbed twice")
     ap.add_argument("--cues", help='JSON list of [seconds, "QML expression"] played while recording; ["end", t] stops')
     ap.add_argument("--fps", type=int, default=30)
     ap.add_argument("--step", type=int, default=-1)
@@ -39,7 +38,7 @@ def main(argv=None) -> int:
     ap.add_argument("--ui", default="", help="open an overlay for --shot: commander | preferences | materials | console | context | sheet")
     a = ap.parse_args(argv)
 
-    gpu.apply(software=a.software)
+    pinned = gpu.apply(software=a.software)
 
     from PySide6.QtCore import QTimer
     from PySide6.QtGui import QGuiApplication
@@ -115,9 +114,11 @@ def main(argv=None) -> int:
 
     def self_check():
         if gpu.on_nvidia():
-            print("Replicator reached the RTX card; quitting (the 4090 is llama-swap's)", file=sys.stderr)
+            print("Replicator landed on the NVIDIA card despite the iGPU pin; quitting so the model server keeps it "
+                  "(set REPLICATOR_GPU=any to allow it)", file=sys.stderr)
             app.exit(3)
-    QTimer.singleShot(4000, self_check)
+    if pinned:
+        QTimer.singleShot(4000, self_check)
 
     if a.record:
         return _record(app, win, studio, a)

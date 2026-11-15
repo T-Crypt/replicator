@@ -1,7 +1,7 @@
-"""Dictation on the CPU with faster-whisper: a WAV in, the words on stdout. Replicator's `stt_cmd` runs it in the
-venv that has faster-whisper (here ~/ext/whisper-cpu), with every GPU hidden and the model read from the local cache:
+"""Dictation on the CPU with faster-whisper: a WAV in, the words on stdout. Replicator's `stt_cmd` runs it in a
+venv that has faster-whisper, with every GPU hidden and the model read from the local cache:
 
-    ~/ext/whisper-cpu/bin/python tools/transcribe.py {wav} [--model small.en]
+    /path/to/whisper-venv/bin/python tools/transcribe.py {wav} [--model small.en]
 
 The WAV is read with the standard library (faster-whisper's own decoder breaks on some PyAV builds).
 """

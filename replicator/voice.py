@@ -1,6 +1,6 @@
 """Optional voice: Replicator reads an explanation aloud, and you can dictate a dream.
 
-Nothing here loads a model in this process or touches the RTX card. Speech comes from a server you already run
+Nothing here loads a model in this process or uses the GPU. Speech comes from a server you already run
 (any OpenAI-compatible `/v1/audio/speech`, such as Kokoro-FastAPI), a local command (Kokoro on the CPU) or espeak-ng; dictation goes to
 an OpenAI-compatible `/v1/audio/transcriptions` server or to a local command such as whisper.cpp's `whisper-cli`.
 Child processes get an environment with every GPU hidden. Audio is recorded and played through PipeWire.

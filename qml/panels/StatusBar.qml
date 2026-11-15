@@ -72,6 +72,6 @@ Rectangle {
                           + "Set in services.json (active_printer); a build that overflows is refused, never clipped."
         }
         Rectangle { width: 1; height: 12; color: Theme.line }
-        Chip { icon: "chip"; label: "DRAWS ON"; value: "iGPU" }
+        Chip { icon: "chip"; label: "DRAWS ON"; value: studio.drawsOn }
     }
 }

@@ -1,10 +1,11 @@
-"""ComfyUI under a Berth lease: upload images, run API-format workflows, fetch outputs.
+"""ComfyUI for Image to 3D: upload images, run API-format workflows, fetch outputs.
 
-The card hand-off is not reimplemented here. `bridge.ensure_up()` from the homelab ComfyUI tooling
-(~/homelab/scripts/comfy/bridge.py) is the one sanctioned way to get ComfyUI holding the card: it stops Strata,
-wakes a parked ComfyUI or switches the card to it through the Berth gateway, and opens a batch so the card stays
-put between our two jobs. `release()` ends that batch so a waiting chat gets the card straight back.
-Override the bridge location with REPLICATOR_COMFY_BRIDGE.
+Replicator talks to a ComfyUI you run yourself at $COMFY_URL (default http://127.0.0.1:8188) with the Hunyuan3D 2.x
+and BiRefNet models below installed. It never loads a model in its own process.
+
+On a machine where one GPU is shared between ComfyUI and an LLM server, set $REPLICATOR_COMFY_BRIDGE to a folder
+holding a `bridge.py` with `ensure_up()` and `end_batch()`: acquire() calls it before the jobs, so the card can be
+handed to ComfyUI and back. Without it, ComfyUI is assumed to be up already.
 """
 from __future__ import annotations
 
@@ -18,8 +19,8 @@ import urllib.request
 import uuid
 from pathlib import Path
 
-BRIDGE_DIR = Path(os.environ.get("REPLICATOR_COMFY_BRIDGE", Path.home() / "homelab" / "scripts" / "comfy"))
-COMFY = os.environ.get("COMFY_LOCAL_URL", "http://127.0.0.1:8188").rstrip("/")
+BRIDGE = os.environ.get("REPLICATOR_COMFY_BRIDGE", "")
+COMFY = (os.environ.get("COMFY_URL") or os.environ.get("COMFY_LOCAL_URL") or "http://127.0.0.1:8188").rstrip("/")
 
 MODEL_SINGLE = "hunyuan_3d_v2.1.safetensors"
 MODEL_MULTI = "hunyuan3d-dit-v2-mv_fp16.safetensors"
@@ -31,21 +32,37 @@ class ComfyError(RuntimeError):
 
 
 def _bridge():
-    if str(BRIDGE_DIR) not in sys.path:
-        sys.path.insert(0, str(BRIDGE_DIR))
+    """The optional GPU hand-off module, or None when REPLICATOR_COMFY_BRIDGE is not set."""
+    if not BRIDGE:
+        return None
+    if BRIDGE not in sys.path:
+        sys.path.insert(0, BRIDGE)
     try:
-        import bridge  # noqa: PLC0415  (homelab/scripts/comfy/bridge.py)
+        import bridge  # noqa: PLC0415
     except ImportError as e:
-        raise ComfyError(f"ComfyUI bridge not found in {BRIDGE_DIR} ({e}); set REPLICATOR_COMFY_BRIDGE") from e
+        raise ComfyError(f"ComfyUI bridge not found in {BRIDGE} ({e}); fix or unset REPLICATOR_COMFY_BRIDGE") from e
     return bridge
 
 
+def _reachable() -> bool:
+    try:
+        with urllib.request.urlopen(COMFY + "/system_stats", timeout=5):
+            return True
+    except (OSError, ValueError):
+        return False
+
+
 def acquire(log=print) -> None:
-    """Block until ComfyUI holds the card (Berth lease). Raises ComfyError when it cannot."""
+    """Block until ComfyUI is up (through the bridge when one is configured). Raises ComfyError when it cannot."""
+    b = _bridge()
+    if b is None:
+        if not _reachable():
+            raise ComfyError(f"ComfyUI is not answering at {COMFY}; start it or set COMFY_URL")
+        log(f"image3d: ComfyUI at {COMFY}")
+        return
     os.environ.setdefault("COMFY_BATCH", "120")  # keep the card between the mask job and the mesh job
     os.environ.setdefault("GEN_CLIENT", "replicator")
-    log("image3d: asking Berth for the card (ComfyUI)")
-    b = _bridge()
+    log("image3d: asking the bridge for the GPU (ComfyUI)")
     try:
         b.ensure_up()
     except SystemExit as e:  # bridge exits with wake instructions when it cannot start ComfyUI
@@ -55,7 +72,9 @@ def acquire(log=print) -> None:
 
 def release() -> None:
     try:
-        _bridge().end_batch()
+        b = _bridge()
+        if b is not None:
+            b.end_batch()
     except ComfyError:
         pass
 

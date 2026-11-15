@@ -1,7 +1,7 @@
 """Showcase renders: a path-traced still of the current view in Blender Cycles, on the CPU only.
 
-The 4090 belongs to llama-swap and Berth. This runs `blender -b` with CUDA hidden and Cycles forced to the CPU
-(32 threads, OIDN denoise), so nothing here opens a GPU context. A GPU path would go through a Berth lease.
+This runs `blender -b` with CUDA hidden and Cycles forced to the CPU (all cores but four, OIDN denoise), so a GPU
+shared with a model server is never touched.
 Coordinates: Replicator is Y-up in mm; Blender is Z-up in metres. (x, y, z) mm -> (x, -z, y) / 1000.
 """
 from __future__ import annotations
@@ -130,8 +130,7 @@ def cycles_still(glb: Path, out: Path, camera: dict, materials: dict | None = No
     args = {"glb": str(glb), "out": str(out), "camera": camera, "ground": ground, "radius": radius,
             "samples": samples, "threads": max(4, (os.cpu_count() or 8) - 4),
             "materials": materials or {}, "part_materials": part_materials or {}}
-    env = dict(os.environ, CUDA_VISIBLE_DEVICES="", __EGL_VENDOR_LIBRARY_FILENAMES=
-               "/usr/share/glvnd/egl_vendor.d/50_mesa.json", __GLX_VENDOR_LIBRARY_NAME="mesa")
+    env = dict(os.environ, CUDA_VISIBLE_DEVICES="")
     with tempfile.NamedTemporaryFile("w", suffix=".py", delete=False) as f:
         f.write(BLENDER_SCRIPT)
         script = f.name

@@ -1,4 +1,5 @@
-"""Optional services, kept outside the repo in ~/.config/Replicator/services.json (mode 600).
+"""Optional services, kept outside the repo in services.json (mode 600): ~/.config/Replicator/services.json on Linux,
+or wherever $REPLICATOR_SERVICES points.
 
 Everything here is off until the operator turns it on in Preferences:
   research     bool   Explain and grounded dreams may look things up on the web (only search words leave the machine)
@@ -16,6 +17,8 @@ Everything here is off until the operator turns it on in Preferences:
                       (a lab's checkpoint on vLLM, Ollama, a hosted API). key_env names the environment variable that
                       holds the API key; the key itself never goes in this file. Example:
                       {"name": "lab-ft", "url": "http://192.168.1.40:8000/v1", "model": "cad-ft-7b", "key_env": ""}
+                      An entry may add "chat_template_kwargs" (a dict sent as-is, e.g. {"reasoning_effort": "high"}).
+  default_engine str  the engine Specify, Edit and Explain use; empty = "local" (replicator/llm/client.py)
 """
 from __future__ import annotations
 
@@ -25,7 +28,8 @@ from pathlib import Path
 
 PATH = Path(os.environ.get("REPLICATOR_SERVICES", Path.home() / ".config" / "Replicator" / "services.json"))
 DEFAULTS = {"research": False, "search_url": "", "speak": False, "tts_url": "", "tts_voice": "af_heart",
-            "tts_cmd": "", "stt_url": "", "stt_cmd": "", "endpoints": [], "printers": [], "active_printer": ""}
+            "tts_cmd": "", "stt_url": "", "stt_cmd": "", "endpoints": [], "printers": [], "active_printer": "",
+            "default_engine": ""}
 
 
 def load() -> dict:

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "replicator"
+version = "0.1.0"
+description = "You specify it, you build it: a sentence becomes a validated build program, an exact solid, a checked report and a printable file."
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE", "vendor/mcp-for-blender/LICENSE"]
+requires-python = ">=3.11"
+dependencies = [
+    "manifold3d>=3.1",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "trimesh>=4.0",
+    "shapely>=2.0",
+    "pillow>=10.0",
+    "jsonpatch>=1.33",
+    "networkx>=3.0",
+    "lxml>=5.0",
+]
+
+[project.optional-dependencies]
+app = ["PySide6>=6.9"]
+mcp = ["mcp>=2.0"]
+cad = ["cadquery-ocp>=7.7", "cascadio>=0.0.13"]
+dev = ["pytest>=8"]
+all = ["replicator[app,mcp,cad,dev]"]
+
+[project.scripts]
+replicator = "replicator.app:main"
+replicator-mcp = "replicator.mcp_server:main"
+
+[project.urls]
+Source = "https://github.com/T-Crypt/replicator"
+Issues = "https://github.com/T-Crypt/replicator/issues"
+
+[tool.setuptools.packages.find]
+include = ["replicator*"]
+
+[tool.setuptools.package-data]
+replicator = ["knowledge/*.md", "llm/prompts/*.md"]

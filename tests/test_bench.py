@@ -122,25 +122,25 @@ def test_chat_sends_the_seed_when_set(monkeypatch):
     monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
     client.SEED.set(7)
     try:
-        client.chat([{"role": "user", "content": "x"}], "dirk")
+        client.chat([{"role": "user", "content": "x"}], "local")
     finally:
         client.SEED.set(None)
     assert seen["body"]["seed"] == 7
-    client.chat([{"role": "user", "content": "x"}], "dirk")
+    client.chat([{"role": "user", "content": "x"}], "local")
     assert "seed" not in seen["body"]
 
 
 def test_run_saves_programs_and_logs_one_row_per_trial(monkeypatch, tmp_path):
     monkeypatch.setattr(client, "dream", lambda prompt, engine: flange_program(flange.instance(13).params))
-    rc = tools.bench.run("dirk", "flange", 13, 2, tmp_path)
+    rc = tools.bench.run("local", "flange", 13, 2, tmp_path)
     assert rc == 0
-    saved = tmp_path / "dirk" / "flange" / "seed13" / "program.json"
+    saved = tmp_path / "local" / "flange" / "seed13" / "program.json"
     assert saved.is_file()
-    rows = [json.loads(l) for l in (tmp_path / "dirk" / "results.jsonl").read_text().splitlines()]
+    rows = [json.loads(l) for l in (tmp_path / "local" / "results.jsonl").read_text().splitlines()]
     assert [r["seed"] for r in rows] == [13, 14]
     assert rows[0]["gate"] is True
     assert rows[0]["score"] == 1.0
-    assert rows[0]["model"] == "dirk"
+    assert rows[0]["model"] == "local"
     assert rows[1]["gate"] is True and rows[1]["score"] < 1.0
     keys = {"task", "task_hash", "class", "category", "seed", "engine", "model",
             "commit", "prompt", "score", "gate", "blocking", "assertions", "seconds"}
@@ -153,9 +153,9 @@ def test_run_scores_zero_when_dream_fails(monkeypatch, tmp_path):
         raise ValueError("endpoint refused the connection")
 
     monkeypatch.setattr(client, "dream", broken)
-    rc = tools.bench.run("dirk", "flange", 13, 1, tmp_path)
+    rc = tools.bench.run("local", "flange", 13, 1, tmp_path)
     assert rc == 0
-    rows = [json.loads(l) for l in (tmp_path / "dirk" / "results.jsonl").read_text().splitlines()]
+    rows = [json.loads(l) for l in (tmp_path / "local" / "results.jsonl").read_text().splitlines()]
     assert rows[0]["score"] == 0.0
     assert rows[0]["gate"] is False
     assert "refused the connection" in rows[0]["reason"]

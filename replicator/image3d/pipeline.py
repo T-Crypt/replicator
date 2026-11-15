@@ -4,8 +4,8 @@
     Hunyuan3D-2mv (sheet: front/left/back/right) or Hunyuan3D 2.1 (one picture) --> raw GLB (file units ~ +-1)
     --decimate, stand on the floor, scale to millimetres (CPU)--> <out>/model.glb
 
-Both GPU jobs run in ComfyUI inside one Berth batch (`comfy.acquire` / `comfy.release`), so a chat that waits gets
-the card back the moment the mesh is out. Everything else runs on the CPU in this process.
+Both GPU jobs run in your ComfyUI (`comfy.acquire` / `comfy.release`, with an optional GPU hand-off bridge), so
+nothing loads a model in this process. Everything else runs on the CPU in this process.
 
 CLI (no UI): python -m replicator.image3d.pipeline <image-or-sheet.png> [--out DIR] [--single] [--side-as right]
 """

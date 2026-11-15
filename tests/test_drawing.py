@@ -1,3 +1,4 @@
+import pytest
 import json
 import re
 from pathlib import Path
@@ -49,6 +50,7 @@ def test_a_light_effect_has_no_mass_and_reads_as_one_in_the_parts_list():
 def test_the_svg_font_is_a_portable_list_qt_gets_one_installed_family():
     import os
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    pytest.importorskip("PySide6")
     from PySide6.QtGui import QFontDatabase, QGuiApplication
     QGuiApplication.instance() or QGuiApplication([])
     from replicator.qt.svg import _one_family
