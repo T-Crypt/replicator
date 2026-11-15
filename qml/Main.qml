@@ -140,7 +140,7 @@ ApplicationWindow {
         // edit
         { id: "undo", group: "Edit", title: "Undo", keys: "Ctrl+Z", icon: "undo", enabled: () => studio.canUndo, run: () => studio.undo() },
         { id: "redo", group: "Edit", title: "Redo", keys: "Ctrl+Shift+Z", icon: "redo", enabled: () => studio.canRedo, run: () => studio.redo() },
-        { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (studio.sheet.png !== undefined) studio.closeSheet(); else if (window.present) window.setMode("reverse"); else if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else { studio.select(""); window.isolate = "" } } },
+        { id: "deselect", group: "Edit", title: "Deselect", keys: "Esc", run: () => { if (studio.sheet.png !== undefined) studio.closeSheet(); else if (window.present) window.setMode("reverse"); else if (window.showcase || window.focusMode) { window.focusMode = false; if (window.showcase) window.setMode("build") } else if (viewport.tool === "measure") viewport.tool = "select"; else { studio.select(""); window.isolate = "" } } },
         { id: "fixIssues", group: "Edit", title: "Fix accuracy issues with the agent", icon: "sparkle", enabled: () => window.idle && studio.issues.some(i => i.severity === "fix"), run: () => studio.fixIssues() },
         { id: "showAll", group: "Edit", title: "Show everything", icon: "eye", run: () => { window.hidden = ({}); window.isolate = "" } },
         { id: "commander", group: "Edit", title: "Commander: search every action", keys: "Ctrl+K", icon: "search", run: () => commander.open() },
@@ -170,6 +170,7 @@ ApplicationWindow {
         { id: "part.delete", group: "Part", title: "Delete", keys: "Delete", icon: "trash", enabled: () => window.part !== "" && window.idle, run: () => studio.deleteComponent(window.part) },
         // tools
         { id: "tool.select", group: "Tool", title: "Select tool", icon: "cursor", checked: () => viewport.tool === "select", run: () => viewport.tool = "select" },
+        { id: "tool.measure", group: "Tool", title: "Measure distance", keys: "D", icon: "ruler", checked: () => viewport.tool === "measure", run: () => viewport.tool = viewport.tool === "measure" ? "select" : "measure" },
         { id: "tool.move", group: "Tool", title: "Move tool", keys: "W", icon: "move", checked: () => viewport.tool === "move", run: () => viewport.tool = viewport.tool === "move" ? "select" : "move" },
         // view
         { id: "frameAll", group: "View", title: "Frame everything", keys: "H", icon: "frame", run: () => viewport.frameAll(true) },
@@ -381,6 +382,7 @@ ApplicationWindow {
                 y: 8; spacing: 3
                 IconButton { icon: "cursor"; tip: "Select"; on: viewport.tool === "select"; onHit: viewport.tool = "select" }
                 IconButton { icon: "move"; tip: "Move  ·  Ctrl snaps 10 mm, Shift is free"; keys: "W"; on: viewport.tool === "move"; onHit: viewport.tool = "move" }
+                IconButton { icon: "ruler"; tip: "Measure  ·  click two points"; keys: "D"; on: viewport.tool === "measure"; onHit: viewport.tool = viewport.tool === "measure" ? "select" : "measure" }
                 IconButton { icon: "frame"; tip: "Frame everything"; keys: "H"; onHit: viewport.frameAll(true) }
                 Rectangle { width: 26; height: 1; color: Theme.line; anchors.horizontalCenter: parent.horizontalCenter }
                 Repeater {

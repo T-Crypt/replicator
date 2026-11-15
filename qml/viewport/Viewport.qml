@@ -18,7 +18,9 @@ Item {
     property bool colorByComponent: false
     property string isolate: ""               // component id shown alone ("" = all)
     property var hidden: ({})                 // component id -> true
-    property string tool: "select"            // select | move
+    property string tool: "select"            // select | move | measure
+    property var measurePts: []               // measure tool: up to two picked surface points (scene units)
+    onToolChanged: measurePts = []
     property bool showcase: false
     property bool present: false
     property bool turntable: false
@@ -434,6 +436,7 @@ Item {
             if (m.button === Qt.MiddleButton) act = "pan"
             else if (m.button === Qt.RightButton) act = "dolly"
             else if (shift) act = "pan"
+            else if (m.modifiers & Qt.ControlModifier) act = "dolly"     // one-button mice and trackpads
             else act = "orbit"
         }
         onPositionChanged: (m) => {
@@ -467,6 +470,13 @@ Item {
                 gizmo.dragging = false; gizmo.axis = -1
                 gizmo.offset = Qt.vector3d(0, 0, 0)
                 if (o.length() > 0.001) studio.nudge(studio.selected, o.x, o.y, o.z)
+            } else if (!moved && m.button === Qt.LeftButton && root.tool === "measure") {
+                const r = view.pick(m.x, m.y)
+                if (r.objectHit) {
+                    const pts = root.measurePts.length >= 2 ? [] : root.measurePts.slice()
+                    pts.push(r.scenePosition)
+                    root.measurePts = pts
+                }
             } else if (!moved && (m.button === Qt.LeftButton || m.button === Qt.RightButton)) {
                 const r = view.pick(m.x, m.y)
                 const id = r.objectHit && r.objectHit.shapeId !== undefined ? r.objectHit.shapeId : ""
@@ -500,13 +510,63 @@ Item {
         }
     }
 
+    // ---- measure overlay: picked points, the line between them and the distance with its X, Y, Z parts
+    Item {
+        id: measure
+        anchors.fill: parent
+        visible: root.tool === "measure" && root.measurePts.length > 0
+        readonly property var pts: {
+            root.tick
+            return root.measurePts.map(p => root.project(p))
+        }
+        readonly property var d: root.measurePts.length === 2 ? root.measurePts[1].minus(root.measurePts[0]) : null
+        function fmt(v) { return Math.abs(v) >= 100 ? v.toFixed(1) : Math.abs(v) >= 1 ? v.toFixed(2) : v.toFixed(3) }
+        Rectangle {
+            visible: measure.pts.length === 2
+            readonly property var a: measure.pts.length > 0 ? measure.pts[0] : Qt.point(0, 0)
+            readonly property var b: measure.pts.length === 2 ? measure.pts[1] : a
+            x: a.x; y: a.y - 1; height: 2; color: Theme.accent; antialiasing: true
+            width: Math.hypot(b.x - a.x, b.y - a.y)
+            transformOrigin: Item.Left
+            rotation: Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI
+        }
+        Repeater {
+            model: measure.pts
+            delegate: Rectangle {
+                required property var modelData
+                x: modelData.x - 5; y: modelData.y - 5; width: 10; height: 10; radius: 5
+                color: Theme.bg; border.color: Theme.accent; border.width: 2
+            }
+        }
+        Rectangle {
+            visible: measure.d !== null
+            x: measure.pts.length === 2 ? (measure.pts[0].x + measure.pts[1].x) / 2 + 12 : 0
+            y: measure.pts.length === 2 ? (measure.pts[0].y + measure.pts[1].y) / 2 - height - 8 : 0
+            width: mLabel.implicitWidth + 16; height: mLabel.implicitHeight + 10; radius: 6
+            color: Theme.panel; border.color: Theme.line
+            Text {
+                id: mLabel
+                anchors.centerIn: parent
+                color: Theme.text; font.family: Theme.mono; font.pixelSize: Theme.fsSmall
+                text: !measure.d ? "" : measure.fmt(measure.d.length()) + " " + studio.units
+                      + "\nΔX " + measure.fmt(measure.d.x) + "   ΔY " + measure.fmt(measure.d.y) + "   ΔZ " + measure.fmt(measure.d.z)
+            }
+        }
+    }
+    Text {
+        anchors.horizontalCenter: parent.horizontalCenter; anchors.top: parent.top; anchors.topMargin: 14
+        visible: root.tool === "measure"
+        text: root.measurePts.length === 1 ? "Click a second point" : "Measure: click two points on the model  ·  Esc leaves"
+        color: Theme.viewDim; font.pixelSize: Theme.fsTiny; font.family: Theme.sans
+    }
+
     // ---- HUD: view name, axis triad (click an axis to look down it)
     Text {   // camera read-out, bottom right
         anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 14
         visible: !root.showcase && !root.present && studio.stepCount > 0
         text: "GRID " + (root.gridCell >= 1000 ? root.gridCell / 1000 + " m" : root.gridCell + " mm") + "    "
               + (root.ortho ? "ORTHO" : "PERSP " + root.fov + "°") + "    " + Math.round(root.dist) + " mm"
-              + (root.tool === "move" ? "    MOVE" : "")
+              + (root.tool === "move" ? "    MOVE" : root.tool === "measure" ? "    MEASURE" : "")
         color: Theme.viewDim
         font.pixelSize: Theme.fsTiny; font.family: Theme.mono
     }

@@ -35,6 +35,7 @@ def main(argv=None) -> int:
     ap.add_argument("--theme", default="", help="abyss | graphite | carbon | daylight (this run only with --shot)")
     ap.add_argument("--accent", default="", help="holo | azure | violet | mint | amber | rose")
     ap.add_argument("--density", default="", help="compact | cozy | roomy")
+    ap.add_argument("--cue", action="append", default=[], help="QML expression run just before --shot grabs (repeatable)")
     ap.add_argument("--ui", default="", help="open an overlay for --shot: commander | preferences | materials | console | context | sheet")
     a = ap.parse_args(argv)
 
@@ -133,6 +134,13 @@ def main(argv=None) -> int:
             if state["waited"] and not state["settled"]:  # let the new scene materialize after the job lands
                 state["settled"] = True
                 QTimer.singleShot(3000, grab)
+                return
+            if a.cue and not state.get("cued"):
+                state["cued"] = True
+                from PySide6.QtCore import QMetaObject, Q_ARG
+                for js in a.cue:
+                    QMetaObject.invokeMethod(win, "runCue", Q_ARG("QVariant", js))
+                QTimer.singleShot(800, grab)     # let the cue's bindings and animations settle
                 return
             img = win.grabWindow()
             img.save(a.shot)

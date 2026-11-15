@@ -190,6 +190,10 @@ class Studio(QObject):
     def ground(self):
         return self._ground
 
+    @Property(str, notify=programChanged)
+    def units(self):
+        return str(self._program.get("units", "mm")) if self._program else "mm"
+
     @Property(float, notify=shapesChanged)
     def radius(self):
         return self._radius
