@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import re
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .. import knowledge
@@ -276,6 +277,14 @@ def research_queries(subject: str, parts: list[str], engine: str = "dirk", log=p
     return [subject[:60]] + [p for p in parts[:3]]
 
 
+def stamp_source(program: dict, prompt: str, engine: str) -> dict:
+    """Record where a dreamed program came from (validation tolerates the extra top-level key). A program that
+    already carries a source keeps it, so a re-dream of a saved file does not launder its origin."""
+    program.setdefault("source", {"prompt": prompt, "engine": engine,
+                                  "date": datetime.now(timezone.utc).date().isoformat()})
+    return program
+
+
 def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = None) -> dict:
     """Text in, a validated BuildProgram out (its blueprint stage kept under program["blueprint"]).
     `sources` (research lane) grounds a concept in real mechanisms; they are kept with the blueprint."""
@@ -318,7 +327,7 @@ def dream(prompt: str, engine: str = "dirk", log=print, sources: list | None = N
                 bp["sources"] = [s.as_dict() for s in sources]
             prog["blueprint"] = bp
             log(f"program: valid, {len(prog['ops'])} ops")
-            return _refine(prog, engine, log)
+            return stamp_source(_refine(prog, engine, log), prompt, engine)
         log(f"program: {len(errs)} problems: {errs[:3]}")
         msgs += [{"role": "assistant", "content": reply},
                  {"role": "user", "content": repair_message(errs)}]

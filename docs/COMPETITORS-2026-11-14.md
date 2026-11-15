@@ -18,6 +18,7 @@ Shipped the same day, after this teardown was written (commit after `2346b94`):
 | P0 MCP server | done | `replicator/mcp_server.py`, 10 tools; driven end to end over stdio by the SDK client; a rejected patch leaves the file byte-identical; an open window reloads agent edits as one undo step |
 | P0 model endpoints | done | `endpoints` in `services.json`, key from an env var; live call through a configured endpoint to Strata |
 | P0 STEP export | done | `core/step.py`; all 11 fixtures read back by OCCT `STEPControl_Reader` as valid solids (BRepCheck), volume within 4e-7 |
+| P1 corpus export | done | `tools/corpus.py export/verify`; one row per program (prompt, program, geometry digest, mass, verdict, kernel); two exports of the fixtures are byte-identical and all 11 rows re-verify; a tampered row is caught. `client.dream` now stamps `source` (prompt, engine, date) |
 
 So the scorecard rows "MCP server", "STEP export" and "Runs your own model endpoint" now read **Y** for
 Replicator. The remaining table stakes are the print answer, an install for a normal person, and
