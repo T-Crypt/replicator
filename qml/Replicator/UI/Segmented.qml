@@ -1,12 +1,15 @@
 import QtQuick
+import QtQuick.Controls
 
 // A segmented switch with a sliding thumb. model: [{ key, label, icon?, hint? }]. `current` is the selected key.
+// iconsOnly shows the label as a tooltip instead; hints: false drops the key hints to save width.
 Rectangle {
     id: seg
     property var model: []
     property string current: ""
     property real segWidth: 104
     property bool iconsOnly: false
+    property bool hints: true
     signal pick(string key)
     implicitWidth: model.length * segWidth + 6
     implicitHeight: Theme.ctl + 6
@@ -44,13 +47,16 @@ Rectangle {
                            color: cell.sel ? Theme.onAccent : sma.containsMouse ? Theme.text : Theme.dim
                            font.pixelSize: Theme.fs; font.family: Theme.sans
                            font.weight: cell.sel ? Font.DemiBold : Font.Medium }
-                    Text { visible: !seg.iconsOnly && !!cell.modelData.hint; text: cell.modelData.hint || ""
+                    Text { visible: !seg.iconsOnly && seg.hints && !!cell.modelData.hint; text: cell.modelData.hint || ""
                            anchors.verticalCenter: parent.verticalCenter
                            color: cell.sel ? Qt.rgba(Theme.onAccent.r, Theme.onAccent.g, Theme.onAccent.b, 0.55) : Theme.faint
                            font.pixelSize: Theme.fsTiny; font.family: Theme.mono }
                 }
                 MouseArea { id: sma; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                             onClicked: seg.pick(cell.modelData.key) }
+                ToolTip.visible: seg.iconsOnly && sma.containsMouse
+                ToolTip.text: (cell.modelData.label || "") + (cell.modelData.hint ? "   " + cell.modelData.hint : "")
+                ToolTip.delay: 450
             }
         }
     }

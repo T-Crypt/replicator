@@ -43,6 +43,7 @@ Item {
     property string viewName: "Perspective"
     readonly property real fov: 35
     readonly property real gridCell: Math.pow(10, Math.floor(Math.log(Math.max(dist, 1) / 14) / Math.LN10))   // as grid.frag
+    property rect avoid: Qt.rect(0, 0, 0, 0)    // a bar floating over the view (the specify capsule) the read-out keeps clear of
     property int tick: 0                      // bumps every frame so 2D overlays re-project
     property real idle: 0
 
@@ -561,8 +562,11 @@ Item {
     }
 
     // ---- HUD: view name, axis triad (click an axis to look down it)
-    Text {   // camera read-out, bottom right
+    Text {   // camera read-out, bottom right; rises above the capsule when they would overlap
+        readonly property bool blocked: root.avoid.width > 0 && parent.width - 14 - implicitWidth < root.avoid.x + root.avoid.width + 32
+                                        && parent.height - 14 - implicitHeight < root.avoid.y + root.avoid.height
         anchors.right: parent.right; anchors.bottom: parent.bottom; anchors.margins: 14
+        anchors.bottomMargin: blocked ? parent.height - root.avoid.y + 8 : 14
         visible: !root.showcase && !root.present && studio.stepCount > 0
         text: "GRID " + (root.gridCell >= 1000 ? root.gridCell / 1000 + " m" : root.gridCell + " mm") + "    "
               + (root.ortho ? "ORTHO" : "PERSP " + root.fov + "°") + "    " + Math.round(root.dist) + " mm"

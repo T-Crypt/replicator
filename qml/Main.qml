@@ -320,7 +320,9 @@ ApplicationWindow {
             }
             Item { Layout.fillWidth: true }
             Segmented {
-                segWidth: 112
+                segWidth: window.width < 1180 ? 40 : window.width < 1500 ? 100 : 112
+                iconsOnly: window.width < 1180
+                hints: window.width >= 1500
                 current: studio.mode
                 model: [ { key: "build", label: "Build", icon: "build", hint: "1" }, { key: "dissect", label: "Dissect", icon: "dissect", hint: "2" },
                          { key: "reverse", label: "Reverse", icon: "reverse", hint: "3" }, { key: "showcase", label: "Showcase", icon: "showcase", hint: "4" },
@@ -336,17 +338,21 @@ ApplicationWindow {
                 Text { text: studio.busy; color: Theme.accentHi; font.pixelSize: Theme.fsSmall; font.family: Theme.sans
                        anchors.verticalCenter: parent.verticalCenter }
             }
-            Rectangle {   // Commander entry
-                implicitWidth: 214; implicitHeight: 28; radius: 14
+            Rectangle {   // Commander entry: a full search field, or a round button on a narrow window
+                readonly property bool full: window.width >= 1500
+                implicitWidth: full ? 214 : 28; implicitHeight: 28; radius: 14
                 color: cmdMa.containsMouse ? Theme.hover : Theme.field
                 border.color: cmdMa.containsMouse ? Theme.accentLine : Theme.line
-                Icon { x: 10; anchors.verticalCenter: parent.verticalCenter; name: "search"; size: 14; color: Theme.dim }
+                Icon { x: parent.full ? 10 : 7; anchors.verticalCenter: parent.verticalCenter; name: "search"; size: 14; color: Theme.dim }
                 Text { x: 31; anchors.verticalCenter: parent.verticalCenter; text: "Search actions"; color: Theme.faint
-                       font.pixelSize: Theme.fsSmall; font.family: Theme.sans }
-                Kbd { anchors.right: parent.right; anchors.rightMargin: 7; anchors.verticalCenter: parent.verticalCenter; keys: "Ctrl+K" }
+                       font.pixelSize: Theme.fsSmall; font.family: Theme.sans; visible: parent.full }
+                ToolTip.visible: !full && cmdMa.containsMouse
+                ToolTip.text: "Search actions   Ctrl+K"
+                ToolTip.delay: 450
+                Kbd { visible: parent.full; anchors.right: parent.right; anchors.rightMargin: 7; anchors.verticalCenter: parent.verticalCenter; keys: "Ctrl+K" }
                 MouseArea { id: cmdMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: commander.open() }
             }
-            Text { text: "MODEL"; color: Theme.faint; font.pixelSize: Theme.fsTiny; font.letterSpacing: Theme.caps
+            Text { visible: window.width >= 1500; text: "MODEL"; color: Theme.faint; font.pixelSize: Theme.fsTiny; font.letterSpacing: Theme.caps
                    font.weight: Font.DemiBold; font.family: Theme.sans; Layout.leftMargin: 12; Layout.rightMargin: 4 }
             RCombo {
                 model: studio.engines; implicitWidth: 104
@@ -443,6 +449,7 @@ ApplicationWindow {
                     blueprint: window.blueprint
                     explode: window.explode
                     explodeGoal: window.explodeTarget
+                    avoid: window.empty || dream.hideT > 0.5 ? Qt.rect(0, 0, 0, 0) : Qt.rect(dream.x, dream.y, dream.width, dream.height)
                     hidden: window.hidden
                     isolate: window.isolate
                     showcase: window.showcase
