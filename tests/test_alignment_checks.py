@@ -81,7 +81,6 @@ def test_a_ring_that_spins_sideways_is_sent_back(tmp_path):
     assert found[0].severity == "fix" and "Column" in found[0].message
 
 
-@pytest.mark.parametrize("name", sorted(p.name for p in FIX.glob("*.json")
-                                        if p.name not in ("turbofan_bad.json", "advanced_ops.json")))
+@pytest.mark.parametrize("name", sorted(p.name for p in FIX.glob("*.json")))
 def test_no_other_fixture_trips_the_new_checks(name):
     assert not [i for i in issues(FIX / name) if i.kind in NEW_KINDS]

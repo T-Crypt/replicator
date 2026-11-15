@@ -1,6 +1,6 @@
 {
  "version": 1,
- "name": "Gas-Generator Liquid Rocket Engine (aerospace materials)",
+ "name": "Aerospace-Alloy Gas-Generator Rocket Engine",
  "units": "mm",
  "materials": {
   "copper": {

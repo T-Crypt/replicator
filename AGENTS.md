@@ -43,7 +43,7 @@ replicator [program.json | model.glb | bundle.zip]              # the real windo
 | `replicator/qt/bridge.py` | the `studio` QObject: every property and slot QML uses |
 | `qml/Main.qml` | layout, workspace state and the `actions` registry (menus, shortcuts, right-click menus, Commander) |
 | `qml/panels/`, `qml/viewport/`, `qml/Replicator/UI/` | one file per panel; the 3D view; design tokens and controls |
-| `fixtures/` | sample programs. `rocket_engine.json` is the accuracy reference; `turbofan_bad.json` is kept as a bad example |
+| `fixtures/` | example programs, each passes `tools.check` (the start screen lists them). `rocket_engine.json` is the accuracy reference; failing cases live in `tests/data/` (`turbofan_bad.json`) |
 
 ## Invariants
 
