@@ -42,7 +42,7 @@ Popup {
                     out.push({ group: "Material", title: m.label, icon: "material", keys: "", ok: true, run: () => studio.applyMaterial(m.id) })
         for (const k in Theme.themes)
             if (match("theme " + Theme.themes[k].label, words))
-                out.push({ group: "Theme", title: Theme.themes[k].label + "  —  " + Theme.themes[k].note, icon: "sun", keys: "", ok: true, run: () => Theme.themeName = k })
+                out.push({ group: "Theme", title: Theme.themes[k].label + "  ·  " + Theme.themes[k].note, icon: "sun", keys: "", ok: true, run: () => Theme.themeName = k })
         for (const k in Theme.accents)
             if (words.length && match("accent colour color " + Theme.accents[k].label, words))
                 out.push({ group: "Accent", title: Theme.accents[k].label, icon: "dot", keys: "", ok: true, tint: Theme.accents[k].base, run: () => Theme.accentName = k })
@@ -74,7 +74,7 @@ Popup {
                 background: null
                 color: Theme.text; font.pixelSize: 16; font.family: Theme.sans
                 selectionColor: Theme.accent; selectedTextColor: Theme.onAccent
-                placeholderText: "Search actions, builds, materials, themes — or describe something to build"
+                placeholderText: "Search actions, builds, materials and themes, or describe something to build"
                 placeholderTextColor: Theme.faint
                 verticalAlignment: TextInput.AlignVCenter
                 onTextChanged: list.currentIndex = 0
