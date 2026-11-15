@@ -1,6 +1,0 @@
-VARYING vec2 uv;
-void MAIN()
-{
-    uv = UV0;
-    POSITION = MODELVIEWPROJECTION_MATRIX * vec4(VERTEX, 1.0);
-}
