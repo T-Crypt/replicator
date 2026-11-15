@@ -1,0 +1,32 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+        extras: ["all", "dev"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Qt runtime libraries
+        if: matrix.extras == 'all'
+        run: sudo apt-get update && sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libfontconfig1 libdbus-1-3
+      - run: pip install -e ".[${{ matrix.extras }}]"
+      - run: python -m pytest -q
+        env:
+          QT_QPA_PLATFORM: offscreen
+      - name: Check every fixture builds
+        run: |
+          for f in fixtures/*.json; do
+            case "$f" in *turbofan_bad.json|*advanced_ops.json) continue;; esac
+            python -m tools.check "$f" > /dev/null || { echo "FAIL $f"; exit 1; }
+          done
