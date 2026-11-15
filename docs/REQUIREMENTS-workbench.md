@@ -255,6 +255,50 @@ any moment:
 | FR-PR-10 | P1 | **Tolerance test print**: generate a calibration coupon for the active printer and material; measured results update the fit clearances in the profile | The next fit uses the new clearance |
 | FR-PR-11 | P2 | Resin printing profile (hollowing, drain holes, supports) | |
 
+### 5.9a Printing direction (operator, 2026-11-14): Bambu Lab first, then other printers
+
+Notes, not yet built. They extend FR-PR-1 to FR-PR-11 above and set their order.
+
+**Target printer.** Build for a Bambu Lab printer first; other printers follow. The operator is buying one (model not
+chosen yet). Until it arrives, code is written against Bambu's published profiles and LAN-mode behaviour, and the
+file export path always works without a printer. Everything printer-specific sits behind the printer profile
+(FR-PR-1), so Klipper/Moonraker, OctoPrint and Prusa printers become profiles plus a transport, not a rewrite.
+
+Facts to verify on the device when it arrives (recalled, not measured): Bambu's LAN mode talks MQTT over TLS for
+status and commands and takes files over FTPS, authorised by an access code shown on the printer; Bambu Studio and
+OrcaSlicer both carry Bambu profiles and have a CLI. Published build volumes to confirm for the model bought: X1
+Carbon, P1S, P1P and A1 256 x 256 x 256 mm; A1 mini 180 x 180 x 180 mm; H2D about 350 x 320 x 325 mm.
+
+**Most prints are replicas.** A build is often printed at reduced scale, so fitting the printer is a first-class
+function, not an error message.
+
+| ID | Pri | Requirement | Accepted when |
+|---|---|---|---|
+| FR-PR-12 | P0 | **Printer envelope**: each printer profile carries its usable build volume (bed X and Y, height Z) minus a safety margin, the nozzle, and loaded filaments. Pick from a catalog of known printers (Bambu models first) or enter dimensions by hand; several printers can be saved and one is active | Profiles live outside the repo (services file); the active printer shows in the status bar |
+| FR-PR-13 | P0 | **Never exceeds the bed**: every export for printing and every send is gated on the envelope. A part or plate that does not fit is refused with the overflow per axis, never silently clipped | A part 1 mm too tall is refused and the message names the axis and the millimetre |
+| FR-PR-14 | P0 | **Fit functions**: fit check (per part and per plate, with clearance left on each axis); scale to fit (largest uniform scale that fits, shown as a factor and as final dimensions); replica presets (1:1, 1:N, fit to bed, fit to a target height); orient to fit (try the rotations that keep the part flat on the bed); split when even the best orientation does not fit (FR-PR-4) | Scale to fit on a 1.2 m house gives the exact factor, and the scaled build passes the fit check on the active printer |
+| FR-PR-15 | P0 | **Scale-aware printability**: when a replica is scaled down, report the features that drop below the nozzle width or minimum wall (railings, pins, thin fins) and offer to thicken them to the printable minimum or drop them, as a separate edit | A 1:50 house lists the window mullions that vanish at 0.4 mm and the thicken edit makes them printable |
+| FR-PR-16 | P0 | **Send to printer**: one action that fits, slices (Bambu Studio or OrcaSlicer CLI, CPU only), packages a printer-ready 3MF and sends it to the active printer over the LAN, with a confirm click every time. The access code lives in a mode 600 file referenced from config, never in a repo or a log | A print starts on the Bambu from Replicator after one confirm |
+| FR-PR-17 | P0 | **Export for printing** without a printer: 3MF (named parts, colours, the plate), STL per part, STEP for CAD, and the sliced file when a slicer is present | Opens in Bambu Studio with parts named and inside the bed |
+| FR-PR-18 | P1 | **Print queue and status**: queued, slicing, sending, printing (progress, layer, time left, camera frame where the printer offers one), done or failed; a job keeps its program version, scale and settings so it can be reprinted exactly | The queue survives an app restart |
+| FR-PR-19 | P2 | **Replicator network print service**: a small tailnet-only service that holds the queue and talks to the printers, so a phone, the PWA or another machine can queue a print without the desktop app open | Not exposed beyond the tailnet |
+
+**Small PWA, off by default.**
+
+| ID | Pri | Requirement | Accepted when |
+|---|---|---|---|
+| FR-PWA-1 | P1 | A toggle in Preferences, off by default, that serves a small installable web app from the desktop app (or the print service) on the tailnet only, behind a token; nothing public | With the toggle off, no port is open |
+| FR-PWA-2 | P1 | Read-only views: renders, projects, creations, build timelines (step through a build, using exported per-step frames or GLB), and the print queue with live status | A queued print shows its progress on the phone |
+| FR-PWA-3 | P2 | Light actions from the phone: queue a print of an existing job, pause or cancel a running print (each with a confirm) | Never starts a print without a confirm |
+
+**The local agent prints and assists.**
+
+| ID | Pri | Requirement | Accepted when |
+|---|---|---|---|
+| FR-AG-P1 | P1 | MCP tools for printing: list printers and the active envelope, fit check, scale to fit, orient, split, slice, export for printing, queue, status | An agent fits and queues a part through MCP alone |
+| FR-AG-P2 | P1 | Sending to a physical printer needs the operator's confirm in the app (or a per-printer auto-send switch the operator sets); the agent can prepare and queue, not start a print on its own by default | The confirm appears in the app and the PWA |
+| FR-AG-P3 | P1 | Print assistance in the app: the agent explains the chosen orientation, supports and settings, fixes printability issues as patches, and reads a failed print's report back into suggestions | A printability issue is fixed by an agent patch and passes the fit and printability checks |
+
 ### 5.10 Refinement
 
 | ID | Pri | Requirement | Accepted when |
@@ -313,8 +357,9 @@ Each phase ends with its golden tasks passing and shots in `out/`.
 
 ## 8. Open questions for the operator
 
-1. **Printer(s).** Which printer, firmware and host (Klipper with Moonraker, OctoPrint, Bambu in LAN mode, or files
-   only)? Nothing is documented in `~/homelab` yet, so it needs a row in `inventory/hosts.yaml`.
+1. **Printer(s).** Answered 2026-11-14: a Bambu Lab printer first (model not chosen yet, arriving), Bambu LAN mode;
+   other printers later. Still open: which model, and a row in `~/homelab/inventory/hosts.yaml` once it is on the
+   network.
 2. **Slicer.** PrusaSlicer or OrcaSlicer (neither is installed)? Both have a CLI.
 3. **Currency and vendors.** USD? Which vendors for parts (Amazon, AliExpress, McMaster, Digi-Key, LCSC)? McMaster has
    no public price API; others need keys (FR-SO-8).
