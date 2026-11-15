@@ -1,9 +1,12 @@
 # Replicator: rules for agents
 
-Replicator is a local 3D build workshop. A sentence becomes a blueprint, the blueprint becomes a **BuildProgram**
+**Work in poteto-mode, every session and every task** (operator, 2026-11-14): read `.claude/skills/poteto-mode/SKILL.md`, follow the matching playbook, and read each `principle-*` leaf before citing it. `CLAUDE.md` has the steps.
+
+Replicator is an engineering and research workshop for nearly anything physical: houses and floor plans, electronics,
+household objects, machines, concepts. A sentence becomes a blueprint, the blueprint becomes a **BuildProgram**
 (ordered solid-modelling ops), manifold3d builds it, a critic measures it, and the Qt Quick 3D workspace shows it
 step by step. You can dissect it, reverse-engineer an imported model, explain it, render it and hand it to Blender.
-Everything runs on this machine. Read `README.md` for the product, `docs/DESIGN.md` for direction and
+Models are local by default or any endpoint the operator names; agents drive it over MCP. Read `README.md` for the product, `docs/DESIGN.md` for direction and
 `docs/REQUIREMENTS-workbench.md` for where it is going (fabrication, mechanics, wiring, sourcing).
 
 ## Commands
@@ -27,7 +30,7 @@ platform cannot run Quick3D). Look at every shot you take; a shot is the only pr
 | `replicator/core/program.py` | BuildProgram schema and validation, JSON Patch, versions on disk, `component_map`, component delete and duplicate |
 | `replicator/core/evaluate.py` | the kernel: op dispatch, per-op cache keyed by hash, build step views |
 | `replicator/core/ops_advanced.py`, `ops_engineering.py` | op tables (`PRIMITIVES`, `MODIFIERS`): loft, pipe, helix, gear, deform; tube, nozzle, rotor, grille |
-| `replicator/core/critique.py` | accuracy checks (`CHECKS` tuple): floating, buried, clipping, off-axis, size, missing, tips |
+| `replicator/core/critique.py` | accuracy checks (`CHECKS` tuple): floating, buried, clipping, off-axis, size (warn >15%, fix >40%), missing, tips, roof (buildings: covers the walls, no V where a pitch is planned, not into the rooms, stated pitch) |
 | `replicator/core/physics.py` | mass, centre of gravity, stands-or-tips, densities by material name |
 | `replicator/core/materials.py` | PBR presets (`PRESETS`, grouped Aerospace, Metal, Polymer, Paint, Glow), paint and whole-build swap |
 | `replicator/core/importers.py` | `ROUTES`: every importable extension and how it becomes a Y-up GLB |

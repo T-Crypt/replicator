@@ -4,3 +4,4 @@ __pycache__/
 *.replicator/
 out/
 brag-output/
+.claude/worktrees/
