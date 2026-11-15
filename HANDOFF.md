@@ -11,8 +11,11 @@ household objects, machines and concepts. Never describe it as only a CAD tool.
 - `endpoints` in services.json add any OpenAI-compatible engine; keys stay in env vars.
 - Preview film: `brag-output/brag.mp4` (56 s, scored, poster in frame 0), scripts in `tools/film/`, take via
   `tools/record.sh` (headless gamescope on the iGPU; `--shot` needs `WAYLAND_DISPLAY=wayland-1` from a plain shell).
-- Open: the checks passed a V-shaped house roof (fixed by hand through MCP, see `fixtures/house_two_bed.json` notes)
-  and missed a lamp with flat arms; add a building roof/pitch check and tighten `size`. STEP is faceted (planes
+- Checks: new `roof` (buildings) and tiered `size` (warn >15%, fix >40%) in `core/critique.py`, tests in
+  `tests/test_roof_and_size.py`. They caught the README turbofan's fan, reverse vanes and turbine arrayed around
+  the wrong axis; `fixtures/dirk_engine_v2.json` corrected and the README previews regenerated.
+- Open: `off_axis` does not inspect radial arrays (that is how the turbofan's rings got through); the lamp's flat
+  arms are not flagged; `assets/range.jpg` and the film show the house before its ridge moved to the long side. STEP is faceted (planes
   only); analytic surfaces need the OCCT layer (P2). `cadquery-ocp` and `mcp` are now in the venv.
 
 # Session 4 (2026-11-14): accuracy workshop, on branch `accuracy-workshop`

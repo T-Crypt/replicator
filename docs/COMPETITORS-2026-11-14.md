@@ -46,10 +46,15 @@ and concepts in one document with one set of checks.
 L6 is new: it is the operator's scope, and no competitor attempts it. Its first evidence is
 `fixtures/house_two_bed.json`, specified by Strata from one sentence. Its first finding is a gap: the
 model rotated the roof the wrong way (a V instead of a gable, 5.9 m tall against a planned 4.6 m),
-and the checks passed it. The `size` check's tolerance and a roof/pitch sanity check for buildings
-are the next fixes, and a desk lamp from the same run failed for the same family of reason (arms
-lying flat, springs upright, not flagged). Breadth is real only when the checks hold for every
-kind of thing, and today they hold best for machines.
+and the checks passed it. Fixed the same day: a `roof` check for buildings (the roof covers the walls,
+is not a V where a pitch is planned, does not cut into the rooms, matches a stated pitch) and a tiered
+`size` check (warn past 15%, sent back to the model past 40%). The original roof is now blocked; the
+desk lamp from the same run (twice its planned size) is blocked too. The tighter size check also
+caught a defect that had shipped in the README turbofan since session 1: its fan, reverse vanes and
+turbine were arrayed around the wrong axis (54% too wide); corrected, with fresh previews. Still
+open: `off_axis` inspects round parts but not radial arrays, which is how those three rings got
+through, and the lamp's flat arms are not flagged. Breadth is real only when the checks hold for
+every kind of thing.
 
 ---
 

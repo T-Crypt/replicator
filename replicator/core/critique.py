@@ -19,7 +19,8 @@ from .physics import properties
 AXISYM = {"cylinder", "tube", "torus", "revolve", "nozzle", "rotor", "capsule", "gear", "helix"}
 CLIP_SHARE = 0.25        # overlap, as a share of the smaller part, that reads as parts passing through each other
 BURIED_SHARE = 0.95
-SIZE_TOLERANCE = 0.35
+SIZE_WARN = 0.15         # built size off the blueprint by more than this on any axis: shown
+SIZE_FIX = 0.40          # by more than this: goes back to the model (the lamp that came out twice its planned size)
 STOP = {"the", "and", "with", "for", "assembly", "set", "main", "unit", "part", "parts", "system", "section"}
 
 
@@ -273,12 +274,115 @@ def size(b: Build) -> list[Issue]:
     if not (isinstance(want, list) and len(want) == 3 and all(isinstance(v, (int, float)) and v > 0 for v in want)):
         return []
     got = b.size
-    off = [i for i in range(3) if abs(got[i] - want[i]) > SIZE_TOLERANCE * want[i]]
+    share = [abs(got[i] - want[i]) / want[i] for i in range(3)]
+    off = [i for i in range(3) if share[i] > SIZE_WARN]
     if not off:
         return []
     fmt = lambda v: " x ".join(f"{x:.0f}" for x in v)  # noqa: E731
-    return [Issue("size", "warn", "", f"Built {fmt(got)} but the blueprint plans {fmt(want)} "
-                  f"(off on {', '.join('XYZ'[i] for i in off)}).")]
+    worst = max(share)
+    axes = ", ".join(f"{'XYZ'[i]} {'+' if got[i] > want[i] else '-'}{share[i]:.0%}" for i in off)
+    return [Issue("size", "fix" if worst > SIZE_FIX else "warn", "",
+                  f"Built {fmt(got)} but the blueprint plans {fmt(want)} ({axes}). Scale the parts that "
+                  "overshoot, or correct the plan if the build is right.")]
+
+
+ROOF_WORDS = ("roof",)
+PITCHED = re.compile(r"\b(gable|gabled|pitched|hip|hipped|ridge|saltbox|a-frame|mansard)\b")
+BUTTERFLY = re.compile(r"\b(butterfly|v-shaped|inverted)\b")
+ANGLE = re.compile(r"(\d{1,2}(?:\.\d+)?)\s*(?:°|deg\b|degrees?\b)")
+
+
+def _named(s: Shape, words: tuple[str, ...]) -> bool:
+    text = f"{s.id} {s.label} {s.part} {s.component}".lower()
+    return any(w in text for w in words)
+
+
+def _union(shapes: list[Shape]):
+    out = shapes[0].manifold
+    for s in shapes[1:]:
+        out = out + s.manifold
+    return out
+
+
+def roof(b: Build) -> list[Issue]:
+    """For a building: does the roof cover the walls, sit on them, and have the shape and pitch the plan asks for?
+    Heights come from slicing the roof with thin vertical slabs at the middle and near both ends of each side."""
+    from .drawing import is_building
+    solid = [s for s in b.shapes if _solid(s)]
+    roofs = [s for s in solid if _named(s, ROOF_WORDS)]
+    if not roofs:
+        return []
+    lo, hi = _boxes(solid)
+    if not is_building(lo.min(0), hi.max(0), b.program.get("units", "mm")):
+        return []
+    walls = [s for s in solid if _named(s, ("wall",)) and s not in roofs] or [s for s in solid if s not in roofs]
+    wlo, whi = _boxes(walls)
+    wlo, whi = wlo.min(0), whi.max(0)
+    top = float(whi[1])
+    shell = _union(roofs)
+    rlo, rhi = _boxes(roofs)
+    span_lo, span_hi = np.minimum(rlo.min(0), wlo) - 1.0, np.maximum(rhi.max(0), whi) + 1.0
+    from manifold3d import Manifold
+
+    def heights(axis: int, at: float) -> tuple[float, float] | None:
+        """(lowest, highest) roof y on a vertical slab across the building at `axis` = `at`, or None if bare. The slab
+        stays inside the walls on the other side, so eaves hanging past the walls do not count as dipping."""
+        inset = (whi - wlo) * 0.03
+        lo_, hi_ = np.maximum(span_lo, wlo + inset), np.minimum(span_hi, whi - inset)
+        lo_[1], hi_[1] = span_lo[1], span_hi[1]
+        size, centre = hi_ - lo_, (hi_ + lo_) / 2
+        size[axis] = max((whi[axis] - wlo[axis]) * 0.01, 1e-3)
+        centre[axis] = at
+        bb = (shell ^ Manifold.cube(size.tolist(), True).translate(centre.tolist())).bounding_box()
+        return None if not np.all(np.isfinite(bb)) or bb[4] < bb[1] else (float(bb[1]), float(bb[4]))
+
+    roof_text = " ".join(f"{s.label} {s.part}" for s in roofs)
+    bp = b.program.get("blueprint") or {}
+    for part in bp.get("parts") or []:
+        if isinstance(part, dict) and "roof" in str(part.get("name", "")).lower():
+            roof_text += f" {part.get('name', '')} {part.get('role', '')} {part.get('shape', '')}"
+    intent = (roof_text + " " + str(bp.get("summary", ""))).lower()
+    wants_pitch = bool(PITCHED.search(intent)) and not BUTTERFLY.search(intent)
+    out: list[Issue] = []
+    label = roofs[0].label or "The roof"
+    profile, lows = {}, []
+    for axis in (0, 2):
+        w = float(whi[axis] - wlo[axis])
+        mid = float((whi[axis] + wlo[axis]) / 2)
+        samples = {"middle": mid, "one end": float(wlo[axis]) + 0.06 * w, "the other end": float(whi[axis]) - 0.06 * w}
+        h = {k: heights(axis, v) for k, v in samples.items()}
+        bare = [k for k, v in h.items() if v is None]
+        if bare:
+            out.append(Issue("roof", "fix", roofs[0].component, f"{label} leaves the walls uncovered along "
+                             f"{'XYZ'[axis]} ({', '.join(bare)}): the roof spans {rlo.min(0)[axis]:.0f} to "
+                             f"{rhi.max(0)[axis]:.0f} but the walls run {wlo[axis]:.0f} to {whi[axis]:.0f}."))
+            continue
+        lows.append(min(v[0] for v in h.values()))
+        profile[axis] = (h["middle"][1], max(h["one end"][1], h["the other end"][1]),
+                         min(h["one end"][1], h["the other end"][1]), 0.44 * w)
+    if out or len(profile) < 2:
+        return out
+    rises = {a: (mid - edge_hi) / run for a, (mid, edge_hi, _, run) in profile.items()}
+    valleys = {a: (edge_lo - mid) / run for a, (mid, _, edge_lo, run) in profile.items()}
+    ridge = max(rises, key=rises.get)
+    if wants_pitch and any(v > 0.05 for v in valleys.values()):
+        a = max(valleys, key=valleys.get)
+        return [Issue("roof", "fix", roofs[0].component, f"{label} is low in the middle and high at the eaves along "
+                      f"{'XYZ'[a]} (a V), but the plan asks for a pitched roof: each slope must rise toward the "
+                      "ridge, so flip the panel's tilt.")]
+    low = min(lows)
+    if low < top - 0.08 * (top - float(wlo[1])):     # after the shape test: "a V, flip it" says more than "too low"
+        return [Issue("roof", "fix", roofs[0].component, f"{label} dips to {low:.0f}, below the wall tops at "
+                      f"{top:.0f}: it cuts down into the rooms.")]
+    if wants_pitch and rises[ridge] < 0.05:
+        return [Issue("roof", "fix", roofs[0].component, f"{label} is flat, but the plan asks for a pitched roof.")]
+    stated = ANGLE.search(intent)
+    if wants_pitch and stated:
+        pitch = float(np.degrees(np.arctan(rises[ridge])))
+        if abs(pitch - float(stated.group(1))) > 10:
+            out.append(Issue("roof", "warn", roofs[0].component, f"{label} pitches at about {pitch:.0f} degrees "
+                             f"across {'XYZ'[ridge]}; the plan says {stated.group(1)}."))
+    return out
 
 
 def _words(s: str) -> list[str]:
@@ -314,7 +418,7 @@ def stability(b: Build) -> list[Issue]:
     return []
 
 
-CHECKS = (floating, cavity_floating, overlaps, array_copies, thin_wall, off_axis, size, missing, stability)
+CHECKS = (floating, cavity_floating, overlaps, array_copies, thin_wall, off_axis, size, missing, stability, roof)
 
 
 def critique(program: dict, shapes: list[Shape], comps: list[Component]) -> list[Issue]:
