@@ -575,10 +575,11 @@ ApplicationWindow {
                         color: window.blueprint > 0.5 ? Theme.holo : window.showcase ? "#eef2f7" : Theme.viewText
                     }
                     Text {
-                        text: studio.summary; width: window.showcase ? 620 : 460; wrapMode: Text.WordWrap
+                        // narrower on a narrow stage, with a line more, so it stays clear of the centred build
+                        text: studio.summary; width: window.showcase ? 620 : Math.min(460, Math.max(240, stage.width * 0.36)); wrapMode: Text.WordWrap
                         color: window.showcase ? "#aab2bd" : Theme.viewDim; font.pixelSize: window.showcase ? 14 : Theme.fs
                         font.family: Theme.sans; lineHeight: 1.25
-                        maximumLineCount: window.showcase ? 6 : 2; elide: Text.ElideRight
+                        maximumLineCount: window.showcase ? 6 : width < 460 ? 3 : 2; elide: Text.ElideRight
                         visible: text !== ""
                     }
                     Row {
